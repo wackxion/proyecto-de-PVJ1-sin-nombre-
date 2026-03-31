@@ -114,7 +114,7 @@ export class Enemy extends GameObject {
      * Crea el sprite del asteroide usando la textura
      */
     _createSprite() {
-        if (this.texture) {
+        if (this.texture !== null) {
             // Usar la textura proporcionada
             this.sprite = new PIXI.Sprite(this.texture);
             this.sprite.anchor.set(0.5);
