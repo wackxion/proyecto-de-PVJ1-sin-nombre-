@@ -1,132 +1,209 @@
 /**
  * Player - Nave espacial controlada por el jugador
  * Hereda de GameObject y implementa rotación + dispara + ataque especial
+ * 
+ * Esta clase maneja toda la lógica de la nave del jugador:
+ * - Movimiento y rotación
+ * - Disparo de proyectiles
+ * - Sistema de ataque especial (ulti)
+ * - Gestión de escudos
+ * - Efectos visuales
  */
 import { GameObject } from './GameObject.js';
 
 export class Player extends GameObject {
     /**
-     * @param {number} x - Posición X inicial
-     * @param {number} y - Posición Y inicial
-     * @param {PIXI.Texture} texture - Textura de la nave
-     * @param {number} gameWidth - Ancho del juego
-     * @param {number} gameHeight - Alto del juego
+     * Constructor del jugador
+     * @param {number} x - Posición X inicial donde aparece la nave
+     * @param {number} y - Posición Y inicial donde aparece la nave
+     * @param {PIXI.Texture} texture - Textura (imagen) de la nave cargada desde assets
+     * @param {number} gameWidth - Ancho del área de juego (en píxeles)
+     * @param {number} gameHeight - Alto del área de juego (en píxeles)
      */
     constructor(x, y, texture, gameWidth = 800, gameHeight = 600) {
+        // Llamar al constructor de la clase padre (GameObject)
+        // Esto inicializa propiedades básicas como x, y, active
         super(x, y);
+        
+        // Velocidad de movimiento de la nave (en píxeles por segundo)
         this.speed = 300;
+        
+        // Rotation (rotación): Ángulo actual de la nave en radianes
+        // 0 radianes = apuntando hacia la derecha
         this.rotation = 0;
+        
+        // Rotation Speed (velocidad de rotación): Cuánto gira la nave por segundo
+        // Valor positivo = gira en sentido horario
         this.rotationSpeed = 4;
-        this.radius = 64;
+        
+        // Radius (radio): radio de colisión para detectar choques con asteroides
+        // Se usa para calcular si la nave toca un asteroide
+        this.radius = 32;
+        
+        // Game Width/Height: Dimensiones del área de juego
+        // Se usan para mantener la nave dentro de la pantalla
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         
-        // Sistema de ataque especial
+        // ULTIMATE ATTACK SYSTEM (Sistema de Ataque Especial)
+        //ultiCharge: carga actual acumulada (0-100)
         this.ultiCharge = 0;
+        //ultiMax: carga necesaria para poder usar el ataque especial
         this.ultiMax = 100;
+        //ultiReady: flag (banderita) que indica si el ataque está listo
         this.ultiReady = false;
         
-        // Sistema de escudos (porcentaje 0-100)
+        // SHIELD SYSTEM (Sistema de Escudos)
+        //shield: Escudos actuales del jugador (porcentaje 0-100)
+        // Cuando llega a 0, es game over
         this.shield = 100;
         
-        // Velocidad de disparo
-        this.shootCooldownMax = 0.2; // segundos entre disparos
-        this.baseShootCooldown = 0.2; // cooldown base para resetear
+        // SHOOTING SYSTEM (Sistema de Disparo)
+        // shootCooldownMax: Tiempo mínimo entre cada disparo (en segundos)
+        // Este valor baja cuando agarrás power-ups (dispara más rápido)
+        this.shootCooldownMax = 0.2;
+        // baseShootCooldown: Valor original del cooldown para resetear
+        this.baseShootCooldown = 0.2;
         
-        // Referencia al Game para crear proyectiles
+        // Game reference: Referencia al objeto principal del juego
+        // Se usa para crear proyectiles y acceder a otras funciones del juego
         this.game = null;
         
-        // Crear sprite
+        // SPRITE CREATION (Creación del Sprite)
+        // Sprite = Imagen del objeto en el juego
+        // Se crea usando la textura proporcionada (assets/nave.png)
         this.sprite = new PIXI.Sprite(texture);
+        
+        // Anchor (ancla): Punto de pivote de la imagen
+        // 0.5 = centro de la imagen (la nave rota desde su centro)
         this.sprite.anchor.set(0.5);
+        
+        // Escalar la nave al doble de su tamaño original
+        // scale.set(x, y) - 2.0 = 200% del tamaño original
+        this.sprite.scale.set(2.0);
+        
+        // Establecer posición inicial
         this.sprite.x = x;
         this.sprite.y = y;
         
+        // Width/Height: Ancho y alto del sprite para cálculos de colisión
+        // Se obtiene directamente de las dimensiones del sprite
         this.width = this.sprite.width;
         this.height = this.sprite.height;
         
-        // Efecto de daño (esfera azul)
+        // DAMAGE EFFECT (Efecto de Daño)
+        // Reference al objeto gráficos que muestra la esfera azul cuando te golpean
         this.damageEffect = null;
+        // Timer para controlar cuánto dura el efecto de daño
         this.damageEffectTimer = 0;
     }
     
     /**
-     * Crea el efecto de daño (esfera azul alrededor de la nave)
+     * Crea el efecto visual de daño
+     * Muestra una esfera azul alrededor de la nave cuando recibe un golpe
+     * 
+     * Esto alerta al jugador que perdió escudos
      */
     _createDamageEffect() {
-        // Si ya existe, destruirlo
+        // Si ya existe un efecto anterior, destruirlo primero
+        // Esto evita tener múltiples efectos acumulados
         if (this.damageEffect) {
             this.damageEffect.destroy();
         }
         
-        // Crear esfera azul semitransparente
+        // Crear nuevos gráficos para la esfera de daño
+        // PIXI.Graphics = objeto para dibujar formas geométricas
         this.damageEffect = new PIXI.Graphics();
+        
+        // Dibujar un círculo (esfera azul semi-transparente)
+        // circle(x, y, radio)
+        // radius + 10 = un poco más grande que la nave
         this.damageEffect.circle(0, 0, this.radius + 10);
+        
+        // fill() = llenar la forma con color
+        // color: 0x0044CC (azul Birome)
+        // alpha: 0.6 (60% de opacidad = semi-transparente)
         this.damageEffect.fill({ color: 0x0044CC, alpha: 0.6 });
         
+        // Posicionar el efecto en el mismo lugar que la nave
         this.damageEffect.x = this.x;
         this.damageEffect.y = this.y;
         
-        // Agregar al stage del juego si está disponible
+        // Agregar el efecto al stage (pantalla principal del juego)
+        // Solo si el juego existe y tiene un stage
         if (this.game && this.game.app && this.game.app.stage) {
             this.game.app.stage.addChild(this.damageEffect);
         }
         
-        // Timer para desaparecer el efecto
-        this.damageEffectTimer = 0.5; // 0.5 segundos
+        // Establecer timer = 0.5 segundos para que desaparezca el efecto
+        this.damageEffectTimer = 0.5;
     }
     
     /**
-     * Actualiza el jugador (rotación, dispara, ulti)
-     * @param {number} delta - Tiempo transcurrido
-     * @param {Object} input - InputManager con métodos de control
+     * Update (Actualización): Se llama cada frame del juego
+     * Maneja toda la lógica del jugador: rotación, disparo, ulti, efectos
+     * 
+     * @param {number} delta - Tiempo transcurrido desde el último frame (en segundos)
+     * @param {Object} input - InputManager con el estado de las teclas
      */
     update(delta, input) {
+        // Si el jugador no está activo, salir inmediatamente
         if (!this.active) return;
         
-        // Rotación con A/D o Flechas izquierda/derecha
+        // ROTATION (Rotación)
+        // Obtener dirección de rotación desde el InputManager
+        // -1 = izquierda, 1 = derecha, 0 = no girar
         const rotationDir = input.getRotation();
+        
+        // Aplicar rotación: dirección * velocidad * tiempo
         this.rotation += rotationDir * this.rotationSpeed * delta;
         
-        // Actualizar sprite
+        // Actualizar el sprite con la nueva rotación
         this.sprite.rotation = this.rotation;
         
-        // Verificar si debe disparar
+        // SHOOTING (Disparo)
+        // Verificar si se debe disparar (tecla presionada + cooldown cumplido)
         if (input.shouldShoot(delta)) {
             this._shoot();
         }
         
-        // Verificar si debe usar ataque especial
+        // ULTIMATE ATTACK (Ataque Especial)
+        // Verificar si se debe usar el ulti (tecla + carga completa)
         if (input.shouldUseUlti(delta) && this.ultiReady) {
             this._useUlti();
         }
         
-        // Actualizar efecto de daño
+        // Actualizar efecto de daño (esfera azul que se desvanece)
         this._updateDamageEffect(delta);
         
-        // Mantener dentro de los límites del canvas
+        // Mantener la nave dentro de los límites de la pantalla
         this._clampToBounds();
     }
     
     /**
-     * Actualiza el efecto de daño
+     * Actualiza el efecto de daño (esfera azul)
+     * Reduce su opacidad hasta que desaparece
+     * 
      * @param {number} delta - Tiempo transcurrido
      */
     _updateDamageEffect(delta) {
+        // Si el timer es mayor a 0, el efecto está activo
         if (this.damageEffectTimer > 0) {
+            // Reducir el timer
             this.damageEffectTimer -= delta;
             
-            // Actualizar posición
+            // Actualizar posición del efecto para que siga a la nave
             if (this.damageEffect) {
                 this.damageEffect.x = this.x;
                 this.damageEffect.y = this.y;
                 
-                // Reducir opacidad mientras desaparece
+                // Reducir opacidad (alpha) mientras desaparece
+                // alpha = tiempo restante / tiempo total
                 const alpha = this.damageEffectTimer / 0.5;
                 this.damageEffect.alpha = alpha;
             }
             
-            // Destruir cuando termine
+            // Cuando el timer llega a 0, destruir el efecto
             if (this.damageEffectTimer <= 0 && this.damageEffect) {
                 this.damageEffect.destroy();
                 this.damageEffect = null;
@@ -136,9 +213,11 @@ export class Player extends GameObject {
     
     /**
      * Crea un proyectil en la dirección que apunta la nave
+     * Llama al método del juego para crear el proyectil
      */
     _shoot() {
         if (this.game) {
+            // Pasar posición actual y rotación (dirección)
             this.game.createProjectile(
                 this.x, 
                 this.y, 
@@ -148,12 +227,15 @@ export class Player extends GameObject {
     }
     
     /**
-     * Activa el ataque especial (ulti)
-     * Destruye todos los asteroides en pantalla
+     * Activa el ataque especial (Ulti)
+     * Destruye todos los asteroides en pantalla y reinicia la carga
      */
     _useUlti() {
         if (this.game) {
+            // Llamar al método del juego que ejecuta el ulti
             this.game.triggerUlti();
+            
+            // Reiniciar la carga del ulti
             this.ultiCharge = 0;
             this.ultiReady = false;
         }
@@ -161,53 +243,66 @@ export class Player extends GameObject {
     
     /**
      * Agrega carga al ataque especial
-     * @param {number} amount - Cantidad a agregar
+     * Se llama cuando se destruye un asteroide
+     * 
+     * @param {number} amount - Cantidad de carga a agregar (puntos)
      */
     addUltiCharge(amount) {
+        // Sumar la carga pero no pasar del máximo (100)
         this.ultiCharge = Math.min(this.ultiMax, this.ultiCharge + amount);
+        
+        // Si reach la carga máxima, marcar como listo
         if (this.ultiCharge >= this.ultiMax) {
             this.ultiReady = true;
         }
     }
     
     /**
-     * Aumenta la velocidad de disparo al obtener el power-up del asteroide especial
+     * Aumenta la velocidad de disparo
+     * Se llama cuando se destruye un asteroide especial (power-up)
+     * 
+     * Reduce el tiempo entre disparos (cooldown)
      */
     increaseShootSpeed() {
-        // Reducir cooldown de disparo (aumenta velocidad de disparo)
-        // Cada power-up reduce el tiempo entre disparos en un 20%
+        // Reducir el cooldown multiplicándolo por 0.8 (80%)
+        // Ejemplo: 0.2s -> 0.16s -> 0.128s (más disparos por segundo)
+        // Math.max(0.05, ...) = no dejar que baje de 0.05 segundos
         this.shootCooldownMax = Math.max(0.05, this.shootCooldownMax * 0.8);
         
-        // Actualizar el cooldown en el InputManager para que los proyectiles disparen más rápido
+        // Actualizar también en el InputManager
+        // Esto asegura que el juego respete el nuevo cooldown
         if (this.game && this.game.inputManager) {
             this.game.inputManager.setShootCooldown(this.shootCooldownMax);
         }
     }
     
     /**
-     * Resetea la velocidad de disparo al valor base
+     * Resetea la velocidad de disparo al valor original
+     * Se llama al iniciar un nuevo juego
      */
     resetShootSpeed() {
         this.shootCooldownMax = this.baseShootCooldown;
         
-        // También actualizar en InputManager
+        // Actualizar en InputManager
         if (this.game && this.game.inputManager) {
             this.game.inputManager.setShootCooldown(this.shootCooldownMax);
         }
     }
     
     /**
-     * Recibe daño (colisión con asteroide)
-     * @param {number} damage - Daño a recibir (porcentaje de escudos)
+     * Recibe daño cuando un asteroide choca con la nave
+     * Reduce los escudos del jugador
+     * 
+     * @param {number} damage - Porcentaje de escudos a perder
      */
     takeDamage(damage) {
         // Reducir escudos
         this.shield -= damage;
         
-        // Crear efecto de daño (esfera azul)
+        // Crear efecto visual de daño (esfera azul)
         this._createDamageEffect();
         
-        // Verificar si los escudos llegaron a 0 (game over)
+        // Si los escudos llegaron a 0, terminar el juego
         if (this.shield <= 0) {
             this.game.gameOver();
         }
@@ -215,22 +310,37 @@ export class Player extends GameObject {
     
     /**
      * Mantiene al jugador dentro de los límites del juego
+     * Evita que la nave se salga de la pantalla
      */
     _clampToBounds() {
+        // Definir límites del área de juego
         const bounds = { width: this.gameWidth, height: this.gameHeight };
+        
+        // Calcular la mitad del ancho y alto del sprite
         const halfWidth = this.width / 2;
         const halfHeight = this.height / 2;
         
+        // Math.max(min, valor) = no dejar que sea menor al mínimo
+        // Math.min(max, valor) = no dejar que sea mayor al máximo
+        // Esto "agarra" la posición para que quede dentro de los bordes
+        
+        // X: entre left edge y right edge
         this.x = Math.max(halfWidth, Math.min(bounds.width - halfWidth, this.x));
+        
+        // Y: entre top edge y bottom edge
         this.y = Math.max(halfHeight, Math.min(bounds.height - halfHeight, this.y));
         
+        // Actualizar posición del sprite para que coincida
         this.sprite.x = this.x;
         this.sprite.y = this.y;
     }
     
     /**
-     * Obtiene la dirección que apunta la nave (vector unitario)
-     * @returns {Object} - Vector {x, y}
+     * Obtiene la dirección que apunta la nave
+     * Útil para calcular hacia dónde van los proyectiles
+     * 
+     * @returns {Object} - Vector {x, y} representando la dirección
+     * x = coseno del ángulo, y = seno del ángulo
      */
     getDirection() {
         return {
@@ -240,10 +350,14 @@ export class Player extends GameObject {
     }
     
     /**
-     * Destruye el jugador y limpia recursos
+     * Destruye el jugador y libera recursos de memoria
+     * Se llama cuando termina el juego
      */
     destroy() {
+        // Llamar al destroy de la clase padre
         super.destroy();
+        
+        // Destruir el efecto de daño si existe
         if (this.damageEffect) {
             this.damageEffect.destroy();
             this.damageEffect = null;
