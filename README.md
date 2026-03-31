@@ -1,45 +1,122 @@
-# proyecto-de-PVJ1-sin-nombre-
-# Proyecto: [Nombre de tu Videojuego] - Programación de Videojuegos 1
+# Space Defender
 
-Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en la **Universidad Nacional de Hurlingham (UNAHUR)**, dictada por el profesor **Facundo Saiegh**. El objetivo principal es desarrollar un videojuego 2D utilizando tecnologías web modernas.
+Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en la **Universidad Nacional de Hurlingham (UNAHUR)**, dictada por el profesor **Facundo Saiegh**.
 
-## 👥 Integrante
-*  braian zapater
-
----
-
-## 🚩 Requisitos del Primer Parcial
-Para la entrega del primer parcial, el proyecto debe cumplir obligatoriamente con los siguientes puntos:
-
-1.  **Idea y Diseño:** Definición de la idea del juego y un **Game Design Document (GDD)** con las mecánicas explicadas.
-2.  **Estética:** Gráficos y estética definidos, incluyendo la **paleta de colores** y los **spritesheets/atlas** a utilizar.
-3.  **Repositorio:** Proyecto alojado en **GitHub** con aportes (commits) de ambos integrantes y publicado en **GitHub Pages**.
-4.  **Arquitectura de Código:** Estructura de clases que represente adecuadamente a las entidades y personajes del juego.
-5.  **Prototipo Funcional:** El proyecto debe ejecutarse **sin errores en la consola** y mostrar al menos un **spritesheet animado y en movimiento** en pantalla.
+## 👥 Integrantes
+- Braian Zapater [@bra_wack](https://github.com/bra_wack)
 
 ---
 
-## 🛠️ Tecnologías y Herramientas
-*   **Lenguaje:** JavaScript (ES6+) o TypeScript .
-*   **Motor:** [PixiJS](https://pixijs.com/) para el renderizado 2D.
-*   **Gestión de Recursos:** Uso del singleton `Assets` de PixiJS para carga asíncrona y gestión de caché.
-*   **Debugging:** Chrome DevTools (pestañas de Console, Network y Sources).
-*   **Servidor Local:** NodeJS con paquetes como `serve` para evitar problemas de CORS durante el desarrollo.
+## 🎮 Descripción del Juego
+
+**Space Defender** es un juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides que aparecen desde los bordes de la pantalla.
+
+### Mecánicas del Juego
+- La nave puede **rotar** hacia la izquierda o derecha
+- **Disparar** proyectiles hacia la dirección que apunta la nave
+- **Ataque especial (Ulti)** que se carga al destruir asteroides
+- Los asteroides vienen en **3 tamaños** (grande, mediano, pequeño)
+- Los asteroides grandes **orbitan** alrededor de la nave
+- Al destruir asteroides grandes/medianos, se rompen en fragmentos más pequeños
+- Sistema de **3 vidas** con escudos
 
 ---
 
-## 🚀 Requisitos Técnicos Finales (TP Final)
-Hacia el final del cuatrimestre, el videojuego deberá integrar:
+## 🎨 Estética
 
-*   **Algoritmo Boids:** Implementación de al menos **50 NPCs** con comportamientos de grupo (alineación, separación y cohesión).
-*   **Interactividad:** Control total por parte del usuario mediante **teclado y/o mouse**.
-*   **Máquina de Estados (FSM):** Gestión de los estados de los personajes (ej. caminar, atacar, morir) y sus animaciones correspondientes.
-*   **Cámara:** Movimiento de cámara fluido siguiendo al protagonista mediante interpolación lineal (**Lerp**).
-*   **Persistencia (Serialización):** Capacidad de guardar y cargar datos (como el High Score o estados del juego) utilizando **LocalStorage**.
+### Paleta de Colores (Estilo Birome)
+| Color | Hex | Uso |
+|-------|-----|-----|
+| Negro Espacial | `#0D0D1A` | Fondo del juego |
+| Birome Azul | `#0044CC` | Nave, proyectiles, UI |
+| Birome Rojo | `#CC0000` | Asteroides |
+| Blanco Estelar | `#FFFFFF` | Estrellas |
+
+---
+
+## 🕹️ Controles
+
+| Tecla | Acción |
+|-------|--------|
+| W / Flecha ↑ | Disparar proyectil |
+| S / Flecha ↓ | Activar ataque especial (Ulti) |
+| A / Flecha ← | Rotar nave a la izquierda |
+| D / Flecha → | Rotar nave a la derecha |
+| ENTER | Reiniciar (en Game Over) |
+
+---
+
+## 🛠️ Tecnologías
+
+- **Lenguaje:** JavaScript (ES6+)
+- **Motor:** [PixiJS v8](https://pixijs.com/) para renderizado 2D
+- **Servidor:** Node.js con `serve`
+
+---
+
+## 📋 Requisitos del Primer Parcial
+
+- [x] GDD con mecánicas definidas
+- [x] Paleta de colores Birome
+- [x] Sprites animados y en movimiento
+- [x] Estructura de clases
+- [x] Sin errores en consola
+- [x] GitHub Pages publicado
+
+---
+
+## 🚀 Cómo Ejecutar
+
+### Para desarrollo local:
+```bash
+# Instalar servidor
+npm install -g serve
+
+# Ejecutar
+npm start
+# o
+serve .
+```
+
+### Para producción:
+El juego está publicado en **GitHub Pages**:
+https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+├── index.html          # Página principal
+├── SPEC.md             # Especificaciones del juego
+├── package.json        # Configuración npm
+├── css/
+│   └── style.css      # Estilos
+├── assets/
+│   ├── nave.png       # Sprite de la nave
+│   └── asteroide.png  # Sprite del asteroide
+└── src/
+    ├── main.js        # Punto de entrada
+    ├── game/
+    │   ├── Game.js        # Clase principal
+    │   ├── Player.js      # Nave del jugador
+    │   ├── Enemy.js       # Asteroides
+    │   ├── Projectile.js # Proyectiles
+    │   └── GameObject.js  # Clase base
+    └── systems/
+        └── InputManager.js # Gestión de teclado
+```
 
 ---
 
 ## 🔗 Recursos Útiles
-*   **Sprites:** [Universal LPC Spritesheet Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/).
-*   **Optimización de Texturas:** [Free Texture Packer](https://free-tex-packer.com/app/).
-*   **Documentación PixiJS:** [Guía de Assets](https://pixijs.com/8.x/guides/comp
+
+- [PixiJS Documentación](https://pixijs.com/8.x/guides/components)
+- [Universal LPC Spritesheet Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/)
+- [Free Texture Packer](https://free-tex-packer.com/app/)
+
+---
+
+## 📝 Licencia
+
+MIT
