@@ -247,7 +247,7 @@ export class Enemy extends GameObject {
             // Si tiene slowdown activo, mover más lento
             let currentSpeed = this.speed;
             if (this.slowdownTimer > 0) {
-                currentSpeed *= 0.5; // 50% más lento
+                currentSpeed *= 0.3; // 70% más lento (solo 30% de velocidad)
                 this.slowdownTimer -= delta;
             }
             
