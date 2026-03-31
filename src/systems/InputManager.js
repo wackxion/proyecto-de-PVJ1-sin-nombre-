@@ -94,6 +94,14 @@ export class InputManager {
     }
     
     /**
+     * Establece el cooldown de disparo (para aumentar velocidad)
+     * @param {number} cooldown - Nuevo cooldown en segundos
+     */
+    setShootCooldown(cooldown) {
+        this.shootCooldownMax = cooldown;
+    }
+    
+    /**
      * Verifica si se debe activar el ataque especial (con cooldown)
      * @param {number} delta - Tiempo transcurrido
      * @returns {boolean} - true si debe activar ulti

@@ -187,10 +187,14 @@ export class Game {
     _spawnEnemy() {
         if (this.enemies.length >= this.maxEnemies) return;
         
-        // Elegir tamaño aleatorio (más probabilidades de grandes)
+        // Elegir tamaño aleatorio
         const rand = Math.random();
         let size;
-        if (rand < 0.5) {
+        
+        // 5% probabilidad de asteroide especial
+        if (rand < 0.05) {
+            size = AsteroidSize.SPECIAL;
+        } else if (rand < 0.5) {
             size = AsteroidSize.LARGE;
         } else if (rand < 0.8) {
             size = AsteroidSize.MEDIUM;
@@ -202,17 +206,30 @@ export class Game {
         const w = this.gameWidth;
         const h = this.gameHeight;
         let x, y;
-        if (Math.random() < 0.5) {
-            // Borde izquierdo o derecho
-            x = Math.random() < 0.5 ? -60 : w + 60;
-            y = Math.random() * h;
+        
+        if (size === AsteroidSize.SPECIAL) {
+            // Los especiales spawnuean desde el centro de los bordes
+            if (Math.random() < 0.5) {
+                // Horizontal: entra desde izquierda o derecha
+                x = Math.random() < 0.5 ? -120 : w + 120;
+                y = h / 2; // Centro vertical
+            } else {
+                // Vertical: entra desde arriba o abajo
+                x = w / 2; // Centro horizontal
+                y = Math.random() < 0.5 ? -120 : h + 120;
+            }
         } else {
-            // Borde superior o inferior
-            x = Math.random() * w;
-            y = Math.random() < 0.5 ? -60 : h + 60;
+            // Asteroides normales
+            if (Math.random() < 0.5) {
+                x = Math.random() < 0.5 ? -60 : w + 60;
+                y = Math.random() * h;
+            } else {
+                x = Math.random() * w;
+                y = Math.random() < 0.5 ? -60 : h + 60;
+            }
         }
         
-        const enemy = new Enemy(x, y, size, this.player, this.asteroidTexture);
+        const enemy = new Enemy(x, y, size, this.player, this.asteroidTexture, null, false, this.gameWidth, this.gameHeight);
         enemy.render(this.app.stage);
         this.enemies.push(enemy);
     }
@@ -288,12 +305,17 @@ export class Game {
             
             // Verificar colisión con el jugador
             if (this._checkCollision(this.player, enemy)) {
-                // El jugador recibe daño
-                this.player.takeDamage(25);
+                // El jugador recibe daño (porcentaje según el tipo de asteroide)
+                this.player.takeDamage(enemy.damage);
                 
                 // Destruir enemigo
                 enemy.destroy();
                 this.enemies.splice(i, 1);
+                
+                // Verificar si es el asteroide especial (aumenta velocidad de disparo)
+                if (enemy.size === AsteroidSize.SPECIAL) {
+                    this.player.increaseShootSpeed();
+                }
                 
                 // Actualizar UI
                 this._updateUI();

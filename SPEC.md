@@ -1,12 +1,12 @@
-# SPEC.md - Proyecto de Videojuego
+# SPEC.md - Jugando en el Espacio
 
 ## 1. Información del Proyecto
 
-- **Nombre del Juego:** Space Defender
+- **Nombre del Juego:** Jugando en el Espacio
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
-- **Integrantes:** [Nombre del estudiante]
-- **Fecha de Entrega:** Primer Parcial
+- **Integrantes:** Braian Zapater
+- **URL del Juego:** https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/
 
 ---
 
@@ -14,50 +14,57 @@
 
 ### 2.1 Idea y Mecánicas
 
-**Concepto:** Juego de nave espacial en vista superior (top-down) donde el jugador controla la rotacion de la nave y cuando dispara 
+**Concepto:** Juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides de diferentes tamaños.
 
 **Mecánicas Principales:**
-- Nave puede rotar en la dirección del movimiento ("A"rota hacia la izquierda, "D" rota hacia la derecha o sus contrapartes en las flechas)
-- la nave tiene una ulti un ataque especial que se carga a medida que va destruyrndo asteroides(al tocar "s" o la flcha hacia abajo se activa)
-- la nave dispara proyectile con (W hacia la direccion que esta viendo o donde la punta da la nave se encuentra a la hora de rotar)
-- Enemigos básicos (asteroide) que se mueven hacia el jugador y si son muy grandes rota como una orbita hacia el 
-- el tamaño de los enemigos influye en su velocidad
-- si los enimigos tocan la nave pierda una vida o baja su nivel de escudos de la nave
-- los enemigos pueden ser destruido por los proyectiles que dispara la nave y comvertirce en asteroides mas pequeños o ya venir en un tamaño mas pequeño  
-- Sistema de puntuación por destruir
-- sistema de 3 vidas
-- los proyectiles hacen daño a los asteroides y los van rompiendo en asteroides mas pequeños
-- los enemigos vienen en 3 diferentes tamaños, grade, mediano y pequeño. 
-- los grandes y medianos se rompen hasta llegar al tamaño pequeño 
+- Nave puede **rotar** hacia la izquierda (A) o derecha (D)
+- **Disparar** proyectiles (W) hacia la dirección que apunta la nave
+- **Ataque especial (Ulti)** - Pulso expansivo que sale de la nave y destruye todo a su paso
+- Sistema de **escudos** (porcentaje 0-100%) en lugar de vidas
+- Efecto visual de **esfera azul** al recibir daño
 
-### 2.2 Controles
+### 2.2 Tipos de Asteroides
+
+| Tipo | Tamaño | Daño a Escudos | Comportamiento | Puntos |
+|------|--------|----------------|----------------|--------|
+| **SMALL** | Pequeño (18px) | 10% | Va hacia la nave | 30 |
+| **MEDIUM** | Mediano (36px) | 25% | Va hacia la nave | 20 |
+| **LARGE** | Grande (60px) | 50% | Orbita alrededor de la nave | 10 |
+| **SPECIAL** | Extra Grande (120px) | 75% | Movimiento horizontal/vertical | 100 |
+
+### 2.3 Sistema de Ruptura
+
+- **LARGE** → 2 **MEDIUM** (se rompen al ser destruidos)
+- **MEDIUM** → 2 **SMALL** (se rompen al ser destruidos)
+- **SPECIAL** → No se rompe, al destruirlo aumenta la velocidad de disparo
+
+### 2.4 Controles
 
 | Tecla | Acción |
 |-------|--------|
-| W / Flecha Arriba | disparar |
-| S / Flecha Abajo | ulti |
-| A / Flecha Izquierda | rota hacia la izquierda |
-| D / Flecha Derecha | rota hacia la derecha |
+| W / Flecha ↑ | Disparar proyectil |
+| S / Flecha ↓ | Activar ataque especial (Ulti) |
+| A / Flecha ← | Rotar nave a la izquierda |
+| D / Flecha → | Rotar nave a la derecha |
+| ENTER / Click | Reiniciar (en Game Over) |
 
 ---
 
 ## 3. Estética
 
-### 3.1 Paleta de Colores
+### 3.1 Paleta de Colores (Estilo Birome)
 
 | Color | Hex | Uso |
 |-------|-----|-----|
 | Negro Espacial | #0D0D1A | Fondo del juego |
-| Violeta Nebula | #2D1B4E | Elementos de fondo |
-| Birome Azul | #0044CC | Nave, proyectiles, UI y efectos |
-| Birome Rojo | #CC0000 | Enemigos (asteroides) |
-| Blanco Estelar | #FFFFFF | Estrellas partículas |
+| Birome Azul | #0044CC | Nave, proyectiles, UI, efecto de daño, ulti |
+| Birome Rojo | #CC0000 | Asteroides |
+| Blanco Estelar | #FFFFFF | Estrellas |
 
-### 3.2 Spritesheets
+### 3.2 Sprites
 
-- **Nave del Jugador:** "Nave vista desde arr.png" (asset proporcionado)
-- **Enemigos:** Spritesheet LPC genérico o drawn asset
-- **Fondos:** Generados procedimentalmente (estrellas)
+- **Nave:** assets/nave.png
+- **Asteroides:** assets/asteroide.png (escalado según tamaño)
 
 ---
 
@@ -72,53 +79,42 @@ src/
 │   ├── Game.js         # Clase principal del juego
 │   ├── GameObject.js   # Clase base para entidades
 │   ├── Player.js       # Nave del jugador
-│   ├── Enemy.js        # Enemigos
-│   └── Background.js   # Fondo con estrellas
+│   ├── Enemy.js        # Asteroides (4 tipos)
+│   ├── Projectile.js   # Proyectiles (líneas)
+│   └── UltiEffect.js   # Efecto especial
 ├── systems/
-│   ├── InputManager.js # Gestión de teclado
-│   └── Renderer.js     # Configuración PixiJS
-└── utils/
-    └── Assets.js       # Singleton para carga de recursos
+│   └── InputManager.js # Gestión de teclado
+└── css/
+    └── style.css       # Estilos
 ```
 
-### 4.2 Diagrama de Clases
+### 4.2 Clases Principales
 
-```mermaid
-classDiagram
-    class GameObject {
-        +x: number
-        +y: number
-        +sprite: PIXI.Sprite
-        +update(delta) void
-    }
-    class Player {
-        +speed: number
-        +velocity: PIXI.Point
-        +move(direction) void
-    }
-    class Enemy {
-        +speed: number
-        +followTarget(target) void
-    }
-    class InputManager {
-        +keys: Map~string, boolean~
-        +isPressed(key) boolean
-    }
-    
-    GameObject <|-- Player
-    GameObject <|-- Enemy
-```
+- **GameObject:** Clase base con x, y, sprite, active
+- **Player:** Nave con rotación, dispara, escudos, efecto de daño
+- **Enemy:** Asteroides con 4 tamaños, ruptura, órbita, movimiento especial
+- **Projectile:** Proyectiles como líneas finas
+- **UltiEffect:** Aro expansivo que destruye asteroides
 
 ---
 
-## 5. Requisitos del Primer Parcial
+## 5. Características Implementadas
 
+### ✅ Primer Parcial
 - [x] GDD con mecánicas definidas
-- [x] Paleta de colores definida (Birome Azul y Birome Rojo)
-- [x] Spritesheet animado y en movimiento (nave + asteroides)
-- [x] Código con estructura de clases
-- [ ] Sin errores en consola
-- [ ] Ejecutándose en GitHub Pages
+- [x] Paleta de colores Birome
+- [x] Sprites animados y en movimiento
+- [x] Estructura de clases
+- [x] Sin errores en consola
+- [x] GitHub Pages publicado
+
+### ✅ Mejoras Adicionales
+- [x] Proyectiles como líneas finas
+- [x] Efecto de esfera azul al recibir daño
+- [x] Sistema de escudos (porcentaje)
+- [x] Ulti como pulso/aro expansivo
+- [x] Pantalla de Game Over con botón de reinicio
+- [x] Asteroide especial (SPECIAL) con velocidad de disparo aumentable
 
 ---
 
@@ -126,13 +122,17 @@ classDiagram
 
 - **Motor:** PixiJS v8
 - **Lenguaje:** JavaScript ES6+
-- **Servidor:** Node.js con serve
+- **Hosting:** GitHub Pages
 
 ---
 
-## 7. Notas de Implementación
+## 7. Cómo Ejecutar
 
-- Usar el singleton `Assets` de PixiJS para carga de texturas
-- Implementar interpolación lineal (Lerp) para movimiento suave de cámara
-- Canvas resolution: 800x600 (escalable)
-- Target: 60 FPS
+### Desarrollo local:
+```bash
+npm install -g serve
+npm start
+```
+
+### Producción:
+El juego está publicado en: **https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/**

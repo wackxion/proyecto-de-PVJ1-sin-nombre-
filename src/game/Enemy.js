@@ -1,33 +1,38 @@
 /**
  * Enemy - Asteroide enemigo
- * Hereda de GameObject y viene en 3 tamaños (grande, mediano, pequeño)
+ * Hereda de GameObject y viene en 4 tipos (small, medium, large, special)
  * Los grandes y medianos se rompen en asteroides más pequeños
  */
 import { GameObject } from './GameObject.js';
 
 // Enum para tipos de tamaño de asteroide
 export const AsteroidSize = {
-    LARGE: 'large',    // Grande: 60px radius
-    MEDIUM: 'medium',  // Mediano: 36px radius
-    SMALL: 'small'    // Pequeño: 18px radius
+    SMALL: 'small',      // Pequeño: 18px radius, 10% daño
+    MEDIUM: 'medium',   // Mediano: 36px radius, 25% daño
+    LARGE: 'large',     // Grande: 60px radius, 50% daño
+    SPECIAL: 'special'  // Especial: 120px radius, no se rompe, da poder de disparo
 };
 
 export class Enemy extends GameObject {
     /**
      * @param {number} x - Posición X inicial
      * @param {number} y - Posición Y inicial
-     * @param {string} size - Tamaño del asteroide (LARGE, MEDIUM, SMALL)
+     * @param {string} size - Tamaño del asteroide (LARGE, MEDIUM, SMALL, SPECIAL)
      * @param {Object} target - Objetivo a seguir (el jugador)
      * @param {PIXI.Texture} texture - Textura del asteroide
      * @param {Object} inheritVelocity - Velocidad heredada {x, y} (opcional)
      * @param {boolean} orbitTarget - Si debe orbitar alrededor del objetivo (opcional)
+     * @param {number} gameWidth - Ancho del juego (para asteroides especiales)
+     * @param {number} gameHeight - Alto del juego (para asteroides especiales)
      */
-    constructor(x, y, size = AsteroidSize.LARGE, target = null, texture = null, inheritVelocity = null, orbitTarget = false) {
+    constructor(x, y, size = AsteroidSize.LARGE, target = null, texture = null, inheritVelocity = null, orbitTarget = false, gameWidth = 800, gameHeight = 600) {
         super(x, y);
         this.size = size;
         this.target = target;
         this.texture = texture;
         this.shouldOrbit = orbitTarget;
+        this.gameWidth = gameWidth;
+        this.gameHeight = gameHeight;
         
         // Velocidad angular para órbita
         this.angularVelocity = (Math.random() - 0.5) * 2;
@@ -57,31 +62,53 @@ export class Enemy extends GameObject {
      */
     _configureBySize() {
         switch (this.size) {
-            case AsteroidSize.LARGE:
-                this.radius = 60;  // Grande: radio 60px
-                this.scale = 2.0;  // Escala 2x
-                this.speed = 50;
-                this.health = 75;
-                this.points = 10;
-                this.ultiCharge = 25;
-                this.shouldOrbit = true;  // Los grandes siempre orbitan
-                break;
-            case AsteroidSize.MEDIUM:
-                this.radius = 36;  // Mediano: radio 36px
-                this.scale = 1.0;  // Escala 1x
-                this.speed = 100;
-                this.health = 50;
-                this.points = 20;
-                this.ultiCharge = 15;
-                break;
             case AsteroidSize.SMALL:
-                this.radius = 18;  // Pequeño: radio 18px
-                this.scale = 0.5;  // Escala 0.5x
+                this.radius = 18;   // Pequeño: radio 18px
+                this.scale = 0.5;   // Escala 0.5x
                 this.speed = 150;
                 this.health = 25;
                 this.points = 30;
                 this.ultiCharge = 10;
+                this.damage = 10;   // 10% de escudos
+                this.shouldOrbit = false;
+                this.isBreakable = true;
                 break;
+            case AsteroidSize.MEDIUM:
+                this.radius = 36;   // Mediano: radio 36px
+                this.scale = 1.0;    // Escala 1x
+                this.speed = 100;
+                this.health = 50;
+                this.points = 20;
+                this.ultiCharge = 15;
+                this.damage = 25;   // 25% de escudos
+                this.shouldOrbit = false;
+                this.isBreakable = true;
+                break;
+            case AsteroidSize.LARGE:
+                this.radius = 60;   // Grande: radio 60px
+                this.scale = 2.0;   // Escala 2x
+                this.speed = 50;
+                this.health = 75;
+                this.points = 10;
+                this.ultiCharge = 25;
+                this.damage = 50;   // 50% de escudos
+                this.shouldOrbit = true;  // Los grandes siempre orbitan
+                this.isBreakable = true;
+                break;
+            case AsteroidSize.SPECIAL:
+                this.radius = 120;  // Especial: radio 120px (2x grande)
+                this.scale = 4.0;   // Escala 4x
+                this.speed = 30;
+                this.health = 200;
+                this.points = 100;
+                this.ultiCharge = 50;
+                this.damage = 75;   // 75% de escudos
+                this.shouldOrbit = false;
+                this.isBreakable = false;  // No se rompe
+                this.movementPattern = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                break;
+        }
+    }
         }
     }
     
@@ -181,8 +208,11 @@ export class Enemy extends GameObject {
         
         // Luego aplicar movimiento hacia el objetivo
         if (this.target) {
-            // Si debe orbitar, orbita. Si no, va directo
-            if (this.shouldOrbit) {
+            // Si es especial, movimiento horizontal/vertical
+            if (this.size === AsteroidSize.SPECIAL) {
+                this._moveSpecial(delta);
+            } else if (this.shouldOrbit) {
+                // Si debe orbitar, orbita. Si no, va directo
                 this._orbitTarget(delta);
             } else {
                 this._moveToTarget(delta);
@@ -195,6 +225,27 @@ export class Enemy extends GameObject {
         
         // Rotar el sprite para efecto visual
         this.sprite.rotation += this.angularVelocity * delta;
+    }
+    
+    /**
+     * Movimiento especial - horizontal o vertical
+     * @param {number} delta - Tiempo transcurrido
+     */
+    _moveSpecial(delta) {
+        // Movimiento continuo en una dirección (horizontal o vertical)
+        if (this.movementPattern === 'horizontal') {
+            this.x += this.speed * delta;
+            // Rebotar en los bordes
+            if (this.x > this.gameWidth + this.radius) {
+                this.x = -this.radius;
+            }
+        } else {
+            this.y += this.speed * delta;
+            // Rebotar en los bordes
+            if (this.y > this.gameHeight + this.radius) {
+                this.y = -this.radius;
+            }
+        }
     }
     
     /**

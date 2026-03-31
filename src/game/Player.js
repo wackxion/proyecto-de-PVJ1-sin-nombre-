@@ -29,6 +29,9 @@ export class Player extends GameObject {
         // Sistema de escudos (porcentaje 0-100)
         this.shield = 100;
         
+        // Velocidad de disparo
+        this.shootCooldownMax = 0.2; // segundos entre disparos
+        
         // Referencia al Game para crear proyectiles
         this.game = null;
         
@@ -167,8 +170,21 @@ export class Player extends GameObject {
     }
     
     /**
+     * Aumenta la velocidad de disparo al destruir asteroide especial
+     */
+    increaseShootSpeed() {
+        // Reducir cooldown de disparo (aumenta velocidad)
+        this.shootCooldownMax = Math.max(0.05, this.shootCooldownMax * 0.8);
+        
+        // También actualizar en InputManager
+        if (this.game && this.game.inputManager) {
+            this.game.inputManager.setShootCooldown(this.shootCooldownMax);
+        }
+    }
+    
+    /**
      * Recibe daño (colisión con asteroide)
-     * @param {number} damage - Daño a recibir
+     * @param {number} damage - Daño a recibir (porcentaje de escudos)
      */
     takeDamage(damage) {
         // Reducir escudos
