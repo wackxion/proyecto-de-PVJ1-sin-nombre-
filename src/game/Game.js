@@ -312,35 +312,140 @@ export class Game {
     gameOver() {
         this.running = false;
         
-        // Mostrar mensaje de game over
-        const graphics = new PIXI.Graphics();
-        graphics.rect(0, 0, this.gameWidth, this.gameHeight);
-        graphics.fill({ color: 0x000000, alpha: 0.7 });
+        // Guardar referencias para limpar después
+        this.gameOverElements = [];
         
-        // Usar PixiJS v8 Text
-        const text = new PIXI.Text({
-            text: `GAME OVER\nPuntuación Final: ${this.score}\nPresiona ENTER para reiniciar`,
+        // Fondo oscuro
+        const bg = new PIXI.Graphics();
+        bg.rect(0, 0, this.gameWidth, this.gameHeight);
+        bg.fill({ color: 0x000000, alpha: 0.8 });
+        this.app.stage.addChild(bg);
+        this.gameOverElements.push(bg);
+        
+        // Título GAME OVER
+        const titleText = new PIXI.Text({
+            text: 'GAME OVER',
             style: {
                 fontFamily: 'Courier New',
-                fontSize: 36,
-                fill: 0x0044CC,
-                align: 'center'
+                fontSize: 64,
+                fill: 0xCC0000,
+                fontWeight: 'bold'
             }
         });
-        text.x = 400 - text.width / 2;
-        text.y = 300 - text.height / 2;
+        titleText.x = this.gameWidth / 2 - titleText.width / 2;
+        titleText.y = this.gameHeight / 2 - 100;
+        this.app.stage.addChild(titleText);
+        this.gameOverElements.push(titleText);
         
-        this.app.stage.addChild(graphics);
-        this.app.stage.addChild(text);
+        // Puntuación final
+        const scoreText = new PIXI.Text({
+            text: `Puntuación Final: ${this.score}`,
+            style: {
+                fontFamily: 'Courier New',
+                fontSize: 32,
+                fill: 0x0044CC
+            }
+        });
+        scoreText.x = this.gameWidth / 2 - scoreText.width / 2;
+        scoreText.y = this.gameHeight / 2 - 20;
+        this.app.stage.addChild(scoreText);
+        this.gameOverElements.push(scoreText);
+        
+        // Instrucciones
+        const instructText = new PIXI.Text({
+            text: 'Presiona ENTER o haz click para jugar de nuevo',
+            style: {
+                fontFamily: 'Courier New',
+                fontSize: 20,
+                fill: 0xFFFFFF
+            }
+        });
+        instructText.x = this.gameWidth / 2 - instructText.width / 2;
+        instructText.y = this.gameHeight / 2 + 40;
+        this.app.stage.addChild(instructText);
+        this.gameOverElements.push(instructText);
+        
+        // Crear botón restart
+        const buttonContainer = new PIXI.Container();
+        buttonContainer.x = this.gameWidth / 2;
+        buttonContainer.y = this.gameHeight / 2 + 100;
+        buttonContainer.eventMode = 'static';
+        buttonContainer.cursor = 'pointer';
+        
+        // Fondo del botón
+        const buttonBg = new PIXI.Graphics();
+        buttonBg.roundRect(-80, -25, 160, 50, 10);
+        buttonBg.fill({ color: 0x0044CC });
+        buttonContainer.addChild(buttonBg);
+        
+        // Texto del botón
+        const buttonText = new PIXI.Text({
+            text: 'REINICIAR',
+            style: {
+                fontFamily: 'Courier New',
+                fontSize: 20,
+                fill: 0xFFFFFF,
+                fontWeight: 'bold'
+            }
+        });
+        buttonText.x = -buttonText.width / 2;
+        buttonText.y = -buttonText.height / 2;
+        buttonContainer.addChild(buttonText);
+        
+        // Efecto hover
+        buttonContainer.on('pointerover', () => {
+            buttonBg.clear();
+            buttonBg.roundRect(-80, -25, 160, 50, 10);
+            buttonBg.fill({ color: 0x0066FF });
+        });
+        buttonContainer.on('pointerout', () => {
+            buttonBg.clear();
+            buttonBg.roundRect(-80, -25, 160, 50, 10);
+            buttonBg.fill({ color: 0x0044CC });
+        });
+        
+        // Click en el botón
+        buttonContainer.on('pointerdown', () => {
+            this._cleanupGameOver();
+            this._restart();
+        });
+        
+        this.app.stage.addChild(buttonContainer);
+        this.gameOverElements.push(buttonContainer);
         
         // Esperar ENTER para reiniciar
         const restartHandler = (e) => {
             if (e.code === 'Enter') {
                 window.removeEventListener('keydown', restartHandler);
+                this._cleanupGameOver();
                 this._restart();
             }
         };
         window.addEventListener('keydown', restartHandler);
+        
+        // También click en cualquier parte de la pantalla
+        const clickHandler = () => {
+            window.removeEventListener('keydown', restartHandler);
+            this.app.stage.off('pointerdown', clickHandler);
+            this._cleanupGameOver();
+            this._restart();
+        };
+        this.app.stage.eventMode = 'static';
+        this.app.stage.on('pointerdown', clickHandler);
+    }
+    
+    /**
+     * Limpia los elementos de game over
+     */
+    _cleanupGameOver() {
+        if (this.gameOverElements) {
+            for (const el of this.gameOverElements) {
+                if (el && el.parent) {
+                    el.parent.removeChild(el);
+                }
+            }
+            this.gameOverElements = [];
+        }
     }
     
     /**
