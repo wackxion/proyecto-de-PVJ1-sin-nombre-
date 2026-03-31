@@ -109,7 +109,6 @@ export class Enemy extends GameObject {
                 break;
         }
     }
-        }
     }
     
     /**
