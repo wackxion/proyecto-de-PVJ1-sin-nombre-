@@ -155,7 +155,7 @@ export class Enemy extends GameObject {
     
     /**
      * Rompe el asteroide en fragmentos más pequeños
-     * Los fragmentos heredan el movimiento orbital del padre
+     * Los fragmentos heredan el movimiento orbital del padre SI el padre orbitaba
      * @returns {Array} - Array de nuevos Enemy
      */
     _break() {
@@ -168,21 +168,24 @@ export class Enemy extends GameObject {
             // Heredar la trayectoria orbital del padre (dirección y movimiento)
             const trajectory = this._calculateTrajectory();
             
-            // Crear fragmentos con órbita forzada = true
+            // Los fragmentos de un grande SIEMPRE heredan órbita (el padre orbitaba)
+            const inheritOrbit = true;
+            
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight)
             );
         } 
         // Los medianos se rompen en pequeños
         else if (this.size === AsteroidSize.MEDIUM) {
-            // Heredar la trayectoria orbital del padre (dirección y movimiento)
-            const trajectory = this._calculateTrajectory();
+            // Heredar la trayectoria orbital del padre SOLO si el padre orbitaba
+            const trajectory = this.shouldOrbit ? this._calculateTrajectory() : null;
+            const inheritOrbit = this.shouldOrbit; // Solo hereda órbita si el padre orbitaba
             
-            // Crear fragmentos con órbita forzada = true (heredada del padre)
+            // Crear fragmentos heredando o no según el padre
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight)
             );
         }
         
