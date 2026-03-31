@@ -5,6 +5,7 @@
 import { Player } from './Player.js';
 import { Projectile } from './Projectile.js';
 import { Enemy, AsteroidSize } from './Enemy.js';
+import { UltiEffect } from './UltiEffect.js';
 import { InputManager } from '../systems/InputManager.js';
 
 export class Game {
@@ -13,10 +14,10 @@ export class Game {
         this.player = null;
         this.inputManager = null;
         this.score = 0;
-        this.lives = 3;
         this.gameObjects = [];
         this.projectiles = [];
         this.enemies = [];
+        this.ultiEffect = null;
         this.running = false;
         
         // Configuración del juego
@@ -138,8 +139,9 @@ export class Game {
      */
     _updateUI() {
         if (this.scoreElement) {
+            const shield = this.player ? this.player.shield : 0;
             const ultiStatus = this.player && this.player.ultiReady ? ' [ULTI LISTO]' : '';
-            this.scoreElement.textContent = `Puntuación: ${this.score} | Vidas: ${this.lives}${ultiStatus}`;
+            this.scoreElement.textContent = `Puntuación: ${this.score} | Escudos: ${shield}%${ultiStatus}`;
         }
     }
     
@@ -157,18 +159,26 @@ export class Game {
     
     /**
      * Activa el ataque especial (ulti)
-     * Destruye todos los asteroides en pantalla
+     * Crea un pulso/aro expansivo que destruye asteroides
      */
     triggerUlti() {
-        // Destruir todos los enemigos
-        for (const enemy of this.enemies) {
-            this.score += enemy.points;
-            this.player.addUltiCharge(enemy.ultiCharge);
-            enemy.destroy();
-        }
+        // Guardar referencia al game para callbacks
+        const game = this;
         
-        this.enemies = [];
-        this._updateUI();
+        // Crear el efecto visual
+        this.ultiEffect = new UltiEffect(
+            this.player.x,
+            this.player.y,
+            this.gameWidth,
+            this.gameHeight,
+            this.enemies,
+            // Callback cuando se destruye un enemigo
+            function(enemy) {
+                game.score += enemy.points;
+                game.player.addUltiCharge(enemy.ultiCharge);
+            }
+        );
+        this.ultiEffect.render(this.app.stage);
     }
     
     /**
@@ -280,7 +290,6 @@ export class Game {
             if (this._checkCollision(this.player, enemy)) {
                 // El jugador recibe daño
                 this.player.takeDamage(25);
-                this.lives = this.player.lives;
                 
                 // Destruir enemigo
                 enemy.destroy();
@@ -289,8 +298,8 @@ export class Game {
                 // Actualizar UI
                 this._updateUI();
                 
-                // Verificar game over
-                if (this.lives <= 0) {
+                // Verificar game over (cuando shield llega a 0)
+                if (this.player.shield <= 0) {
                     this.gameOver();
                 }
             }
@@ -340,9 +349,14 @@ export class Game {
     _restart() {
         // Limpiar todo
         this.score = 0;
-        this.lives = 3;
         this.projectiles = [];
         this.enemies = [];
+        
+        // Limpiar efecto ulti
+        if (this.ultiEffect) {
+            this.ultiEffect.destroy();
+            this.ultiEffect = null;
+        }
         
         // Recrear jugador
         if (this.player) this.player.destroy();
@@ -384,6 +398,18 @@ export class Game {
             enemy.update(delta);
         }
         
+        // Actualizar efecto ulti
+        if (this.ultiEffect && this.ultiEffect.active) {
+            this.ultiEffect.update(delta);
+            
+            if (!this.ultiEffect.active) {
+                if (this.ultiEffect.sprite && this.ultiEffect.sprite.parent) {
+                    this.ultiEffect.sprite.parent.removeChild(this.ultiEffect.sprite);
+                }
+                this.ultiEffect = null;
+            }
+        }
+        
         // Procesar colisiones
         this._processProjectileCollisions();
         this._processPlayerCollisions();
@@ -406,7 +432,8 @@ export class Game {
     addScore(points) {
         this.score += points;
         if (this.scoreElement) {
-            this.scoreElement.textContent = `Puntuación: ${this.score} | Vidas: ${this.lives}`;
+            const shield = this.player ? this.player.shield : 0;
+            this.scoreElement.textContent = `Puntuación: ${this.score} | Escudos: ${shield}%`;
         }
     }
     

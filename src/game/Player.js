@@ -26,8 +26,7 @@ export class Player extends GameObject {
         this.ultiMax = 100;
         this.ultiReady = false;
         
-        // Vidas y escudos
-        this.lives = 3;
+        // Sistema de escudos (porcentaje 0-100)
         this.shield = 100;
         
         // Referencia al Game para crear proyectiles
@@ -41,6 +40,36 @@ export class Player extends GameObject {
         
         this.width = this.sprite.width;
         this.height = this.sprite.height;
+        
+        // Efecto de daño (esfera azul)
+        this.damageEffect = null;
+        this.damageEffectTimer = 0;
+    }
+    
+    /**
+     * Crea el efecto de daño (esfera azul alrededor de la nave)
+     */
+    _createDamageEffect() {
+        // Si ya existe, destruirlo
+        if (this.damageEffect) {
+            this.damageEffect.destroy();
+        }
+        
+        // Crear esfera azul semitransparente
+        this.damageEffect = new PIXI.Graphics();
+        this.damageEffect.circle(0, 0, this.radius + 10);
+        this.damageEffect.fill({ color: 0x0044CC, alpha: 0.6 });
+        
+        this.damageEffect.x = this.x;
+        this.damageEffect.y = this.y;
+        
+        // Agregar al stage del juego si está disponible
+        if (this.game && this.game.app && this.game.app.stage) {
+            this.game.app.stage.addChild(this.damageEffect);
+        }
+        
+        // Timer para desaparecer el efecto
+        this.damageEffectTimer = 0.5; // 0.5 segundos
     }
     
     /**
@@ -68,8 +97,37 @@ export class Player extends GameObject {
             this._useUlti();
         }
         
+        // Actualizar efecto de daño
+        this._updateDamageEffect(delta);
+        
         // Mantener dentro de los límites del canvas
         this._clampToBounds();
+    }
+    
+    /**
+     * Actualiza el efecto de daño
+     * @param {number} delta - Tiempo transcurrido
+     */
+    _updateDamageEffect(delta) {
+        if (this.damageEffectTimer > 0) {
+            this.damageEffectTimer -= delta;
+            
+            // Actualizar posición
+            if (this.damageEffect) {
+                this.damageEffect.x = this.x;
+                this.damageEffect.y = this.y;
+                
+                // Reducir opacidad mientras desaparece
+                const alpha = this.damageEffectTimer / 0.5;
+                this.damageEffect.alpha = alpha;
+            }
+            
+            // Destruir cuando termine
+            if (this.damageEffectTimer <= 0 && this.damageEffect) {
+                this.damageEffect.destroy();
+                this.damageEffect = null;
+            }
+        }
     }
     
     /**
@@ -113,15 +171,15 @@ export class Player extends GameObject {
      * @param {number} damage - Daño a recibir
      */
     takeDamage(damage) {
+        // Reducir escudos
         this.shield -= damage;
         
+        // Crear efecto de daño (esfera azul)
+        this._createDamageEffect();
+        
+        // Verificar si los escudos llegaron a 0 (game over)
         if (this.shield <= 0) {
-            this.lives--;
-            this.shield = 100; // Recargar escudos
-            
-            if (this.lives <= 0) {
-                this.game.gameOver();
-            }
+            this.game.gameOver();
         }
     }
     
@@ -149,5 +207,16 @@ export class Player extends GameObject {
             x: Math.cos(this.rotation),
             y: Math.sin(this.rotation)
         };
+    }
+    
+    /**
+     * Destruye el jugador y limpia recursos
+     */
+    destroy() {
+        super.destroy();
+        if (this.damageEffect) {
+            this.damageEffect.destroy();
+            this.damageEffect = null;
+        }
     }
 }

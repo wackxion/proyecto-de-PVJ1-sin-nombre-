@@ -1,6 +1,6 @@
 /**
  * Projectile - Proyectil disparado por la nave
- * Hereda de GameObject y se mueve en línea recta
+ * Hereda de GameObject y se mueve en línea recta como una línea fina
  */
 import { GameObject } from './GameObject.js';
 
@@ -14,33 +14,45 @@ export class Projectile extends GameObject {
      */
     constructor(x, y, direction, gameWidth = 800, gameHeight = 600) {
         super(x, y);
-        this.speed = 500;
+        this.speed = 600;
         this.direction = direction;
         this.damage = 25;
         this.lifetime = 2;
-        this.radius = 5;
+        this.radius = 3;
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
+        
+        // Longitud de la línea
+        this.length = 25;
         
         // Color Birome Azul según SPEC.md (#0044CC)
         const color = 0x0044CC;
         
-        // Crear graphics para el proyectil (círculo azul)
+        // Crear graphics para el proyectil (línea fina)
         this.graphics = new PIXI.Graphics();
-        this.graphics.circle(0, 0, 5);
-        this.graphics.fill(color);
+        
+        // Dibujar línea desde atrás hacia adelante
+        const startX = -this.length / 2;
+        const endX = this.length / 2;
+        
+        this.graphics.moveTo(startX, 0);
+        this.graphics.lineTo(endX, 0);
+        this.graphics.stroke({ width: 2, color: color });
         
         // Crear sprite del graphics
         this.sprite = this.graphics;
         this.sprite.x = x;
         this.sprite.y = y;
         
-        this.width = 10;
-        this.height = 10;
+        // Rotar para que apunte en la dirección
+        this.sprite.rotation = direction;
+        
+        this.width = this.length;
+        this.height = 4;
         
         // Mover el proyectil hacia adelante desde la posición inicial
-        this.x += Math.cos(direction) * 30;
-        this.y += Math.sin(direction) * 30;
+        this.x += Math.cos(direction) * 35;
+        this.y += Math.sin(direction) * 35;
         this.sprite.x = this.x;
         this.sprite.y = this.y;
     }
@@ -69,7 +81,8 @@ export class Projectile extends GameObject {
         this.sprite.y = this.y;
         
         // Verificar si está fuera de los límites
-        if (this.x < 0 || this.x > this.gameWidth || this.y < 0 || this.y > this.gameHeight) {
+        if (this.x < -50 || this.x > this.gameWidth + 50 || 
+            this.y < -50 || this.y > this.gameHeight + 50) {
             this.destroy();
         }
     }
