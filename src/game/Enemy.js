@@ -161,7 +161,7 @@ export class Enemy extends GameObject {
         
         // Los grandes se rompen en medianos, los medianos en pequeños
         if (this.size === AsteroidSize.LARGE) {
-            // Heredar la trayectoria hacia la nave
+            // Heredar la trayectoria orbital del padre
             const trajectory = this._calculateTrajectory();
             
             newAsteroids.push(
@@ -169,7 +169,7 @@ export class Enemy extends GameObject {
                 new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
             );
         } else if (this.size === AsteroidSize.MEDIUM) {
-            // Heredar la trayectoria hacia la nave
+            // Heredar la trayectoria orbital del padre
             const trajectory = this._calculateTrajectory();
             
             newAsteroids.push(
