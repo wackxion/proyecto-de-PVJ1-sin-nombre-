@@ -40,10 +40,11 @@ export class Enemy extends GameObject {
         // Configurar según el tamaño primero
         this._configureBySize();
         
-        // Luego aplicar velocidad heredada del padre (trayectoria hacia la nave)
+        // Luego aplicar velocidad heredada del padre (trayectoria orbital)
         this.vx = inheritVelocity ? inheritVelocity.x : 0;
         this.vy = inheritVelocity ? inheritVelocity.y : 0;
         this.hasInheritedTrajectory = inheritVelocity !== null;
+        this.trajectoryTimer = inheritVelocity !== null ? 60 : 0; // Frames de duración
         
         // Crear sprite del asteroide
         this._createSprite();
@@ -181,8 +182,8 @@ export class Enemy extends GameObject {
     }
     
     /**
-     * Calcula la trayectoria hacia la nave
-     * @returns {Object} - Velocidad en dirección hacia el objetivo
+     * Calcula la trayectoria orbital hacia la nave (curvatura)
+     * @returns {Object} - Velocidad en dirección perpendicular (órbita)
      */
     _calculateTrajectory() {
         if (!this.target) return { x: 0, y: 0 };
@@ -192,11 +193,18 @@ export class Enemy extends GameObject {
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist > 0) {
-            // Velocidad hacia la nave
-            const speed = 80;
+            // Velocidad perpendicular a la dirección hacia la nave (movimiento orbital)
+            // Esto crea una curvatura alrededor de la nave
+            const speed = 60;
+            const orbitX = -dy / dist;  // Perpendicular
+            const orbitY = dx / dist;    // Perpendicular
+            
+            // Agregar también un poco de aproximación hacia la nave
+            const approachFactor = 0.3;
+            
             return {
-                x: (dx / dist) * speed,
-                y: (dy / dist) * speed
+                x: orbitX * speed + (dx / dist) * speed * approachFactor,
+                y: orbitY * speed + (dy / dist) * speed * approachFactor
             };
         }
         
@@ -210,17 +218,16 @@ export class Enemy extends GameObject {
     update(delta) {
         if (!this.active) return;
         
-        // Si tiene velocidad heredada (trayectoria hacia la nave), aplicarla primero
-        if (this.hasInheritedTrajectory) {
+        // Si tiene trayectoria heredada (orbital), aplicarla primero
+        if (this.hasInheritedTrajectory && this.trajectoryTimer > 0) {
             this.x += this.vx * delta;
             this.y += this.vy * delta;
             
-            // Reducir velocidad lentamente hasta que se estabilice
-            this.vx *= 0.99;
-            this.vy *= 0.99;
+            // Reducir timer
+            this.trajectoryTimer -= delta;
             
-            // Cuando la velocidad es muy baja, dejar de usar trayectoria heredada
-            if (Math.abs(this.vx) < 5 && Math.abs(this.vy) < 5) {
+            // Cuando el timer termina, transicionar al movimiento normal
+            if (this.trajectoryTimer <= 0) {
                 this.hasInheritedTrajectory = false;
             }
         }
