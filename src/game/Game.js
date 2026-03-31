@@ -7,6 +7,7 @@ import { Projectile } from './Projectile.js';
 import { Enemy, AsteroidSize } from './Enemy.js';
 import { UltiEffect } from './UltiEffect.js';
 import { BurstEffect } from './BurstEffect.js';
+import { HitEffect } from './HitEffect.js';
 import { InputManager } from '../systems/InputManager.js';
 
 export class Game {
@@ -19,6 +20,7 @@ export class Game {
         this.projectiles = [];
         this.enemies = [];
         this.burstEffects = [];
+        this.hitEffects = [];
         this.ultiEffect = null;
         this.running = false;
         
@@ -265,6 +267,11 @@ export class Game {
                 
                 // Verificar colisión
                 if (this._checkCollision(projectile, enemy)) {
+                    // Crear efecto de impacto visual
+                    const hit = new HitEffect(enemy.x, enemy.y, 'hit');
+                    hit.render(this.app.stage);
+                    this.hitEffects.push(hit);
+                    
                     // El proyectil hace daño al enemigo
                     const newAsteroids = enemy.takeDamage(projectile.damage);
                     
@@ -585,6 +592,19 @@ export class Game {
                     burst.sprite.parent.removeChild(burst.sprite);
                 }
                 this.burstEffects.splice(i, 1);
+            }
+        }
+        
+        // Actualizar efectos de impacto
+        for (let i = this.hitEffects.length - 1; i >= 0; i--) {
+            const hit = this.hitEffects[i];
+            hit.update(delta);
+            
+            if (!hit.active) {
+                if (hit.sprite && hit.sprite.parent) {
+                    hit.sprite.parent.removeChild(hit.sprite);
+                }
+                this.hitEffects.splice(i, 1);
             }
         }
         

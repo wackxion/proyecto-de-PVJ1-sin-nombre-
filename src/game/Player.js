@@ -171,11 +171,21 @@ export class Player extends GameObject {
     }
     
     /**
-     * Aumenta la velocidad de disparo al destruir asteroide especial
+     * Aumenta la velocidad de disparo y tamaño al destruir asteroide especial
      */
     increaseShootSpeed() {
         // Reducir cooldown de disparo (aumenta velocidad) - multiplica por 0.8
         this.shootCooldownMax = Math.max(0.05, this.shootCooldownMax * 0.8);
+        
+        // Aumentar tamaño de la nave (hasta un máximo de 2x)
+        if (this.radius < 40) {
+            this.radius *= 1.15;
+            
+            // Actualizar sprite
+            this.sprite.scale.set(this.sprite.scale.x * 1.1);
+            this.width = this.sprite.width;
+            this.height = this.sprite.height;
+        }
         
         // También actualizar en InputManager
         if (this.game && this.game.inputManager) {

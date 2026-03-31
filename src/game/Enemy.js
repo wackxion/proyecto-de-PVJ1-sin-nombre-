@@ -98,11 +98,11 @@ export class Enemy extends GameObject {
             case AsteroidSize.SPECIAL:
                 this.radius = 120;  // Especial: radio 120px (2x grande)
                 this.scale = 4.0;   // Escala 4x
-                this.speed = 30;
+                this.speed = 50;   // Aumentado de 30 a 50
                 this.health = 200;
                 this.points = 100;
                 this.ultiCharge = 50;
-                this.damage = 75;   // 75% de escudos
+                this.damage = 90;   // Aumentado de 75% a 90%
                 this.shouldOrbit = false;
                 this.isBreakable = false;  // No se rompe
                 this.movementPattern = Math.random() < 0.5 ? 'horizontal' : 'vertical';
@@ -229,8 +229,14 @@ export class Enemy extends GameObject {
     update(delta) {
         if (!this.active) return;
         
+        // Si tiene retroceso activo (por impacto), aplicarlo
+        if (this.pushBackTimer > 0) {
+            this.x += this.vx * delta;
+            this.y += this.vy * delta;
+            this.pushBackTimer -= delta;
+        }
         // Si tiene trayectoria heredada (orbital), aplicarla primero
-        if (this.hasInheritedTrajectory && this.trajectoryTimer > 0) {
+        else if (this.hasInheritedTrajectory && this.trajectoryTimer > 0) {
             this.x += this.vx * delta;
             this.y += this.vy * delta;
             
@@ -242,9 +248,8 @@ export class Enemy extends GameObject {
                 this.hasInheritedTrajectory = false;
             }
         }
-        
         // Luego mover según el tipo
-        if (this.target) {
+        else if (this.target) {
             if (this.size === AsteroidSize.SPECIAL) {
                 this._moveSpecial(delta);
             } else if (this.shouldOrbit) {
@@ -400,11 +405,39 @@ export class Enemy extends GameObject {
     takeDamage(damage) {
         this.health -= damage;
         
+        // Si no se destruye, hacer retroceder
+        if (this.health > 0) {
+            this._pushBack();
+        }
+        
         if (this.health <= 0) {
             return this._break();
         }
         
         return [];
+    }
+    
+    /**
+     * Hace retroceder el asteroide cuando recibe impacto
+     * (sin destruirlo)
+     */
+    _pushBack() {
+        // Dirección opuesta a la nave
+        if (this.target) {
+            const dx = this.x - this.target.x;
+            const dy = this.y - this.target.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 0) {
+                // Velocidad de retroceso
+                const pushSpeed = 80;
+                this.vx = (dx / dist) * pushSpeed;
+                this.vy = (dy / dist) * pushSpeed;
+                
+                // Activar timer de retroceso
+                this.pushBackTimer = 0.3; // 0.3 segundos
+            }
+        }
     }
     
     /**
