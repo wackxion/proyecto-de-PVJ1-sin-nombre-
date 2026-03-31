@@ -230,17 +230,6 @@ export class Enemy extends GameObject {
         // Rotar el sprite para efecto visual
         this.sprite.rotation += this.angularVelocity * delta;
     }
-                this._moveConcentric(delta);
-            }
-        }
-        
-        // Actualizar sprite
-        this.sprite.x = this.x;
-        this.sprite.y = this.y;
-        
-        // Rotar el sprite para efecto visual
-        this.sprite.rotation += this.angularVelocity * delta;
-    }
     
     /**
      * Movimiento especial - horizontal o vertical
