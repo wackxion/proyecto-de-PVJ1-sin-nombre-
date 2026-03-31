@@ -6,6 +6,7 @@ import { Player } from './Player.js';
 import { Projectile } from './Projectile.js';
 import { Enemy, AsteroidSize } from './Enemy.js';
 import { UltiEffect } from './UltiEffect.js';
+import { BurstEffect } from './BurstEffect.js';
 import { InputManager } from '../systems/InputManager.js';
 
 export class Game {
@@ -17,6 +18,7 @@ export class Game {
         this.gameObjects = [];
         this.projectiles = [];
         this.enemies = [];
+        this.burstEffects = [];
         this.ultiEffect = null;
         this.running = false;
         
@@ -123,6 +125,7 @@ export class Game {
         const centerY = this.gameHeight / 2;
         this.player = new Player(centerX, centerY, this.playerTexture, this.gameWidth, this.gameHeight);
         this.player.game = this; // Referencia para crear proyectiles
+        this.player.resetShootSpeed(); // Resetear velocidad de disparo
         this.player.render(this.app.stage);
     }
     
@@ -276,9 +279,13 @@ export class Game {
                         this.score += enemy.points;
                         this.player.addUltiCharge(enemy.ultiCharge);
                         
-                        // Si es el asteroide especial, aumentar velocidad de disparo
+                        // Si es el asteroide especial, aumentar velocidad de disparo + efecto visual
                         if (enemy.size === AsteroidSize.SPECIAL) {
                             this.player.increaseShootSpeed();
+                            // Crear efecto de burst visual
+                            const burst = new BurstEffect(enemy.x, enemy.y);
+                            burst.render(this.app.stage);
+                            this.burstEffects.push(burst);
                         }
                         
                         // Remover de la lista
@@ -511,12 +518,13 @@ export class Game {
         this.score = 0;
         this.projectiles = [];
         this.enemies = [];
+        this.burstEffects = [];
         this.ultiEffect = null;
         
         // Recrear fondo
         this._createBackground();
         
-        // Recrear jugador
+        // Recrear jugador (resetea velocidad de disparo)
         this._createPlayer();
         
         this._updateUI();
@@ -564,6 +572,19 @@ export class Game {
                     this.ultiEffect.sprite.parent.removeChild(this.ultiEffect.sprite);
                 }
                 this.ultiEffect = null;
+            }
+        }
+        
+        // Actualizar efectos de burst
+        for (let i = this.burstEffects.length - 1; i >= 0; i--) {
+            const burst = this.burstEffects[i];
+            burst.update(delta);
+            
+            if (!burst.active) {
+                if (burst.sprite && burst.sprite.parent) {
+                    burst.sprite.parent.removeChild(burst.sprite);
+                }
+                this.burstEffects.splice(i, 1);
             }
         }
         

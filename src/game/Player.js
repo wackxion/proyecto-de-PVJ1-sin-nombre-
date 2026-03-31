@@ -31,6 +31,7 @@ export class Player extends GameObject {
         
         // Velocidad de disparo
         this.shootCooldownMax = 0.2; // segundos entre disparos
+        this.baseShootCooldown = 0.2; // cooldown base para resetear
         
         // Referencia al Game para crear proyectiles
         this.game = null;
@@ -173,8 +174,20 @@ export class Player extends GameObject {
      * Aumenta la velocidad de disparo al destruir asteroide especial
      */
     increaseShootSpeed() {
-        // Reducir cooldown de disparo (aumenta velocidad)
+        // Reducir cooldown de disparo (aumenta velocidad) - multiplica por 0.8
         this.shootCooldownMax = Math.max(0.05, this.shootCooldownMax * 0.8);
+        
+        // También actualizar en InputManager
+        if (this.game && this.game.inputManager) {
+            this.game.inputManager.setShootCooldown(this.shootCooldownMax);
+        }
+    }
+    
+    /**
+     * Resetea la velocidad de disparo al valor base
+     */
+    resetShootSpeed() {
+        this.shootCooldownMax = this.baseShootCooldown;
         
         // También actualizar en InputManager
         if (this.game && this.game.inputManager) {
