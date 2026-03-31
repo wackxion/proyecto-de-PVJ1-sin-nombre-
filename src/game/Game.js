@@ -438,33 +438,58 @@ export class Game {
      * Limpia los elementos de game over
      */
     _cleanupGameOver() {
+        // Flag para evitar múltiples limpiezas
+        if (this.cleaningUp) return;
+        this.cleaningUp = true;
+        
+        // Limpiar elementos visuales
         if (this.gameOverElements) {
             for (const el of this.gameOverElements) {
-                if (el && el.parent) {
-                    el.parent.removeChild(el);
+                try {
+                    if (el && el.parent) {
+                        el.parent.removeChild(el);
+                        // Destruir completamente si es un container o graphics
+                        if (el.destroy && typeof el.destroy === 'function') {
+                            el.destroy();
+                        }
+                    }
+                } catch (e) {
+                    // Ignorar errores al limpiar
                 }
             }
             this.gameOverElements = [];
         }
+        
+        // Limpiar eventos del stage
+        if (this.app && this.app.stage) {
+            this.app.stage.removeAllListeners('pointerdown');
+            this.app.stage.eventMode = 'none';
+        }
+        
+        setTimeout(() => {
+            this.cleaningUp = false;
+        }, 100);
     }
     
     /**
      * Reinicia el juego
      */
     _restart() {
-        // Limpiar todo
+        // Limpiar todo el stage (eliminar todos los elementos anteriores)
+        if (this.app && this.app.stage) {
+            this.app.stage.removeChildren();
+        }
+        
+        // Reiniciar variables
         this.score = 0;
         this.projectiles = [];
         this.enemies = [];
+        this.ultiEffect = null;
         
-        // Limpiar efecto ulti
-        if (this.ultiEffect) {
-            this.ultiEffect.destroy();
-            this.ultiEffect = null;
-        }
+        // Recrear fondo
+        this._createBackground();
         
         // Recrear jugador
-        if (this.player) this.player.destroy();
         this._createPlayer();
         
         this._updateUI();
