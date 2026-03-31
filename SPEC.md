@@ -25,20 +25,31 @@
 
 ### 2.2 Tipos de Asteroides
 
-| Tipo | Tamaño | Daño a Escudos | Comportamiento | Puntos |
-|------|--------|----------------|----------------|--------|
-| **SMALL** | Pequeño (18px) | 10% | Va hacia la nave | 30 |
-| **MEDIUM** | Mediano (36px) | 25% | Va hacia la nave | 20 |
-| **LARGE** | Grande (60px) | 50% | Orbita alrededor de la nave | 10 |
-| **SPECIAL** | Extra Grande (120px) | 75% | Movimiento horizontal/vertical | 100 |
+| Tipo | Tamaño | Salud | Daño a Escudos | Comportamiento | Puntos |
+|------|--------|-------|----------------|----------------|--------|
+| **SMALL** | 36px | 25 HP | 10% | Va hacia la nave | 30 |
+| **MEDIUM** | 72px | 50 HP | 25% | Va hacia la nave | 20 |
+| **LARGE** | 120px | 75 HP | 50% | Orbita alrededor de la nave | 10 |
+| **SPECIAL** | 120px | 200 HP | 0% (power-up) | Va hacia la nave (rápido) | 100 |
 
 ### 2.3 Sistema de Ruptura
 
-- **LARGE** → 2 **MEDIUM** (se rompen al ser destruidos)
-- **MEDIUM** → 2 **SMALL** (se rompen al ser destruidos)
-- **SPECIAL** → No se rompe, al destruirlo aumenta la velocidad de disparo
+- **LARGE** → 2 **MEDIUM** (heredan órbita del padre)
+- **MEDIUM** → 2 **SMALL** (heredan órbita solo si el padre orbitaba)
+- **SPECIAL** → No suelta fragmentos, al destruirlo otorga power-up de velocidad de disparo
 
-### 2.4 Controles
+### 2.4 Sistema de Power-up
+
+- Al destruir el asteroide **SPECIAL**, la velocidad de disparo aumenta un 20%
+- El power-up se acumula, permitiendo varios incrementos
+- El special **no hace daño** al chocar con la nave
+
+### 2.5 Efectos de Impacto
+
+- Al recibir daño de proyectil (sin destruir), el asteroide se mueve al 30% de velocidad por 1 segundo
+- Efecto visual de impacto (HitEffect) al recibir proyectil
+
+### 2.6 Controles
 
 | Tecla | Acción |
 |-------|--------|
@@ -63,8 +74,8 @@
 
 ### 3.2 Sprites
 
-- **Nave:** assets/nave.png
-- **Asteroides:** assets/asteroide.png (escalado según tamaño)
+- **Nave:** assets/nave.png (tamaño base 64px radius)
+- **Asteroides:** assets/asteroide.png tintados de rojo (escalado según tamaño)
 
 ---
 
@@ -81,7 +92,9 @@ src/
 │   ├── Player.js       # Nave del jugador
 │   ├── Enemy.js        # Asteroides (4 tipos)
 │   ├── Projectile.js   # Proyectiles (líneas)
-│   └── UltiEffect.js   # Efecto especial
+│   ├── UltiEffect.js   # Efecto especial
+│   ├── BurstEffect.js  # Efecto de burst al destruir especial
+│   └── HitEffect.js    # Efecto de impacto al recibir daño
 ├── systems/
 │   └── InputManager.js # Gestión de teclado
 └── css/
@@ -95,6 +108,8 @@ src/
 - **Enemy:** Asteroides con 4 tamaños, ruptura, órbita, movimiento especial
 - **Projectile:** Proyectiles como líneas finas
 - **UltiEffect:** Aro expansivo que destruye asteroides
+- **BurstEffect:** Partículas al destruir special
+- **HitEffect:** Efecto visual de impacto
 
 ---
 
@@ -114,7 +129,12 @@ src/
 - [x] Sistema de escudos (porcentaje)
 - [x] Ulti como pulso/aro expansivo
 - [x] Pantalla de Game Over con botón de reinicio
-- [x] Asteroide especial (SPECIAL) con velocidad de disparo aumentable
+- [x] Asteroide especial (SPECIAL) como power-up
+- [x] Asteroides tintados de rojo
+- [x] Efecto de slowdown al recibir impacto
+- [x] Efecto visual de impacto (HitEffect)
+- [x] Herencia de órbita en fragmentos
+- [x] Nave más grande (64px radius)
 
 ---
 
@@ -131,7 +151,7 @@ src/
 ### Desarrollo local:
 ```bash
 npm install -g serve
-npm start
+serve .
 ```
 
 ### Producción:
