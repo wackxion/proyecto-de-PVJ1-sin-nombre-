@@ -104,7 +104,7 @@ export class Enemy extends GameObject {
                 this.ultiCharge = 50;
                 this.damage = 0;    // NO hace daño - es un power-up
                 this.shouldOrbit = false;
-                this.isBreakable = false;  // No se rompe
+                this.isBreakable = true;  // Ahora se puede romper
                 this.movementPattern = Math.random() < 0.5 ? 'horizontal' : 'vertical';
                 break;
         }
@@ -186,6 +186,15 @@ export class Enemy extends GameObject {
             newAsteroids.push(
                 new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight),
                 new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight)
+            );
+        }
+        // El especial se rompe en 2 medianos
+        else if (this.size === AsteroidSize.SPECIAL) {
+            const trajectory = this._calculateTrajectory();
+            
+            newAsteroids.push(
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
             );
         }
         
