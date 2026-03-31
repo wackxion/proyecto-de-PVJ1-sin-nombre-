@@ -17,7 +17,7 @@ export class Player extends GameObject {
         this.speed = 300;
         this.rotation = 0;
         this.rotationSpeed = 4;
-        this.radius = 32;
+        this.radius = 64;
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         
