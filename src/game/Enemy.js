@@ -187,15 +187,7 @@ export class Enemy extends GameObject {
                 new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight)
             );
         }
-        // El especial se rompe en 2 pequeños (como small)
-        else if (this.size === AsteroidSize.SPECIAL) {
-            const trajectory = this._calculateTrajectory();
-            
-            newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, false, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, false, this.gameWidth, this.gameHeight)
-            );
-        }
+        // El especial NO se rompe - solo da power-up al destruirse
         
         return newAsteroids;
     }
