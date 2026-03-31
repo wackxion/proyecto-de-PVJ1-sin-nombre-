@@ -324,8 +324,11 @@ export class Game {
             
             // Verificar colisión con el jugador
             if (this._checkCollision(this.player, enemy)) {
-                // El jugador recibe daño (porcentaje según el tipo de asteroide)
-                this.player.takeDamage(enemy.damage);
+                // Si NO es el asteroide especial, hacer daño
+                // El especial es un power-up y no hace daño al chocar
+                if (enemy.size !== AsteroidSize.SPECIAL) {
+                    this.player.takeDamage(enemy.damage);
+                }
                 
                 // Destruir enemigo
                 enemy.destroy();
