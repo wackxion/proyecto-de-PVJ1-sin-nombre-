@@ -114,12 +114,15 @@ export class Enemy extends GameObject {
      */
     _createSprite() {
         if (this.texture !== null) {
-            // Usar la textura proporcionada
+            // Usar la textura proporcionada con tinte rojo
             this.sprite = new PIXI.Sprite(this.texture);
             this.sprite.anchor.set(0.5);
             
             // Aplicar escala según el tamaño
             this.sprite.scale.set(this.scale);
+            
+            // Aplicar tinte rojo (color Birome Rojo)
+            this.sprite.tint = 0xCC0000;
             
         } else {
             // Crear graphics si no hay textura (color Birome Rojo)
