@@ -1,4 +1,12 @@
-# Space Defender
+# 🎮 Jugando en el Espacio
+
+[![GitHub Pages](https://img.shields.io/badge/Jugar-Aquí-0044CC?style=for-the-badge)](https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/)
+
+---
+
+**¡Juega ahora!** 👉 [https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/](https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/)
+
+---
 
 Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en la **Universidad Nacional de Hurlingham (UNAHUR)**, dictada por el profesor **Facundo Saiegh**.
 
@@ -9,16 +17,17 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 
 ## 🎮 Descripción del Juego
 
-**Space Defender** es un juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides que aparecen desde los bordes de la pantalla.
+**Jugando en el Espacio** es un juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides que aparecen desde los bordes de la pantalla.
 
 ### Mecánicas del Juego
 - La nave puede **rotar** hacia la izquierda o derecha
-- **Disparar** proyectiles hacia la dirección que apunta la nave
-- **Ataque especial (Ulti)** que se carga al destruir asteroides
+- **Disparar** proyectiles (líneas azules) hacia la dirección que apunta la nave
+- **Ataque especial (Ulti)** - Un pulso expansivo que sale de la nave y destroye todo a su paso
 - Los asteroides vienen en **3 tamaños** (grande, mediano, pequeño)
 - Los asteroides grandes **orbitan** alrededor de la nave
 - Al destruir asteroides grandes/medianos, se rompen en fragmentos más pequeños
-- Sistema de **3 vidas** con escudos
+- Sistema de **escudos** (porcentaje 0-100%)
+- Al recibir daño aparece una **esfera azul** temporal alrededor de la nave
 
 ---
 
@@ -28,7 +37,7 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 | Color | Hex | Uso |
 |-------|-----|-----|
 | Negro Espacial | `#0D0D1A` | Fondo del juego |
-| Birome Azul | `#0044CC` | Nave, proyectiles, UI |
+| Birome Azul | `#0044CC` | Nave, proyectiles, UI, efecto de daño |
 | Birome Rojo | `#CC0000` | Asteroides |
 | Blanco Estelar | `#FFFFFF` | Estrellas |
 
@@ -42,7 +51,7 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 | S / Flecha ↓ | Activar ataque especial (Ulti) |
 | A / Flecha ← | Rotar nave a la izquierda |
 | D / Flecha → | Rotar nave a la derecha |
-| ENTER | Reiniciar (en Game Over) |
+| ENTER / Click | Reiniciar (en Game Over) |
 
 ---
 
@@ -78,10 +87,6 @@ npm start
 serve .
 ```
 
-### Para producción:
-El juego está publicado en **GitHub Pages**:
-https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/
-
 ---
 
 ## 📁 Estructura del Proyecto
@@ -102,6 +107,7 @@ https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/
     │   ├── Player.js      # Nave del jugador
     │   ├── Enemy.js       # Asteroides
     │   ├── Projectile.js # Proyectiles
+    │   ├── UltiEffect.js # Efecto especial
     │   └── GameObject.js  # Clase base
     └── systems/
         └── InputManager.js # Gestión de teclado
