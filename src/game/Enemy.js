@@ -244,10 +244,17 @@ export class Enemy extends GameObject {
         }
         // Luego mover según el tipo
         else if (this.target) {
+            // Si tiene slowdown activo, mover más lento
+            let currentSpeed = this.speed;
+            if (this.slowdownTimer > 0) {
+                currentSpeed *= 0.5; // 50% más lento
+                this.slowdownTimer -= delta;
+            }
+            
             if (this.shouldOrbit) {
-                this._orbitTarget(delta);
+                this._orbitTarget(delta, currentSpeed);
             } else {
-                this._moveConcentric(delta);
+                this._moveConcentric(delta, currentSpeed);
             }
         }
         
@@ -258,21 +265,21 @@ export class Enemy extends GameObject {
         // Rotar el sprite para efecto visual
         this.sprite.rotation += this.angularVelocity * delta;
     }
-    
      
     /**
      * Movimiento concéntrico - se acerca directamente a la nave
      * @param {number} delta - Tiempo transcurrido
+     * @param {number} speed - Velocidad actual (puede ser reducida por slowdown)
      */
-    _moveConcentric(delta) {
+    _moveConcentric(delta, speed) {
         const dx = this.target.x - this.x;
         const dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist > 0) {
             // Mover directamente hacia la nave
-            this.vx = (dx / dist) * this.speed;
-            this.vy = (dy / dist) * this.speed;
+            this.vx = (dx / dist) * speed;
+            this.vy = (dy / dist) * speed;
             
             this.x += this.vx * delta;
             this.y += this.vy * delta;
@@ -287,9 +294,9 @@ export class Enemy extends GameObject {
     takeDamage(damage) {
         this.health -= damage;
         
-        // Si no se destruye, reducir velocidad
+        // Si no se destruye, activar desaceleración temporal
         if (this.health > 0) {
-            this._slowDown();
+            this._activateSlowdown();
         }
         
         if (this.health <= 0) {
@@ -300,15 +307,39 @@ export class Enemy extends GameObject {
     }
     
     /**
-     * Reduce la velocidad del asteroide cuando recibe impacto
+     * Activa la desaceleración temporal del asteroide
+     * (se activa por 1 segundo, no se acumula)
      */
-    _slowDown() {
-        // Reducir la velocidad actual en un 30%
-        this.speed *= 0.7;
+    _activateSlowdown() {
+        // Siempre establecer timer a 1 segundo (resetea si ya estaba activo)
+        this.slowdownTimer = 1.0;
+    }
+    
+    /**
+     * Orbita alrededor del objetivo
+     * @param {number} delta - Tiempo transcurrido
+     * @param {number} speed - Velocidad actual (puede ser reducida por slowdown)
+     */
+    _orbitTarget(delta, speed) {
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
         
-        // Asegurar que no sea muy lenta
-        if (this.speed < 20) {
-            this.speed = 20;
+        if (dist > 0) {
+            // Mover en dirección perpendicular (órbita)
+            const orbitX = -dy / dist;
+            const orbitY = dx / dist;
+            
+            // Velocidad orbital
+            this.vx = orbitX * speed;
+            this.vy = orbitY * speed;
+            
+            this.x += this.vx * delta;
+            this.y += this.vy * delta;
+            
+            // También acercarse un poco (30% de la velocidad)
+            this.x += (dx / dist) * (speed * 0.3) * delta;
+            this.y += (dy / dist) * (speed * 0.3) * delta;
         }
     }
     
