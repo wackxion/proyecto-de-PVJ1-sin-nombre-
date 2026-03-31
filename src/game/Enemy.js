@@ -102,7 +102,7 @@ export class Enemy extends GameObject {
                 this.health = 200;
                 this.points = 100;
                 this.ultiCharge = 50;
-                this.damage = 90;   // Aumentado de 75% a 90%
+                this.damage = 0;    // NO hace daño - es un power-up
                 this.shouldOrbit = false;
                 this.isBreakable = false;  // No se rompe
                 this.movementPattern = Math.random() < 0.5 ? 'horizontal' : 'vertical';

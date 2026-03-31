@@ -298,6 +298,10 @@ export class Game {
                         // Remover de la lista
                         this.enemies.splice(j, 1);
                     }
+                    // Si es el asteroide especial pero NO se destruyó, igual dar power-up
+                    else if (enemy.size === AsteroidSize.SPECIAL) {
+                        this.player.increaseShootSpeed();
+                    }
                     
                     // Destruir proyectil
                     projectile.destroy();
@@ -324,14 +328,16 @@ export class Game {
             
             // Verificar colisión con el jugador
             if (this._checkCollision(this.player, enemy)) {
-                // El jugador recibe daño (porcentaje según el tipo de asteroide)
-                this.player.takeDamage(enemy.damage);
+                // Si NO es el asteroide especial, hacer daño
+                if (enemy.size !== AsteroidSize.SPECIAL) {
+                    this.player.takeDamage(enemy.damage);
+                }
                 
                 // Destruir enemigo
                 enemy.destroy();
                 this.enemies.splice(i, 1);
                 
-                // Verificar si es el asteroide especial (aumenta velocidad de disparo)
+                // Si es el asteroide especial, dar power-up
                 if (enemy.size === AsteroidSize.SPECIAL) {
                     this.player.increaseShootSpeed();
                 }
