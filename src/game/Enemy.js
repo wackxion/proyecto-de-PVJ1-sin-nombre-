@@ -168,21 +168,21 @@ export class Enemy extends GameObject {
         
         // Los grandes se rompen en medianos (heredando órbita), los medianos en pequeños
         if (this.size === AsteroidSize.LARGE) {
-            // Los medianos también orbitan si el padre orbitaba
-            const impulse1 = { x: this.vx + 50, y: this.vy + 50 };
-            const impulse2 = { x: this.vx - 50, y: this.vy - 50 };
-            
-            newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse1, true),
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse2, true)
-            );
-        } else if (this.size === AsteroidSize.MEDIUM) {
+            // Impulso en dirección opuesta para que salgan disparados
             const impulse1 = { x: this.vx + 80, y: this.vy + 80 };
             const impulse2 = { x: this.vx - 80, y: this.vy - 80 };
             
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse1, this.shouldOrbit),
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse2, this.shouldOrbit)
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse1, true, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse2, true, this.gameWidth, this.gameHeight)
+            );
+        } else if (this.size === AsteroidSize.MEDIUM) {
+            const impulse1 = { x: this.vx + 100, y: this.vy + 100 };
+            const impulse2 = { x: this.vx - 100, y: this.vy - 100 };
+            
+            newAsteroids.push(
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse1, this.shouldOrbit, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse2, this.shouldOrbit, this.gameWidth, this.gameHeight)
             );
         }
         
@@ -200,9 +200,9 @@ export class Enemy extends GameObject {
         this.x += this.vx * delta;
         this.y += this.vy * delta;
         
-        // Reducir velocidad heredada (fricción)
-        this.vx *= 0.97;
-        this.vy *= 0.97;
+        // Reducir velocidad heredada lentamente
+        this.vx *= 0.98;
+        this.vy *= 0.98;
         
         // Luego aplicar movimiento hacia el objetivo
         if (this.target) {
@@ -210,8 +210,8 @@ export class Enemy extends GameObject {
             if (this.size === AsteroidSize.SPECIAL) {
                 this._moveSpecial(delta);
             } else if (this.shouldOrbit) {
-                // Orbita suavemente - mezclar movimiento actual con órbita
-                this._orbitTargetSmooth(delta);
+                // Los fragmentos también orbitan - usar movimiento orbital directo
+                this._orbitTargetDirect(delta);
             } else {
                 this._moveToTarget(delta);
             }
@@ -269,6 +269,35 @@ export class Enemy extends GameObject {
             // También acercarse un poco
             this.x += (dx / dist) * (this.speed * 0.3) * delta;
             this.y += (dy / dist) * (this.speed * 0.3) * delta;
+        }
+    }
+    
+    /**
+     * Órbita directa para fragmentos - mantiene el movimiento orbital
+     * @param {number} delta - Tiempo transcurrido
+     */
+    _orbitTargetDirect(delta) {
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 0) {
+            // Velocidad orbital perpendicular
+            const orbitVx = -dy / dist * this.speed;
+            const orbitVy = dx / dist * this.speed;
+            
+            // Mantener la velocidad orbital como velocidad base
+            this.vx = orbitVx;
+            this.vy = orbitVy;
+            
+            // Mover en dirección perpendicular (órbita)
+            this.x += this.vx * delta;
+            this.y += this.vy * delta;
+            
+            // Acercarse gradualmente si está lejos
+            const approachSpeed = this.speed * 0.15;
+            this.x += (dx / dist) * approachSpeed * delta;
+            this.y += (dy / dist) * approachSpeed * delta;
         }
     }
     
