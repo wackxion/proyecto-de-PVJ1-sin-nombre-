@@ -201,8 +201,8 @@ export class Enemy extends GameObject {
         this.y += this.vy * delta;
         
         // Reducir velocidad heredada (fricción)
-        this.vx *= 0.98;
-        this.vy *= 0.98;
+        this.vx *= 0.97;
+        this.vy *= 0.97;
         
         // Luego aplicar movimiento hacia el objetivo
         if (this.target) {
@@ -210,8 +210,8 @@ export class Enemy extends GameObject {
             if (this.size === AsteroidSize.SPECIAL) {
                 this._moveSpecial(delta);
             } else if (this.shouldOrbit) {
-                // Si debe orbitar, orbita. Si no, va directo
-                this._orbitTarget(delta);
+                // Orbita suavemente - mezclar movimiento actual con órbita
+                this._orbitTargetSmooth(delta);
             } else {
                 this._moveToTarget(delta);
             }
@@ -269,6 +269,40 @@ export class Enemy extends GameObject {
             // También acercarse un poco
             this.x += (dx / dist) * (this.speed * 0.3) * delta;
             this.y += (dy / dist) * (this.speed * 0.3) * delta;
+        }
+    }
+    
+    /**
+     * Órbita suave que respeta la velocidad heredada
+     * Mezcla el movimiento orbital con la velocidad existente
+     * @param {number} delta - Tiempo transcurrido
+     */
+    _orbitTargetSmooth(delta) {
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 0) {
+            // Calcular velocidad orbital
+            const orbitX = -dy / dist;
+            const orbitY = dx / dist;
+            
+            const orbitVx = orbitX * this.speed * delta;
+            const orbitVy = orbitY * this.speed * delta;
+            
+            // Mezclar con velocidad actual (heredada) - 70% orbital, 30% heredada
+            this.vx = this.vx * 0.3 + orbitVx * 0.7;
+            this.vy = this.vy * 0.3 + orbitVy * 0.7;
+            
+            // Aplicar movimiento
+            this.x += this.vx;
+            this.y += this.vy;
+            
+            // Acercarse gradualmente al objetivo (solo si está muy lejos)
+            if (dist > 150) {
+                this.x += (dx / dist) * (this.speed * 0.2) * delta;
+                this.y += (dy / dist) * (this.speed * 0.2) * delta;
+            }
         }
     }
     
