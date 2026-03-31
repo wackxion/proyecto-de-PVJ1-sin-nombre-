@@ -157,32 +157,33 @@ export class Enemy extends GameObject {
      * Rompe el asteroide en fragmentos más pequeños
      * Los fragmentos heredan la velocidad del padre Y el modo órbita
      * @returns {Array} - Array de nuevos Enemy
+    /**
+     * Rompe el asteroide en fragmentos más pequeños
+     * Los fragmentos heredan el movimiento concéntrico hacia la nave
+     * @returns {Array} - Array de nuevos Enemy
      */
     _break() {
         this.destroy();
         
         const newAsteroids = [];
         
-        // Calcular velocidad del padre para heredar
-        const parentVelocity = { x: this.vx, y: this.vy };
-        
-        // Los grandes se rompen en medianos (heredando órbita), los medianos en pequeños
+        // Los grandes se rompen en medianos, los medianos en pequeños
         if (this.size === AsteroidSize.LARGE) {
-            // Impulso en dirección opuesta para que salgan disparados
+            // Impulso para los fragmentos
+            const impulse1 = { x: this.vx + 60, y: this.vy + 60 };
+            const impulse2 = { x: this.vx - 60, y: this.vy - 60 };
+            
+            newAsteroids.push(
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse1, false, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse2, false, this.gameWidth, this.gameHeight)
+            );
+        } else if (this.size === AsteroidSize.MEDIUM) {
             const impulse1 = { x: this.vx + 80, y: this.vy + 80 };
             const impulse2 = { x: this.vx - 80, y: this.vy - 80 };
             
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse1, true, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse2, true, this.gameWidth, this.gameHeight)
-            );
-        } else if (this.size === AsteroidSize.MEDIUM) {
-            const impulse1 = { x: this.vx + 100, y: this.vy + 100 };
-            const impulse2 = { x: this.vx - 100, y: this.vy - 100 };
-            
-            newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse1, this.shouldOrbit, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse2, this.shouldOrbit, this.gameWidth, this.gameHeight)
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse1, false, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse2, false, this.gameWidth, this.gameHeight)
             );
         }
         
@@ -210,10 +211,11 @@ export class Enemy extends GameObject {
             if (this.size === AsteroidSize.SPECIAL) {
                 this._moveSpecial(delta);
             } else if (this.shouldOrbit) {
-                // Los fragmentos también orbitan - usar movimiento orbital directo
-                this._orbitTargetDirect(delta);
+                // Órbita alrededor de la nave
+                this._orbitTarget(delta);
             } else {
-                this._moveToTarget(delta);
+                // Movimiento concéntrico - se acerca directamente a la nave
+                this._moveConcentric(delta);
             }
         }
         
@@ -336,20 +338,21 @@ export class Enemy extends GameObject {
     }
     
     /**
-     * Se mueve directamente hacia el objetivo
+     * Movimiento concéntrico - se acerca directamente a la nave
      * @param {number} delta - Tiempo transcurrido
      */
-    _moveToTarget(delta) {
+    _moveConcentric(delta) {
         const dx = this.target.x - this.x;
         const dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist > 0) {
-            this.vx = (dx / dist) * this.speed * delta;
-            this.vy = (dy / dist) * this.speed * delta;
+            // Mover directamente hacia la nave
+            this.vx = (dx / dist) * this.speed;
+            this.vy = (dy / dist) * this.speed;
             
-            this.x += this.vx;
-            this.y += this.vy;
+            this.x += this.vx * delta;
+            this.y += this.vy * delta;
         }
     }
     
