@@ -109,7 +109,6 @@ export class Enemy extends GameObject {
                 break;
         }
     }
-    }
     
     /**
      * Crea el sprite del asteroide usando la textura
