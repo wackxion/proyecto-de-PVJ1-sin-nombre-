@@ -40,9 +40,10 @@ export class Enemy extends GameObject {
         // Configurar según el tamaño primero
         this._configureBySize();
         
-        // Luego aplicar velocidad heredada del padre
+        // Luego aplicar velocidad heredada del padre (trayectoria hacia la nave)
         this.vx = inheritVelocity ? inheritVelocity.x : 0;
         this.vy = inheritVelocity ? inheritVelocity.y : 0;
+        this.hasInheritedTrajectory = inheritVelocity !== null;
         
         // Crear sprite del asteroide
         this._createSprite();
@@ -159,24 +160,47 @@ export class Enemy extends GameObject {
         
         // Los grandes se rompen en medianos, los medianos en pequeños
         if (this.size === AsteroidSize.LARGE) {
-            // Heredar la velocidad del padre
-            const velocity = { x: this.vx, y: this.vy };
+            // Heredar la trayectoria hacia la nave
+            const trajectory = this._calculateTrajectory();
             
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, velocity, true, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, velocity, true, this.gameWidth, this.gameHeight)
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
             );
         } else if (this.size === AsteroidSize.MEDIUM) {
-            // Heredar la velocidad del padre
-            const velocity = { x: this.vx, y: this.vy };
+            // Heredar la trayectoria hacia la nave
+            const trajectory = this._calculateTrajectory();
             
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, velocity, true, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, velocity, true, this.gameWidth, this.gameHeight)
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
             );
         }
         
         return newAsteroids;
+    }
+    
+    /**
+     * Calcula la trayectoria hacia la nave
+     * @returns {Object} - Velocidad en dirección hacia el objetivo
+     */
+    _calculateTrajectory() {
+        if (!this.target) return { x: 0, y: 0 };
+        
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 0) {
+            // Velocidad hacia la nave
+            const speed = 80;
+            return {
+                x: (dx / dist) * speed,
+                y: (dy / dist) * speed
+            };
+        }
+        
+        return { x: 0, y: 0 };
     }
     
     /**
@@ -186,14 +210,19 @@ export class Enemy extends GameObject {
     update(delta) {
         if (!this.active) return;
         
-        // Si tiene velocidad heredada (del padre), aplicarla primero
-        if (Math.abs(this.vx) > 0.1 || Math.abs(this.vy) > 0.1) {
+        // Si tiene velocidad heredada (trayectoria hacia la nave), aplicarla primero
+        if (this.hasInheritedTrajectory) {
             this.x += this.vx * delta;
             this.y += this.vy * delta;
             
-            // Reducir velocidad lentamente
-            this.vx *= 0.98;
-            this.vy *= 0.98;
+            // Reducir velocidad lentamente hasta que se estabilice
+            this.vx *= 0.99;
+            this.vy *= 0.99;
+            
+            // Cuando la velocidad es muy baja, dejar de usar trayectoria heredada
+            if (Math.abs(this.vx) < 5 && Math.abs(this.vy) < 5) {
+                this.hasInheritedTrajectory = false;
+            }
         }
         
         // Luego mover según el tipo
