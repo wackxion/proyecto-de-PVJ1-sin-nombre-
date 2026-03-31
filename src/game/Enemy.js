@@ -229,14 +229,8 @@ export class Enemy extends GameObject {
     update(delta) {
         if (!this.active) return;
         
-        // Si tiene retroceso activo (por impacto), aplicarlo
-        if (this.pushBackTimer > 0) {
-            this.x += this.vx * delta;
-            this.y += this.vy * delta;
-            this.pushBackTimer -= delta;
-        }
         // Si tiene trayectoria heredada (orbital), aplicarla primero
-        else if (this.hasInheritedTrajectory && this.trajectoryTimer > 0) {
+        if (this.hasInheritedTrajectory && this.trajectoryTimer > 0) {
             this.x += this.vx * delta;
             this.y += this.vy * delta;
             
@@ -250,9 +244,7 @@ export class Enemy extends GameObject {
         }
         // Luego mover según el tipo
         else if (this.target) {
-            if (this.size === AsteroidSize.SPECIAL) {
-                this._moveSpecial(delta);
-            } else if (this.shouldOrbit) {
+            if (this.shouldOrbit) {
                 this._orbitTarget(delta);
             } else {
                 this._moveConcentric(delta);
@@ -267,117 +259,7 @@ export class Enemy extends GameObject {
         this.sprite.rotation += this.angularVelocity * delta;
     }
     
-    /**
-     * Movimiento especial - horizontal o vertical
-     * @param {number} delta - Tiempo transcurrido
-     */
-    _moveSpecial(delta) {
-        // Movimiento continuo en una dirección (horizontal o vertical)
-        if (this.movementPattern === 'horizontal') {
-            this.x += this.speed * delta;
-            // Rebotar en los bordes
-            if (this.x > this.gameWidth + this.radius) {
-                this.x = -this.radius;
-            }
-        } else {
-            this.y += this.speed * delta;
-            // Rebotar en los bordes
-            if (this.y > this.gameHeight + this.radius) {
-                this.y = -this.radius;
-            }
-        }
-    }
-    
-    /**
-     * Orbita alrededor del objetivo
-     * @param {number} delta - Tiempo transcurrido
-     */
-    _orbitTarget(delta) {
-        const dx = this.target.x - this.x;
-        const dy = this.target.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist > 0) {
-            // Mover en dirección perpendicular (órbita)
-            const orbitX = -dy / dist;
-            const orbitY = dx / dist;
-            
-            // Velocidad orbital
-            this.vx = orbitX * this.speed;
-            this.vy = orbitY * this.speed;
-            
-            this.x += this.vx * delta;
-            this.y += this.vy * delta;
-            
-            // También acercarse un poco (30% de la velocidad)
-            this.x += (dx / dist) * (this.speed * 0.3) * delta;
-            this.y += (dy / dist) * (this.speed * 0.3) * delta;
-        }
-    }
-    
-    /**
-     * Órbita directa para fragmentos - mantiene el movimiento orbital
-     * @param {number} delta - Tiempo transcurrido
-     */
-    _orbitTargetDirect(delta) {
-        const dx = this.target.x - this.x;
-        const dy = this.target.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist > 0) {
-            // Velocidad orbital perpendicular
-            const orbitVx = -dy / dist * this.speed;
-            const orbitVy = dx / dist * this.speed;
-            
-            // Mantener la velocidad orbital como velocidad base
-            this.vx = orbitVx;
-            this.vy = orbitVy;
-            
-            // Mover en dirección perpendicular (órbita)
-            this.x += this.vx * delta;
-            this.y += this.vy * delta;
-            
-            // Acercarse gradualmente si está lejos
-            const approachSpeed = this.speed * 0.15;
-            this.x += (dx / dist) * approachSpeed * delta;
-            this.y += (dy / dist) * approachSpeed * delta;
-        }
-    }
-    
-    /**
-     * Órbita suave que respeta la velocidad heredada
-     * Mezcla el movimiento orbital con la velocidad existente
-     * @param {number} delta - Tiempo transcurrido
-     */
-    _orbitTargetSmooth(delta) {
-        const dx = this.target.x - this.x;
-        const dy = this.target.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist > 0) {
-            // Calcular velocidad orbital
-            const orbitX = -dy / dist;
-            const orbitY = dx / dist;
-            
-            const orbitVx = orbitX * this.speed * delta;
-            const orbitVy = orbitY * this.speed * delta;
-            
-            // Mezclar con velocidad actual (heredada) - 70% orbital, 30% heredada
-            this.vx = this.vx * 0.3 + orbitVx * 0.7;
-            this.vy = this.vy * 0.3 + orbitVy * 0.7;
-            
-            // Aplicar movimiento
-            this.x += this.vx;
-            this.y += this.vy;
-            
-            // Acercarse gradualmente al objetivo (solo si está muy lejos)
-            if (dist > 150) {
-                this.x += (dx / dist) * (this.speed * 0.2) * delta;
-                this.y += (dy / dist) * (this.speed * 0.2) * delta;
-            }
-        }
-    }
-    
+     
     /**
      * Movimiento concéntrico - se acerca directamente a la nave
      * @param {number} delta - Tiempo transcurrido
@@ -405,9 +287,9 @@ export class Enemy extends GameObject {
     takeDamage(damage) {
         this.health -= damage;
         
-        // Si no se destruye, hacer retroceder
+        // Si no se destruye, reducir velocidad
         if (this.health > 0) {
-            this._pushBack();
+            this._slowDown();
         }
         
         if (this.health <= 0) {
@@ -418,25 +300,15 @@ export class Enemy extends GameObject {
     }
     
     /**
-     * Hace retroceder el asteroide cuando recibe impacto
-     * (sin destruirlo)
+     * Reduce la velocidad del asteroide cuando recibe impacto
      */
-    _pushBack() {
-        // Dirección opuesta a la nave
-        if (this.target) {
-            const dx = this.x - this.target.x;
-            const dy = this.y - this.target.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist > 0) {
-                // Velocidad de retroceso
-                const pushSpeed = 80;
-                this.vx = (dx / dist) * pushSpeed;
-                this.vy = (dy / dist) * pushSpeed;
-                
-                // Activar timer de retroceso
-                this.pushBackTimer = 0.3; // 0.3 segundos
-            }
+    _slowDown() {
+        // Reducir la velocidad actual en un 30%
+        this.speed *= 0.7;
+        
+        // Asegurar que no sea muy lenta
+        if (this.speed < 20) {
+            this.speed = 20;
         }
     }
     
