@@ -159,7 +159,7 @@ export class Enemy extends GameObject {
      * @returns {Array} - Array de nuevos Enemy
     /**
      * Rompe el asteroide en fragmentos más pequeños
-     * Los fragmentos heredan la dirección del padre
+     * Los fragmentos heredan el movimiento del padre (órbita o concéntrico)
      * @returns {Array} - Array de nuevos Enemy
      */
     _break() {
@@ -169,21 +169,23 @@ export class Enemy extends GameObject {
         
         // Los grandes se rompen en medianos, los medianos en pequeños
         if (this.size === AsteroidSize.LARGE) {
-            // Heredar velocidad del padre + pequeño impulso en la misma dirección
+            // Heredar velocidad del padre + pequeño impulso
             const impulse1 = { x: this.vx + this.vx * 0.3, y: this.vy + this.vy * 0.3 };
             const impulse2 = { x: this.vx + this.vx * 0.3, y: this.vy + this.vy * 0.3 };
             
+            // Los fragmentos también orbitan (heredan el movimiento del padre)
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse1, false, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse2, false, this.gameWidth, this.gameHeight)
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse1, true, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse2, true, this.gameWidth, this.gameHeight)
             );
         } else if (this.size === AsteroidSize.MEDIUM) {
             const impulse1 = { x: this.vx + this.vx * 0.3, y: this.vy + this.vy * 0.3 };
             const impulse2 = { x: this.vx + this.vx * 0.3, y: this.vy + this.vy * 0.3 };
             
+            // Los fragmentos también orbitan
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse1, false, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse2, false, this.gameWidth, this.gameHeight)
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse1, true, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse2, true, this.gameWidth, this.gameHeight)
             );
         }
         
