@@ -159,7 +159,7 @@ export class Enemy extends GameObject {
      * @returns {Array} - Array de nuevos Enemy
     /**
      * Rompe el asteroide en fragmentos más pequeños
-     * Los fragmentos heredan el movimiento concéntrico hacia la nave
+     * Los fragmentos heredan la dirección del padre
      * @returns {Array} - Array de nuevos Enemy
      */
     _break() {
@@ -169,17 +169,17 @@ export class Enemy extends GameObject {
         
         // Los grandes se rompen en medianos, los medianos en pequeños
         if (this.size === AsteroidSize.LARGE) {
-            // Impulso para los fragmentos
-            const impulse1 = { x: this.vx + 60, y: this.vy + 60 };
-            const impulse2 = { x: this.vx - 60, y: this.vy - 60 };
+            // Heredar velocidad del padre + pequeño impulso en la misma dirección
+            const impulse1 = { x: this.vx + this.vx * 0.3, y: this.vy + this.vy * 0.3 };
+            const impulse2 = { x: this.vx + this.vx * 0.3, y: this.vy + this.vy * 0.3 };
             
             newAsteroids.push(
                 new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse1, false, this.gameWidth, this.gameHeight),
                 new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, impulse2, false, this.gameWidth, this.gameHeight)
             );
         } else if (this.size === AsteroidSize.MEDIUM) {
-            const impulse1 = { x: this.vx + 80, y: this.vy + 80 };
-            const impulse2 = { x: this.vx - 80, y: this.vy - 80 };
+            const impulse1 = { x: this.vx + this.vx * 0.3, y: this.vy + this.vy * 0.3 };
+            const impulse2 = { x: this.vx + this.vx * 0.3, y: this.vy + this.vy * 0.3 };
             
             newAsteroids.push(
                 new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, impulse1, false, this.gameWidth, this.gameHeight),
@@ -197,24 +197,37 @@ export class Enemy extends GameObject {
     update(delta) {
         if (!this.active) return;
         
-        // Aplicar velocidad heredada (se va reduciendo con el tiempo)
-        this.x += this.vx * delta;
-        this.y += this.vy * delta;
+        // Si tiene velocidad heredada significativa, aplicarla primero
+        const inheritedSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         
-        // Reducir velocidad heredada lentamente
-        this.vx *= 0.98;
-        this.vy *= 0.98;
+        if (inheritedSpeed > 10) {
+            // Aplicar velocidad heredada (se va reduciendo lentamente)
+            this.x += this.vx * delta;
+            this.y += this.vy * delta;
+            
+            // Reducir velocidad heredada muy lentamente
+            this.vx *= 0.99;
+            this.vy *= 0.99;
+        } else {
+            // Cuando la velocidad heredada se reduce, mover hacia el objetivo
+            if (this.target) {
+                if (this.size === AsteroidSize.SPECIAL) {
+                    this._moveSpecial(delta);
+                } else if (this.shouldOrbit) {
+                    this._orbitTarget(delta);
+                } else {
+                    this._moveConcentric(delta);
+                }
+            }
+        }
         
-        // Luego aplicar movimiento hacia el objetivo
-        if (this.target) {
-            // Si es especial, movimiento horizontal/vertical
-            if (this.size === AsteroidSize.SPECIAL) {
-                this._moveSpecial(delta);
-            } else if (this.shouldOrbit) {
-                // Órbita alrededor de la nave
-                this._orbitTarget(delta);
-            } else {
-                // Movimiento concéntrico - se acerca directamente a la nave
+        // Actualizar sprite
+        this.sprite.x = this.x;
+        this.sprite.y = this.y;
+        
+        // Rotar el sprite para efecto visual
+        this.sprite.rotation += this.angularVelocity * delta;
+    }
                 this._moveConcentric(delta);
             }
         }
