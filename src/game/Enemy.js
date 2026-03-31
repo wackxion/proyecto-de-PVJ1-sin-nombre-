@@ -96,16 +96,15 @@ export class Enemy extends GameObject {
                 this.isBreakable = true;
                 break;
             case AsteroidSize.SPECIAL:
-                this.radius = 120;  // Especial: radio 120px (2x grande)
+                this.radius = 120;  // Especial: apariencia grande como LARGE
                 this.scale = 4.0;   // Escala 4x
-                this.speed = 50;   // Aumentado de 30 a 50
+                this.speed = 120;  // Más rápido que todos
                 this.health = 200;
                 this.points = 100;
                 this.ultiCharge = 50;
                 this.damage = 0;    // NO hace daño - es un power-up
-                this.shouldOrbit = false;
-                this.isBreakable = true;  // Ahora se puede romper
-                this.movementPattern = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                this.shouldOrbit = false;  // Se mueve directo a la nave como SMALL
+                this.isBreakable = true;  // Se puede romper
                 break;
         }
     }
@@ -188,13 +187,13 @@ export class Enemy extends GameObject {
                 new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight)
             );
         }
-        // El especial se rompe en 2 medianos
+        // El especial se rompe en 2 pequeños (como small)
         else if (this.size === AsteroidSize.SPECIAL) {
             const trajectory = this._calculateTrajectory();
             
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, false, this.gameWidth, this.gameHeight),
+                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, false, this.gameWidth, this.gameHeight)
             );
         }
         
