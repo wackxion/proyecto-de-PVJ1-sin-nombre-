@@ -1,0 +1,15 @@
+{
+  "name": "space-defender",
+  "version": "1.0.0",
+  "description": "Videojuego 2D - Programación de Videojuegos 1 UNAHUR",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "serve .",
+    "dev": "serve .",
+    "build": "echo 'No build required for static site'"
+  },
+  "keywords": ["game", "pixijs", "videojuegos"],
+  "author": "",
+  "license": "MIT",
+  "homepage": "https://github.com/wackxion/space-defender"
+}
