@@ -276,6 +276,11 @@ export class Game {
                         this.score += enemy.points;
                         this.player.addUltiCharge(enemy.ultiCharge);
                         
+                        // Si es el asteroide especial, aumentar velocidad de disparo
+                        if (enemy.size === AsteroidSize.SPECIAL) {
+                            this.player.increaseShootSpeed();
+                        }
+                        
                         // Remover de la lista
                         this.enemies.splice(j, 1);
                     }
