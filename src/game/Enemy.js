@@ -37,14 +37,15 @@ export class Enemy extends GameObject {
         // Velocidad angular para órbita
         this.angularVelocity = (Math.random() - 0.5) * 2;
         
-        // Configurar según el tamaño primero
-        this._configureBySize();
+        // Configurar según el tamaño primero (pasar si tiene herencia orbital)
+        const hasInheritance = inheritVelocity !== null;
+        this._configureBySize(hasInheritance);
         
         // Luego aplicar velocidad heredada del padre (trayectoria orbital)
         this.vx = inheritVelocity ? inheritVelocity.x : 0;
         this.vy = inheritVelocity ? inheritVelocity.y : 0;
-        this.hasInheritedTrajectory = inheritVelocity !== null;
-        this.trajectoryTimer = inheritVelocity !== null ? 60 : 0; // Frames de duración
+        this.hasInheritedTrajectory = hasInheritance;
+        this.trajectoryTimer = hasInheritance ? 60 : 0; // Frames de duración
         
         // Crear sprite del asteroide
         this._createSprite();
@@ -55,8 +56,9 @@ export class Enemy extends GameObject {
     
     /**
      * Configura las propiedades según el tamaño
+     * @param {boolean} forceOrbit - Forzar órbita (para fragmentos heredados)
      */
-    _configureBySize() {
+    _configureBySize(forceOrbit = false) {
         switch (this.size) {
             case AsteroidSize.SMALL:
                 this.radius = 36;   // Pequeño: radio 36px (x2)
@@ -66,7 +68,8 @@ export class Enemy extends GameObject {
                 this.points = 30;
                 this.ultiCharge = 10;
                 this.damage = 10;   // 10% de escudos
-                this.shouldOrbit = false;
+                // Si tiene trayectoria heredada, mantener órbita; si no, default = false
+                this.shouldOrbit = forceOrbit;
                 this.isBreakable = true;
                 break;
             case AsteroidSize.MEDIUM:
@@ -77,7 +80,8 @@ export class Enemy extends GameObject {
                 this.points = 20;
                 this.ultiCharge = 15;
                 this.damage = 25;   // 25% de escudos
-                this.shouldOrbit = false;
+                // Si tiene trayectoria heredada, mantener órbita; si no, default = false
+                this.shouldOrbit = forceOrbit;
                 this.isBreakable = true;
                 break;
             case AsteroidSize.LARGE:
@@ -151,7 +155,7 @@ export class Enemy extends GameObject {
     
     /**
      * Rompe el asteroide en fragmentos más pequeños
-     * Los fragmentos heredan el movimiento del padre
+     * Los fragmentos heredan el movimiento orbital del padre
      * @returns {Array} - Array de nuevos Enemy
      */
     _break() {
@@ -159,19 +163,23 @@ export class Enemy extends GameObject {
         
         const newAsteroids = [];
         
-        // Los grandes se rompen en medianos, los medianos en pequeños
+        // Los grandes se rompen en medianos
         if (this.size === AsteroidSize.LARGE) {
-            // Heredar la trayectoria orbital del padre
+            // Heredar la trayectoria orbital del padre (dirección y movimiento)
             const trajectory = this._calculateTrajectory();
             
+            // Crear fragmentos con órbita forzada = true
             newAsteroids.push(
                 new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight),
                 new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
             );
-        } else if (this.size === AsteroidSize.MEDIUM) {
-            // Heredar la trayectoria orbital del padre
+        } 
+        // Los medianos se rompen en pequeños
+        else if (this.size === AsteroidSize.MEDIUM) {
+            // Heredar la trayectoria orbital del padre (dirección y movimiento)
             const trajectory = this._calculateTrajectory();
             
+            // Crear fragmentos con órbita forzada = true (heredada del padre)
             newAsteroids.push(
                 new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight),
                 new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, true, this.gameWidth, this.gameHeight)
@@ -286,13 +294,14 @@ export class Enemy extends GameObject {
             const orbitX = -dy / dist;
             const orbitY = dx / dist;
             
-            this.vx = orbitX * this.speed * delta;
-            this.vy = orbitY * this.speed * delta;
+            // Velocidad orbital
+            this.vx = orbitX * this.speed;
+            this.vy = orbitY * this.speed;
             
-            this.x += this.vx;
-            this.y += this.vy;
+            this.x += this.vx * delta;
+            this.y += this.vy * delta;
             
-            // También acercarse un poco
+            // También acercarse un poco (30% de la velocidad)
             this.x += (dx / dist) * (this.speed * 0.3) * delta;
             this.y += (dy / dist) * (this.speed * 0.3) * delta;
         }
