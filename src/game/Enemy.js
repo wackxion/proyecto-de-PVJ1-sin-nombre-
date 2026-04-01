@@ -361,7 +361,7 @@ export class Enemigo extends GameObject {
     _crearFragmentoConOffset(tamanio, indiceOffset) {
         // Offset para separar los fragmentos
         const baseOffset = 60;
-        const offsetX = offsetIndex === 0 ? -baseOffset : baseOffset;
+        const offsetX = indiceOffset === 0 ? -baseOffset : baseOffset;
         const offsetY = (Math.random() - 0.5) * baseOffset;
         
         // Calcular trayectoria única para cada fragmento
