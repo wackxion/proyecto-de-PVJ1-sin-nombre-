@@ -68,7 +68,13 @@ export class Game {
         this.spawnTimer = 0;
         
         // SpawnInterval = tiempo en segundos entre cada oleada de asteroides
-        this.spawnInterval = 1;
+        // Se reduce progresivamente para aumentar la dificultad
+        this.spawnInterval = 1.5;
+        this.minSpawnInterval = 0.3; // Mínimo intervalo (máxima dificultad)
+        this.spawnDecreaseRate = 0.02; // Cuánto se reduce el intervalo por oleada
+        
+        // WaveCounter = contador de oleadas para determinar dificultad
+        this.waveCounter = 0;
         
         // MaxEnemies = cantidad máxima de asteroides en pantalla
         this.maxEnemies = 30;
@@ -213,6 +219,15 @@ export class Game {
         // Buscar el elemento HTML con id="score"
         this.scoreElement = document.getElementById('score');
         
+        // Crear elemento para mostrar la oleada (wave)
+        this.waveElement = document.getElementById('wave');
+        if (!this.waveElement) {
+            this.waveElement = document.createElement('div');
+            this.waveElement.id = 'wave';
+            this.waveElement.style.cssText = 'position: absolute; top: 60px; left: 20px; color: #00FF00; font-family: monospace; font-size: 16px;';
+            document.body.appendChild(this.waveElement);
+        }
+        
         // Actualizar la UI por primera vez
         this._updateUI();
     }
@@ -251,6 +266,11 @@ export class Game {
             
             // Actualizar el texto del elemento HTML
             this.scoreElement.textContent = `Puntuación: ${this.score} | ${shieldText}${ultiStatus}`;
+        }
+        
+        // Actualizar display de oleada
+        if (this.waveElement) {
+            this.waveElement.textContent = `Oleada: ${this.waveCounter} | Intervalo: ${this.spawnInterval.toFixed(2)}s`;
         }
     }
     
@@ -842,6 +862,22 @@ export class Game {
         if (this.spawnTimer >= this.spawnInterval) {
             this.spawnTimer = 0;
             this._spawnEnemy();
+            
+            // Aumentar contador de oleadas
+            this.waveCounter++;
+            
+            // Reducir intervalo de spawn progresivamente (aumentar dificultad)
+            if (this.spawnInterval > this.minSpawnInterval) {
+                this.spawnInterval = Math.max(
+                    this.minSpawnInterval, 
+                    this.spawnInterval - this.spawnDecreaseRate
+                );
+            }
+            
+            // Aumentar máximo de enemigos gradualmente
+            if (this.waveCounter % 10 === 0 && this.maxEnemies < 50) {
+                this.maxEnemies += 5;
+            }
         }
         
         // === ACTUALIZAR UI ===
