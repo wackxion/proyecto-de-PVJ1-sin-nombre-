@@ -314,19 +314,31 @@ export class Game {
         let size;
         
         // Distribución de probabilidad:
-        // 5% SPECIAL (muy poco común)
+        // 5% SPECIAL (power-up)
         if (rand < 0.05) {
             size = AsteroidSize.SPECIAL;
-        } 
-        // 45% LARGE (común)
-        else if (rand < 0.5) {
+        }
+        // 10% LARGE_REZAGADO (pasa de largo)
+        else if (rand < 0.15) {
+            size = AsteroidSize.LARGE_REZAGADO;
+        }
+        // 10% MEDIUM_REZAGADO
+        else if (rand < 0.25) {
+            size = AsteroidSize.MEDIUM_REZAGADO;
+        }
+        // 10% SMALL_REZAGADO
+        else if (rand < 0.35) {
+            size = AsteroidSize.SMALL_REZAGADO;
+        }
+        // 30% LARGE normal (orbita)
+        else if (rand < 0.65) {
             size = AsteroidSize.LARGE;
-        } 
-        // 30% MEDIUM
-        else if (rand < 0.8) {
+        }
+        // 20% MEDIUM normal
+        else if (rand < 0.85) {
             size = AsteroidSize.MEDIUM;
-        } 
-        // 20% SMALL
+        }
+        // 15% SMALL normal
         else {
             size = AsteroidSize.SMALL;
         }
@@ -335,6 +347,11 @@ export class Game {
         const w = this.gameWidth;
         const h = this.gameHeight;
         let x, y;
+        
+        // Verificar si es un tipo rezagado
+        const isRezagado = size === AsteroidSize.LARGE_REZAGADO || 
+                          size === AsteroidSize.MEDIUM_REZAGADO || 
+                          size === AsteroidSize.SMALL_REZAGADO;
         
         if (size === AsteroidSize.SPECIAL) {
             // Los especiales aparecen desde el centro de los bordes
@@ -346,6 +363,17 @@ export class Game {
                 // Aparece desde arriba o abajo (eje vertical)
                 x = w / 2; // Centro horizontal
                 y = Math.random() < 0.5 ? -120 : h + 120;
+            }
+        } else if (isRezagado) {
+            // Los rezagados aparecen desde un borde y van hacia el otro
+            if (Math.random() < 0.5) {
+                // Eje horizontal: izquierda o derecha
+                x = Math.random() < 0.5 ? -60 : w + 60;
+                y = Math.random() * h;
+            } else {
+                // Eje vertical: arriba o abajo
+                x = Math.random() * w;
+                y = Math.random() < 0.5 ? -60 : h + 60;
             }
         } else {
             // Asteroides normales aparecen desde cualquier borde
@@ -782,6 +810,7 @@ export class Game {
         // === PROCESAR COLISIONES ===
         this._processProjectileCollisions();
         this._processPlayerCollisions();
+        this._processEnemyCollisions();
         
         // === GENERAR NUEVOS ENEMIGOS ===
         this.spawnTimer += delta;
@@ -792,6 +821,43 @@ export class Game {
         
         // === ACTUALIZAR UI ===
         this._updateUI();
+    }
+    
+    /**
+     * Procesa colisiones entre asteroides rezagados
+     * Cuando dos asteroides rezagados chocan, alteran su dirección
+     */
+    _processEnemyCollisions() {
+        // Verificar colisiones entre asteroides rezagados
+        for (let i = 0; i < this.enemies.length; i++) {
+            const enemy1 = this.enemies[i];
+            if (!enemy1.active || !enemy1.isRezagado) continue;
+            
+            for (let j = i + 1; j < this.enemies.length; j++) {
+                const enemy2 = this.enemies[j];
+                if (!enemy2.active || !enemy2.isRezagado) continue;
+                
+                // Verificar colisión entre los dos asteroides
+                if (this._checkCollision(enemy1, enemy2)) {
+                    // Ambos alteran su dirección
+                    enemy1.alterDirection();
+                    enemy2.alterDirection();
+                }
+            }
+        }
+        
+        // También verificar si los rezagados chocan con asteroides normales
+        for (const enemy of this.enemies) {
+            if (!enemy.active || !enemy.isRezagado) continue;
+            
+            for (const other of this.enemies) {
+                if (!other.active || other.isRezagado || other === enemy) continue;
+                
+                if (this._checkCollision(enemy, other)) {
+                    enemy.alterDirection();
+                }
+            }
+        }
     }
     
     /**

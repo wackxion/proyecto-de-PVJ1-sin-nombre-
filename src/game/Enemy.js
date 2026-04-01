@@ -16,10 +16,13 @@ import { GameObject } from './GameObject.js';
 // Enum = tipo de dato que define constantes con nombres descriptivos
 // AsteroidSize es un objeto con las constantes que representan los tipos de asteroides
 export const AsteroidSize = {
-    SMALL: 'small',      // Asteroide pequeño
-    MEDIUM: 'medium',   // Asteroide mediano
-    LARGE: 'large',     // Asteroide grande
-    SPECIAL: 'special'  // Asteroide especial (power-up)
+    SMALL: 'small',      // Asteroide pequeño - va directo a la nave
+    MEDIUM: 'medium',   // Asteroide mediano - va directo a la nave
+    LARGE: 'large',     // Asteroide grande - orbita alrededor de la nave
+    SPECIAL: 'special',  // Asteroide especial (power-up)
+    LARGE_REZAGADO: 'large_rezagado',   // Asteroide grande rezagado - pasa de largo
+    MEDIUM_REZAGADO: 'medium_rezagado', // Asteroide mediano rezagado
+    SMALL_REZAGADO: 'small_rezagado'    // Asteroide pequeño rezagado
 };
 
 export class Enemy extends GameObject {
@@ -60,6 +63,11 @@ export class Enemy extends GameObject {
         // Se usa para que el asteroide rote visualmente
         // Valor aleatorio entre -1 y 1 (en radianes por segundo)
         this.angularVelocity = (Math.random() - 0.5) * 2;
+        
+        // Inicializar propiedades de rezagado (se configuran en _configureBySize)
+        this.isRezagado = false;
+        this.directionX = 0;
+        this.directionY = 0;
         
         // Configurar las propiedades según el tipo de asteroide
         // Esto establece el radio, velocidad, salud, puntos, etc.
@@ -153,6 +161,55 @@ export class Enemy extends GameObject {
                 this.damage = 0;      // NO hace daño - es un power-up
                 this.shouldOrbit = false; // Va directo como SMALL
                 this.isBreakable = true; // Se puede romper
+                this.isRezagado = false; // No es rezagado
+                break;
+                
+            case AsteroidSize.LARGE_REZAGADO:
+                // Grande rezagado: pasa de largo, no sigue a la nave
+                this.radius = 120;
+                this.scale = 4.0;
+                this.speed = 60;      // Velocidad media-baja
+                this.health = 75;    // Mucha salud
+                this.points = 10;    // Pocos puntos
+                this.ultiCharge = 25;
+                this.damage = 50;    // 50% de escudos
+                this.shouldOrbit = false;
+                this.isBreakable = true;
+                this.isRezagado = true; // Es rezagado
+                this.directionX = Math.random() < 0.5 ? 1 : -1; // Dirección horizontal
+                this.directionY = 0;
+                break;
+                
+            case AsteroidSize.MEDIUM_REZAGADO:
+                // Mediano rezagado
+                this.radius = 72;
+                this.scale = 2.0;
+                this.speed = 80;     // Velocidad media
+                this.health = 50;    // Salud media
+                this.points = 20;    // Puntos medios
+                this.ultiCharge = 15;
+                this.damage = 25;    // 25% de escudos
+                this.shouldOrbit = false;
+                this.isBreakable = true;
+                this.isRezagado = true;
+                this.directionX = Math.random() < 0.5 ? 1 : -1;
+                this.directionY = 0;
+                break;
+                
+            case AsteroidSize.SMALL_REZAGADO:
+                // Pequeño rezagado
+                this.radius = 36;
+                this.scale = 1.0;
+                this.speed = 120;    // Velocidad alta
+                this.health = 25;    // Poca salud
+                this.points = 30;    // Puntos por destruirlo
+                this.ultiCharge = 10;
+                this.damage = 10;     // 10% de escudos
+                this.shouldOrbit = false;
+                this.isBreakable = true;
+                this.isRezagado = true;
+                this.directionX = Math.random() < 0.5 ? 1 : -1;
+                this.directionY = 0;
                 break;
         }
     }
@@ -253,9 +310,56 @@ export class Enemy extends GameObject {
                 new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight)
             );
         }
+        // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
+        else if (this.size === AsteroidSize.LARGE_REZAGADO) {
+            // Crear fragmentos rezagados con dirección aleatoria
+            newAsteroids.push(
+                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO),
+                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO)
+            );
+        }
+        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
+        else if (this.size === AsteroidSize.MEDIUM_REZAGADO) {
+            newAsteroids.push(
+                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO),
+                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO)
+            );
+        }
         // SPECIAL no suelta fragmentos
         
         return newAsteroids;
+    }
+    
+    /**
+     * Crea un fragmento rezagado con dirección aleatoria
+     * 
+     * @param {string} size - Tamaño del fragmento
+     * @returns {Enemy} - Nuevo asteroide rezagado
+     */
+    _createRezagadoFragment(size) {
+        // Dirección aleatoria para el fragmento
+        const directionX = Math.random() < 0.5 ? 1 : -1;
+        const directionY = 0;
+        
+        // Crear el fragmento
+        const fragment = new Enemy(
+            this.x, 
+            this.y, 
+            size, 
+            this.target, 
+            this.texture, 
+            null, 
+            false, 
+            this.gameWidth, 
+            this.gameHeight
+        );
+        
+        // Asignar dirección rezagada
+        fragment.isRezagado = true;
+        fragment.directionX = directionX;
+        fragment.directionY = directionY;
+        
+        return fragment;
     }
     
     /**
@@ -332,8 +436,12 @@ export class Enemy extends GameObject {
                 this.slowdownTimer -= delta;
             }
             
-            // Según el tipo de movimiento
-            if (this.shouldOrbit) {
+            // Si es rezagado, moverse en línea recta sin seguir a la nave
+            if (this.isRezagado) {
+                this._moveRezagado(delta, currentSpeed);
+            }
+            // Si no es rezagado, movimiento normal
+            else if (this.shouldOrbit) {
                 // Orbitar alrededor de la nave
                 this._orbitTarget(delta, currentSpeed);
             } else {
@@ -346,8 +454,65 @@ export class Enemy extends GameObject {
         this.sprite.x = this.x;
         this.sprite.y = this.y;
         
+        // Verificar si está fuera de los bordes (para rezagados)
+        this._checkBounds();
+        
         // Rotar el sprite para efecto visual
         this.sprite.rotation += this.angularVelocity * delta;
+    }
+    
+    /**
+     * Movimiento rezagado
+     * El asteroide se mueve en línea recta sin seguir a la nave
+     * Desaparece cuando sale de la pantalla
+     * 
+     * @param {number} delta - Tiempo transcurrido
+     * @param {number} speed - Velocidad actual
+     */
+    _moveRezagado(delta, speed) {
+        // Mover en la dirección asignada
+        this.x += this.directionX * speed * delta;
+        this.y += this.directionY * speed * delta;
+    }
+    
+    /**
+     * Verifica si el asteroide está fuera de los bordes
+     * Para rezagados: los destruye cuando salen de la pantalla
+     */
+    _checkBounds() {
+        if (this.isRezagado) {
+            const margin = this.radius + 50;
+            
+            // Si está fuera de los bordes, destruir
+            if (this.x < -margin || this.x > this.gameWidth + margin ||
+                this.y < -margin || this.y > this.gameHeight + margin) {
+                this.destroy();
+            }
+        }
+    }
+    
+    /**
+     * Alterar dirección al chocar con otro asteroide
+     * Se llama desde Game.js cuando hay colisión entre asteroides
+     */
+    alterDirection() {
+        // Nueva dirección aleatoria
+        // puede ser horizontal, vertical, o diagonal
+        const rand = Math.random();
+        
+        if (rand < 0.33) {
+            // Horizontal
+            this.directionX = Math.random() < 0.5 ? 1 : -1;
+            this.directionY = 0;
+        } else if (rand < 0.66) {
+            // Vertical
+            this.directionX = 0;
+            this.directionY = Math.random() < 0.5 ? 1 : -1;
+        } else {
+            // Diagonal
+            this.directionX = Math.random() < 0.5 ? 1 : -1;
+            this.directionY = Math.random() < 0.5 ? 1 : -1;
+        }
     }
     
     /**
