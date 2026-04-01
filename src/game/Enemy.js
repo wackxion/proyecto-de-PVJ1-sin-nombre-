@@ -410,13 +410,13 @@ export class Enemigo extends GameObject {
         
         // Calcular offset para que los fragmentos aparezcan separados
         const baseOffset = 50; // distancia mínima entre fragmentos
-        const offsetX = offsetIndex === 0 ? -baseOffset : baseOffset;
+        const offsetX = indiceOffset === 0 ? -baseOffset : baseOffset;
         
         // Crear el fragmento con posición desplazada
         const fragment = new Enemigo(
             this.x + offsetX, 
             this.y, 
-            size, 
+            tamanio, 
             this.objetivo, 
             this.textura, 
             null, 
