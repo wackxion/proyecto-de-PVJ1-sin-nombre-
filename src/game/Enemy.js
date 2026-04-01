@@ -458,7 +458,9 @@ export class Enemy extends GameObject {
         this._checkBounds();
         
         // Rotar el sprite para efecto visual
-        this.sprite.rotation += this.angularVelocity * delta;
+        if (this.sprite) {
+            this.sprite.rotation += this.angularVelocity * delta;
+        }
     }
     
     /**
