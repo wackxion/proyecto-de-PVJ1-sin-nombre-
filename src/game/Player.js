@@ -340,48 +340,24 @@ export class Player extends GameObject {
     takeDamage(damage) {
         // Si no está en sobrecalentamiento
         if (!this.isOverheated) {
-            // Si los escudos están al 100%, entrar en modo enfriamiento
-            if (this.shield >= 100) {
-                // Guardar los escudos actuales (100%)
-                this.overheatShield = 100;
-                
-                // Entrar en sobrecalentamiento
+            // Reducir escudos
+            this.shield = Math.max(0, this.shield - damage);
+            
+            // Crear efecto visual de daño
+            this._createDamageEffect();
+            
+            // Si los escudos llegaron a 0, entrar en modo sobrecalentamiento
+            if (this.shield <= 0) {
+                // Guardar que entró en sobrecalentamiento desde 0
+                this.overheatShield = 0;
                 this.isOverheated = true;
                 this.overheatTimer = this.overheatDuration;
-                
-                // Reducir escudos por el daño recibido
-                this.shield = Math.max(0, this.shield - damage);
-                
-                // Crear efecto visual de daño
-                this._createDamageEffect();
-            } else {
-                // Si los escudos están debajo de 100% Y el daño hace que bajen de 100
-                // entrar en sobrecalentamiento
-                const newShield = Math.max(0, this.shield - damage);
-                
-                if (newShield < 100) {
-                    // Entrar en sobrecalentamiento con los escudos que quedan
-                    this.overheatShield = newShield;
-                    this.isOverheated = true;
-                    this.overheatTimer = this.overheatDuration;
-                }
-                
-                this.shield = newShield;
-                
-                // Crear efecto visual de daño
-                this._createDamageEffect();
             }
         } else {
-            // Si está en sobrecalentamiento y recibe otro golpe, perder el enfriamiento
-            // Los escudos vuelven al valor que tenía antes del sobrecalentamiento
-            this.shield = this.overheatShield;
-            
-            // Salir del modo sobrecalentamiento
-            this.isOverheated = false;
-            this.overheatTimer = 0;
-            
-            // Efecto visual de que perdió el enfriamiento
-            this._createOverheatLostEffect();
+            // Si está en sobrecalentamiento y recibe otro golpe, MUERE
+            this.shield = 0;
+            this.game.gameOver();
+            return;
         }
         
         // Verificar si los escudos llegaron a 0 (solo si no está en sobrecalentamiento)
