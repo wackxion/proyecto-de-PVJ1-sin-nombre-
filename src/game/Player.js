@@ -69,6 +69,22 @@ export class Player extends GameObject {
         // Se usa para crear proyectiles y acceder a otras funciones del juego
         this.game = null;
         
+        // SISTEMA DE ESCUDOS Y SOBRECALENTAMIENTO
+        // Shield: Escudos actuales (porcentaje 0-100)
+        this.shield = 100;
+        
+        // IsOverheated: Flag que indica si está en modo enfriamiento
+        this.isOverheated = false;
+        
+        // OverheatTimer: Temporizador de enfriamiento (cuenta regresiva)
+        this.overheatTimer = 0;
+        
+        // OverheatDuration: Duración del modo enfriamiento (10 segundos)
+        this.overheatDuration = 10;
+        
+        // OverheatShield: Guarda los escudos que tenía al entrar en sobrecalentamiento
+        this.overheatShield = 0;
+        
         // SPRITE CREATION (Creación del Sprite)
         // Sprite = Imagen del objeto en el juego
         // Se crea usando la textura proporcionada (assets/nave.png)
@@ -176,8 +192,34 @@ export class Player extends GameObject {
         // Actualizar efecto de daño (esfera azul que se desvanece)
         this._updateDamageEffect(delta);
         
+        // Actualizar temporizador de sobrecalentamiento
+        this._updateOverheat(delta);
+        
         // Mantener la nave dentro de los límites de la pantalla
         this._clampToBounds();
+    }
+    
+    /**
+     * Actualiza el temporizador de sobrecalentamiento
+     * Cuando el timer llega a 0, los escudos vuelven al 100%
+     * 
+     * @param {number} delta - Tiempo transcurrido
+     */
+    _updateOverheat(delta) {
+        // Si está en sobrecalentamiento
+        if (this.isOverheated && this.overheatTimer > 0) {
+            // Reducir el timer
+            this.overheatTimer -= delta;
+            
+            // Cuando el timer llega a 0, terminar el sobrecalentamiento
+            if (this.overheatTimer <= 0) {
+                // Restaurar escudos al 100%
+                this.shield = 100;
+                this.overheatShield = 0;
+                this.isOverheated = false;
+                this.overheatTimer = 0;
+            }
+        }
     }
     
     /**
@@ -291,21 +333,75 @@ export class Player extends GameObject {
     
     /**
      * Recibe daño cuando un asteroide choca con la nave
-     * Reduce los escudos del jugador
+     * Maneja el sistema de sobrecalentamiento (enfriamiento)
      * 
      * @param {number} damage - Porcentaje de escudos a perder
      */
     takeDamage(damage) {
-        // Reducir escudos
-        this.shield -= damage;
+        // Si no está en sobrecalentamiento
+        if (!this.isOverheated) {
+            // Si los escudos están al 100%, entrar en modo enfriamiento
+            if (this.shield >= 100) {
+                // Guardar los escudos actuales (100%)
+                this.overheatShield = 100;
+                
+                // Entrar en sobrecalentamiento
+                this.isOverheated = true;
+                this.overheatTimer = this.overheatDuration;
+                
+                // Reducir escudos por el daño recibido
+                this.shield = Math.max(0, this.shield - damage);
+                
+                // Crear efecto visual de daño
+                this._createDamageEffect();
+            } else {
+                // Si no está al 100%, perder escudos normalmente
+                this.shield = Math.max(0, this.shield - damage);
+                
+                // Crear efecto visual de daño
+                this._createDamageEffect();
+            }
+        } else {
+            // Si está en sobrecalentamiento y recibe otro golpe, perder el enfriamiento
+            // Los escudos vuelven al valor que tenía antes del sobrecalentamiento
+            this.shield = this.overheatShield;
+            
+            // Salir del modo sobrecalentamiento
+            this.isOverheated = false;
+            this.overheatTimer = 0;
+            
+            // Efecto visual de que perdió el enfriamiento
+            this._createOverheatLostEffect();
+        }
         
-        // Crear efecto visual de daño (esfera azul)
-        this._createDamageEffect();
-        
-        // Si los escudos llegaron a 0, terminar el juego
-        if (this.shield <= 0) {
+        // Verificar si los escudos llegaron a 0 (solo si no está en sobrecalentamiento)
+        if (!this.isOverheated && this.shield <= 0) {
             this.game.gameOver();
         }
+    }
+    
+    /**
+     * Crea efecto visual cuando se pierde el sobrecalentamiento
+     */
+    _createOverheatLostEffect() {
+        if (this.damageEffect) {
+            this.damageEffect.destroy();
+        }
+        
+        this.damageEffect = new PIXI.Graphics();
+        
+        // Círculo rojo para indicar que perdió el enfriamiento
+        this.damageEffect.circle(0, 0, this.radius + 15);
+        this.damageEffect.fill({ color: 0xFF0000, alpha: 0.7 });
+        
+        this.damageEffect.x = this.x;
+        this.damageEffect.y = this.y;
+        
+        if (this.game && this.game.app && this.game.app.stage) {
+            this.game.app.stage.addChild(this.damageEffect);
+        }
+        
+        this.damageEffectTimer = 0.5;
     }
     
     /**

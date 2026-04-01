@@ -220,17 +220,37 @@ export class Game {
     /**
      * Actualiza la interfaz de usuario
      * Muestra la puntuación actual, los escudos y si el ulti está listo
+     * Si está en sobrecalentamiento, muestra en rojo
      */
     _updateUI() {
         if (this.scoreElement) {
             // Obtener los escudos del jugador (porcentaje)
-            const shield = this.player ? this.player.shield : 0;
+            let shield = this.player ? this.player.shield : 0;
+            const isOverheated = this.player ? this.player.isOverheated : false;
+            
+            // Texto base de escudos
+            let shieldText = `Escudos: ${Math.round(shield)}%`;
+            
+            // Si está en sobrecalentamiento, mostrar en rojo y agregar timer
+            if (isOverheated) {
+                const timer = this.player ? Math.ceil(this.player.overheatTimer) : 0;
+                shieldText = `⚠️ ENFRIAMIENTO: ${Math.round(shield)}% (${timer}s)`;
+                
+                // Aplicar color rojo usando HTML
+                this.scoreElement.innerHTML = `Puntuación: ${this.score} | <span style="color: #FF0000;">${shieldText}</span>`;
+                
+                // También actualizar el style del elemento padre si existe
+                if (this.scoreElement.parentElement) {
+                    this.scoreElement.parentElement.style.borderColor = isOverheated ? '#FF0000' : '#0044CC';
+                }
+                return;
+            }
             
             // Verificar si el ataque especial está listo
             const ultiStatus = this.player && this.player.ultiReady ? ' [ULTI LISTO]' : '';
             
             // Actualizar el texto del elemento HTML
-            this.scoreElement.textContent = `Puntuación: ${this.score} | Escudos: ${shield}%${ultiStatus}`;
+            this.scoreElement.textContent = `Puntuación: ${this.score} | ${shieldText}${ultiStatus}`;
         }
     }
     
