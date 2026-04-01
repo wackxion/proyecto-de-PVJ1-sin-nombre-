@@ -235,7 +235,7 @@ export class Enemigo extends GameObject {
             this.imagen.scale.set(this.escala);
             
             // Aplicar tinte según el tipo de asteroide
-            if (this.size === TamanioAsteroide.SPECIAL) {
+            if (this.tamanio === TamanioAsteroide.SPECIAL) {
                 // Verde para el special (power-up)
                 this.imagen.tint = 0x00CC44;
             } else if (this.esRezagado) {
@@ -249,7 +249,7 @@ export class Enemigo extends GameObject {
         } else {
             // Determinar color según el tipo
             let color;
-            if (this.size === TamanioAsteroide.SPECIAL) {
+            if (this.tamanio === TamanioAsteroide.SPECIAL) {
                 color = 0x00CC44; // Verde
             } else if (this.esRezagado) {
                 color = 0x8800CC; // Violeta
@@ -276,7 +276,7 @@ export class Enemigo extends GameObject {
                     craterRadius
                 );
                 // Color más oscuro que el base
-                if (this.size === TamanioAsteroide.SPECIAL) {
+                if (this.tamanio === TamanioAsteroide.SPECIAL) {
                     this.graphics.fill({ color: 0x008833 });
                 } else if (this.esRezagado) {
                     this.graphics.fill({ color: 0x550088 });
@@ -313,13 +313,35 @@ export class Enemigo extends GameObject {
         const newAsteroids = [];
         
         // Si es LARGE, crear 2 MEDIUM
-        if (this.size === TamanioAsteroide.LARGE) {
+        if (this.tamanio === TamanioAsteroide.LARGE) {
             // Crear fragmentos con direcciones opuestas
             newAsteroids.push(
-                this._crearFragmentoConOffset(TamanioAsteroide.MEDIUM, 0),
-                this._crearFragmentoConOffset(TamanioAsteroide.MEDIUM, 1)
+                this._crearFragmentoConOffset(TamanioAsteroide.MEDIANO, 0),
+                this._crearFragmentoConOffset(TamanioAsteroide.MEDIANO, 1)
             );
         } 
+        // Si es MEDIUM, crear 2 SMALL
+        else if (this.tamanio === TamanioAsteroide.MEDIANO) {
+            newAsteroids.push(
+                this._crearFragmentoConOffset(TamanioAsteroide.PEQUENO, 0),
+                this._crearFragmentoConOffset(TamanioAsteroide.PEQUENO, 1)
+            );
+        }
+        // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
+        if (this.tamanio === TamanioAsteroide.LARGE_REZAGADO) {
+            // Crear fragmentos rezagados con direcciones diferentes
+            newAsteroids.push(
+                this._crearFragmentoRezagado(TamanioAsteroide.MEDIANO_REZAGADO, 0),
+                this._crearFragmentoRezagado(TamanioAsteroide.MEDIANO_REZAGADO, 1)
+            );
+        }
+        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
+        else if (this.tamanio === TamanioAsteroide.MEDIANO_REZAGADO) {
+            newAsteroids.push(
+                this._crearFragmentoRezagado(TamanioAsteroide.PEQUENO_REZAGADO, 0),
+                this._crearFragmentoRezagado(TamanioAsteroide.PEQUENO_REZAGADO, 1)
+            );
+        }
         // Si es MEDIUM, crear 2 SMALL
         else if (this.size === TamanioAsteroide.MEDIUM) {
             newAsteroids.push(

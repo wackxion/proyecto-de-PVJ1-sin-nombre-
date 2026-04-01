@@ -533,7 +533,7 @@ export class Game {
                         this.jugador.agregarCargaUlti(enemy.cargaUlti);
                         
                         // Si es el asteroide especial, dar power-up
-                        if (enemy.size === TamanioAsteroide.SPECIAL) {
+                        if (enemy.tamanio === TamanioAsteroide.SPECIAL) {
                             // Aumentar velocidad de disparo
                             this.jugador.aumentarVelocidadDisparo();
                             
@@ -578,7 +578,7 @@ export class Game {
             if (this._verificarColision(this.jugador, enemy)) {
                 // Si NO es el asteroide especial, hacer daño
                 // El especial es un power-up y no hace daño al chocar
-                if (enemy.size !== TamanioAsteroide.SPECIAL) {
+                if (enemy.tamanio !== TamanioAsteroide.SPECIAL) {
                     // El jugador recibe daño (reduce los escudos)
                     // Si está en sobrecalentamiento, pierde el enfriamiento al recibir daño
                     this.jugador.takeDamage(enemy.damage);
