@@ -105,14 +105,14 @@ export class Game {
      * @param {HTMLDivElement} container - Elemento HTML donde se va a dibujar el juego
      */
     async init(container) {
-        console.log('=== INICIANDO JUEGO ===');
-        console.log('Container:', container);
+        // console.log('=== INICIANDO JUEGO ===');
+        // console.log('Container:', container);
         
         // Obtener el tamaño de la ventana del navegador
         const width = window.innerWidth;
         const height = window.innerHeight;
         
-        console.log('Tamaño ventana:', width, height);
+        // console.log('Tamaño ventana:', width, height);
         
         // Crear la aplicación PixiJS
         // PIXI.Application es la clase principal de PixiJS que maneja el canvas
@@ -129,12 +129,12 @@ export class Game {
             resizeTo: window         // Redimensionar cuando cambia la ventana
         });
 
-        console.log('Aplicación PixiJS iniciada, canvas:', this.aplicacion.canvas);
+        // console.log('Aplicación PixiJS iniciada, canvas:', this.aplicacion.canvas);
         
         // Agregar el canvas (elemento visual del juego) al contenedor HTML
         container.appendChild(this.aplicacion.canvas);
         
-        console.log('Canvas agregado al container');
+        // console.log('Canvas agregado al container');
         
         // Guardar las dimensiones del área de juego
         this.anchoJuego = width;
@@ -143,22 +143,22 @@ export class Game {
         // Crear el InputManager para manejar el teclado
         this.gestorEntrada = new GestorEntrada();
         
-        console.log('GestorEntrada creado');
+        // console.log('GestorEntrada creado');
         
         // Cargar los assets (imágenes) del juego
         await this._cargarRecursos();
         
-        console.log('Recursos cargados, texturas:', this.texturaJugador, this.texturaAsteroide);
+        // console.log('Recursos cargados, texturas:', this.texturaJugador, this.texturaAsteroide);
         
         // Crear el fondo con estrellas
         this._crearFondo();
         
-        console.log('Fondo creado');
+        // console.log('Fondo creado');
         
         // Crear el jugador (nave)
         this._crearJugador();
         
-        console.log('Jugador creado y renderizado');
+        // console.log('Jugador creado y renderizado');
         
         // Configurar la interfaz de usuario (UI)
         this._configurarUI();
@@ -174,7 +174,7 @@ export class Game {
      * Son las imágenes que se usan en el juego
      */
     async _cargarRecursos() {
-        console.log('Cargando assets...');
+        // console.log('Cargando assets...');
         
         try {
             // Inicializar PixiJS Assets
@@ -191,12 +191,11 @@ export class Game {
             this.texturaJugador = naveTexture;
             this.texturaAsteroide = asteroideTexture;
             
-            console.log('Assets cargados correctamente - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
+            // console.log('Assets cargados correctamente - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
         } catch (error) {
             console.error('Error cargando assets:', error);
             
-            // Fallback: crear texturas programáticamente si falla la carga
-            console.log('Usando texturas generadas como fallback...');
+            // console.log('Usando texturas generadas como fallback...');
             
             // Crear Graphics para la nave
             const naveGraphics = new PIXI.Graphics();
@@ -222,7 +221,7 @@ export class Game {
             // Convertir a textura
             this.texturaAsteroide = this.aplicacion.renderer.generateTexture(astroGraphics);
             
-            console.log('Fallback listo - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
+            // console.log('Fallback listo - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
         }
     }
     
@@ -231,7 +230,7 @@ export class Game {
      * Se dibuja un rectángulo negro y encima puntos blancos aleatorios (estrellas)
      */
     _crearFondo() {
-        console.log('Creando fondo, stage:', this.aplicacion.stage);
+        // console.log('Creando fondo, stage:', this.aplicacion.stage);
         
         // Crear objeto gráfico para dibujar
         const graphics = new PIXI.Graphics();
@@ -258,7 +257,7 @@ export class Game {
         
         // Agregar el fondo al stage
         this.aplicacion.stage.addChild(graphics);
-        console.log('Fondo agregado al stage, children:', this.aplicacion.stage.children.length);
+        // console.log('Fondo agregado al stage, children:', this.aplicacion.stage.children.length);
     }
     
     /**
@@ -270,12 +269,12 @@ export class Game {
         const centerX = this.anchoJuego / 2;
         const centerY = this.altoJuego / 2;
         
-        console.log('Creando jugador en:', centerX, centerY, 'textura:', this.texturaJugador);
+        // console.log('Creando jugador en:', centerX, centerY, 'textura:', this.texturaJugador);
         
         // Crear el objeto Player con la textura de la nave
         this.jugador = new Jugador(centerX, centerY, this.texturaJugador, this.anchoJuego, this.altoJuego);
         
-        console.log('Jugador creado, imagen:', this.jugador.imagen);
+        // console.log('Jugador creado, imagen:', this.jugador.imagen);
         
         // Guardar referencia al juego en el jugador
         // Esto permite que el jugador pueda crear proyectiles
@@ -287,7 +286,7 @@ export class Game {
         // Renderizar el jugador en el stage
         this.jugador.render(this.aplicacion.stage);
         
-        console.log('Jugador renderizado, parent:', this.jugador.imagen?.parent);
+        // console.log('Jugador renderizado, parent:', this.jugador.imagen?.parent);
     }
     
     /**
@@ -433,7 +432,7 @@ export class Game {
             size = 'small';
         }
         
-        console.log('Size asignado directamente:', size);
+        // console.log('Size asignado directamente:', size);
         
         // Determinar posición de spawn (los asteroides aparecen desde los bordes)
         const w = this.anchoJuego;
@@ -483,13 +482,13 @@ export class Game {
         // Crear el enemigo con todos los parámetros necesarios
         const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
         
-        console.log('Enemigo creado:', size, 'imagen:', enemigo.imagen);
-        console.log('TexturaAsteroide:', this.texturaAsteroide);
+        // console.log('Enemigo creado:', size, 'imagen:', enemigo.imagen);
+        // console.log('TexturaAsteroide:', this.texturaAsteroide);
         
         // Renderizar y agregar a la lista
         enemigo.render(this.aplicacion.stage);
         
-        console.log('Enemigo renderizado, parent:', enemigo.imagen?.parent);
+        // console.log('Enemigo renderizado, parent:', enemigo.imagen?.parent);
         
         this.enemigos.push(enemigo);
     }

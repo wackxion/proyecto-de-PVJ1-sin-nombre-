@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     try {
         await game.init(container);
-        console.log('Space Defender iniciado correctamente');
+        // console.log('Space Defender iniciado correctamente');
     } catch (error) {
         console.error('Error al iniciar el juego:', error);
         container.innerHTML = `<p style="color: red; text-align: center; padding: 20px;">Error: ${error.message}</p>`;
