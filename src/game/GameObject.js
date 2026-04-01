@@ -35,6 +35,7 @@ export class GameObject {
         // Sprite = la imagen visual del objeto
         // Puede ser un PIXI.Sprite o PIXI.Graphics
         this.sprite = null;
+        this.imagen = null;
         
         // Active = flag que indica si el objeto está activo
         // false = el objeto fue destruido y debe ser removido
@@ -60,11 +61,14 @@ export class GameObject {
      * @param {PIXI.Container} container - Contenedor donde agregar el sprite
      */
     render(container) {
+        // Usar 'imagen' si existe, sino usar 'sprite' (compatibilidad)
+        const visual = this.imagen || this.sprite;
+        
         // Solo agregar si:
         // 1. El sprite existe
         // 2. No está ya agregado a un contenedor
-        if (this.sprite && !this.sprite.parent) {
-            container.addChild(this.sprite);
+        if (visual && !visual.parent) {
+            container.addChild(visual);
         }
     }
     
@@ -77,9 +81,11 @@ export class GameObject {
         // Marcar como inactivo
         this.active = false;
         
-        // Destruir el sprite para liberar memoria
-        if (this.sprite) {
-            this.sprite.destroy();
+        // Destruir el sprite (imagen) para liberar memoria
+        const visual = this.imagen || this.sprite;
+        if (visual) {
+            visual.destroy();
+            this.imagen = null;
             this.sprite = null;
         }
     }

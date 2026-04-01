@@ -447,6 +447,10 @@ export class Game {
      * @returns {boolean} - true si hay colisión, false si no
      */
     _verificarColision(obj1, obj2) {
+        // Usar 'radio' si existe, sino usar 'radius' (compatibilidad)
+        const radio1 = obj1.radio || obj1.radius || 30;
+        const radio2 = obj2.radio || obj2.radius || 30;
+        
         // Calcular la distancia entre los centros de los dos objetos
         const dx = obj1.x - obj2.x;  // Diferencia en X
         const dy = obj1.y - obj2.y;  // Diferencia en Y
@@ -456,7 +460,7 @@ export class Game {
         
         // Hay colisión si la distancia es menor a la suma de los radios
         // Esto significa que los círculos se superponen
-        return dist < (obj1.radius + obj2.radius);
+        return dist < (radio1 + radio2);
     }
     
     /**
@@ -474,8 +478,9 @@ export class Game {
                 enemy.y < -margin || enemy.y > this.altoJuego + margin) {
                 
                 // Remover el sprite si existe
-                if (enemy.sprite && enemy.sprite.parent) {
-                    enemy.sprite.parent.removeChild(enemy.sprite);
+                const enemyVisual = enemy.imagen || enemy.sprite;
+                if (enemyVisual && enemyVisual.parent) {
+                    enemyVisual.parent.removeChild(enemyVisual);
                 }
                 
                 // Destruir el enemigo
@@ -821,8 +826,9 @@ export class Game {
             
             // Si el proyectil ya no está activo, removerlo
             if (!projectile.active) {
-                if (projectile.sprite && projectile.sprite.parent) {
-                    projectile.sprite.parent.removeChild(projectile.sprite);
+                const projVisual = projectile.imagen || projectile.sprite;
+                if (projVisual && projVisual.parent) {
+                    projVisual.parent.removeChild(projVisual);
                 }
                 this.proyectiles.splice(i, 1);
             }
@@ -841,8 +847,9 @@ export class Game {
             this.efectoUlti.update(delta);
             
             if (!this.efectoUlti.active) {
-                if (this.efectoUlti.sprite && this.efectoUlti.sprite.parent) {
-                    this.efectoUlti.sprite.parent.removeChild(this.efectoUlti.sprite);
+                const ultiVisual = this.efectoUlti.imagen || this.efectoUlti.sprite;
+                if (ultiVisual && ultiVisual.parent) {
+                    ultiVisual.parent.removeChild(ultiVisual);
                 }
                 this.efectoUlti = null;
             }
@@ -854,8 +861,9 @@ export class Game {
             burst.update(delta);
             
             if (!burst.active) {
-                if (burst.sprite && burst.sprite.parent) {
-                    burst.sprite.parent.removeChild(burst.sprite);
+                const burstVisual = burst.imagen || burst.sprite;
+                if (burstVisual && burstVisual.parent) {
+                    burstVisual.parent.removeChild(burstVisual);
                 }
                 this.efectosExplosion.splice(i, 1);
             }
@@ -867,8 +875,9 @@ export class Game {
             hit.update(delta);
             
             if (!hit.active) {
-                if (hit.sprite && hit.sprite.parent) {
-                    hit.sprite.parent.removeChild(hit.sprite);
+                const hitVisual = hit.imagen || hit.sprite;
+                if (hitVisual && hitVisual.parent) {
+                    hitVisual.parent.removeChild(hitVisual);
                 }
                 this.efectosImpacto.splice(i, 1);
             }
