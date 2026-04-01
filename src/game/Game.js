@@ -105,9 +105,14 @@ export class Game {
      * @param {HTMLDivElement} container - Elemento HTML donde se va a dibujar el juego
      */
     async init(container) {
+        console.log('=== INICIANDO JUEGO ===');
+        console.log('Container:', container);
+        
         // Obtener el tamaño de la ventana del navegador
         const width = window.innerWidth;
         const height = window.innerHeight;
+        
+        console.log('Tamaño ventana:', width, height);
         
         // Crear la aplicación PixiJS
         // PIXI.Application es la clase principal de PixiJS que maneja el canvas
@@ -123,9 +128,13 @@ export class Game {
             autoDensity: true,      // Ajustar densidad automáticamente
             resizeTo: window         // Redimensionar cuando cambia la ventana
         });
+
+        console.log('Aplicación PixiJS iniciada, canvas:', this.aplicacion.canvas);
         
         // Agregar el canvas (elemento visual del juego) al contenedor HTML
         container.appendChild(this.aplicacion.canvas);
+        
+        console.log('Canvas agregado al container');
         
         // Guardar las dimensiones del área de juego
         this.anchoJuego = width;
