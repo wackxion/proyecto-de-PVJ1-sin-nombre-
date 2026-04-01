@@ -387,37 +387,6 @@ export class Enemy extends GameObject {
         
         return fragment;
     }
-        // Si es MEDIUM, crear 2 SMALL
-        else if (this.size === AsteroidSize.MEDIUM) {
-            // Solo hereda trayectoria si el padre orbitaba
-            const trajectory = this.shouldOrbit ? this._calculateTrajectory() : null;
-            const inheritOrbit = this.shouldOrbit;
-            
-            // Crear dos fragmentos pequeños
-            newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.SMALL, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight)
-            );
-        }
-        // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
-        if (this.size === AsteroidSize.LARGE_REZAGADO) {
-            // Crear fragmentos rezagados con dirección aleatoria y separados
-            newAsteroids.push(
-                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO, 0),
-                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO, 1)
-            );
-        }
-        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
-        else if (this.size === AsteroidSize.MEDIUM_REZAGADO) {
-            newAsteroids.push(
-                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO, 0),
-                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO, 1)
-            );
-        }
-        // SPECIAL no suelta fragmentos
-        
-        return newAsteroids;
-    }
     
     /**
      * Crea un fragmento rezagado con dirección aleatoria
