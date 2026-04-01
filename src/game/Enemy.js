@@ -410,8 +410,8 @@ export class Enemy extends GameObject {
      * @param {number} delta - Tiempo transcurrido desde el último frame (en segundos)
      */
     update(delta) {
-        // Si el asteroide no está activo, salir
-        if (!this.active) return;
+        // Si el asteroide no está activo o no tiene sprite, salir
+        if (!this.active || !this.sprite) return;
         
         // === TRAYECTORIA HEREDADA ===
         // Si tiene trayectoria heredada del padre, aplicarla primero
