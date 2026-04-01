@@ -32,7 +32,7 @@ export class UltiEffect extends GameObject {
         this.gameHeight = gameHeight;
         
         // Referencia a los enemigos
-        this.enemies = enemies;
+        this.enemigos = enemies;
         
         // Callback = función que se llama cuando se destruye un enemigo
         this.onDestroyEnemy = onDestroyEnemy;
@@ -132,8 +132,8 @@ export class UltiEffect extends GameObject {
      */
     _verificarColisiones() {
         // Recorrer todos los enemigos
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
+        for (let i = this.enemigos.length - 1; i >= 0; i--) {
+            const enemy = this.enemigos[i];
             
             // Si el enemigo no está activo, skip
             if (!enemy.active) continue;
@@ -158,7 +158,7 @@ export class UltiEffect extends GameObject {
                 enemy.destroy();
                 
                 // Remover de la lista
-                this.enemies.splice(i, 1);
+                this.enemigos.splice(i, 1);
             }
         }
     }

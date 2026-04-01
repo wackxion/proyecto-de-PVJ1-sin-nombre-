@@ -147,7 +147,7 @@ export class Jugador extends GameObject {
         
         // Agregar el efecto al stage (pantalla principal del juego)
         // Solo si el juego existe y tiene un stage
-        if (this.juego && this.juego.app && this.juego.aplicacion.stage) {
+        if (this.juego && this.juego.aplicacion && this.juego.aplicacion.stage) {
             this.juego.aplicacion.stage.addChild(this.damageEffect);
         }
         
@@ -260,7 +260,7 @@ export class Jugador extends GameObject {
     _disparar() {
         if (this.juego) {
             // Pasar posición actual y rotación (dirección)
-            this.juego.createProjectile(
+            this.juego.crearProyectil(
                 this.x, 
                 this.y, 
                 this.rotacion
@@ -275,7 +275,7 @@ export class Jugador extends GameObject {
     _usarUlti() {
         if (this.juego) {
             // Llamar al método del juego que ejecuta el ulti
-            this.juego.triggerUlti();
+            this.juego.activarUlti();
             
             // Reiniciar la carga del ulti
             this.cargaUlti = 0;
@@ -373,13 +373,13 @@ export class Jugador extends GameObject {
         } else {
             // Si está en sobrecalentamiento y recibe otro golpe, MUERE
             this.escudos = 0;
-            this.juego.finJuego();
+            this.juego.gameOver();
             return;
         }
         
         // Verificar si los escudos llegaron a 0 (solo si no está en sobrecalentamiento)
         if (!this.sobrecalentado && this.escudos <= 0) {
-            this.juego.finJuego();
+            this.juego.gameOver();
         }
     }
     
@@ -400,7 +400,7 @@ export class Jugador extends GameObject {
         this.damageEffect.x = this.x;
         this.damageEffect.y = this.y;
         
-        if (this.juego && this.juego.app && this.juego.aplicacion.stage) {
+        if (this.juego && this.juego.aplicacion && this.juego.aplicacion.stage) {
             this.juego.aplicacion.stage.addChild(this.damageEffect);
         }
         
@@ -413,7 +413,7 @@ export class Jugador extends GameObject {
      */
     _mantenerEnPantalla() {
         // Definir límites del área de juego
-        const bounds = { width: this.juegoWidth, height: this.juegoHeight };
+        const bounds = { width: this.anchoJuego, height: this.altoJuego };
         
         // Calcular la mitad del ancho y alto del sprite
         const halfWidth = this.width / 2;

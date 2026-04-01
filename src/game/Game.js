@@ -176,31 +176,54 @@ export class Game {
     async _cargarRecursos() {
         console.log('Cargando assets...');
         
-        // Crear Graphics para la nave
-        const naveGraphics = new PIXI.Graphics();
-        // Triángulo de nave
-        naveGraphics.moveTo(25, 0);
-        naveGraphics.lineTo(-15, -15);
-        naveGraphics.lineTo(-10, 0);
-        naveGraphics.lineTo(-15, 15);
-        naveGraphics.closePath();
-        naveGraphics.fill(0x00AAFF);
-        // Convertir a textura
-        this.texturaJugador = this.aplicacion.renderer.generateTexture(naveGraphics);
-        
-        // Crear Graphics para el asteroide
-        const astroGraphics = new PIXI.Graphics();
-        astroGraphics.circle(0, 0, 30);
-        astroGraphics.fill(0xCC0000);
-        // Agregar algunos cráteres
-        astroGraphics.circle(-10, -5, 8);
-        astroGraphics.fill(0x990000);
-        astroGraphics.circle(8, 10, 5);
-        astroGraphics.fill(0x990000);
-        // Convertir a textura
-        this.texturaAsteroide = this.aplicacion.renderer.generateTexture(astroGraphics);
-        
-        console.log('Assets creados - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
+        try {
+            // Inicializar PixiJS Assets
+            await PIXI.Assets.init();
+            
+            // Cargar las imágenes desde la carpeta assets/
+            // Usar el API de PixiJS v8
+            const [naveTexture, asteroideTexture] = await Promise.all([
+                PIXI.Assets.load('assets/nave.png'),
+                PIXI.Assets.load('assets/asteroide.png')
+            ]);
+            
+            // Asignar las texturas cargadas
+            this.texturaJugador = naveTexture;
+            this.texturaAsteroide = asteroideTexture;
+            
+            console.log('Assets cargados correctamente - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
+        } catch (error) {
+            console.error('Error cargando assets:', error);
+            
+            // Fallback: crear texturas programáticamente si falla la carga
+            console.log('Usando texturas generadas como fallback...');
+            
+            // Crear Graphics para la nave
+            const naveGraphics = new PIXI.Graphics();
+            // Triángulo de nave
+            naveGraphics.moveTo(25, 0);
+            naveGraphics.lineTo(-15, -15);
+            naveGraphics.lineTo(-10, 0);
+            naveGraphics.lineTo(-15, 15);
+            naveGraphics.closePath();
+            naveGraphics.fill(0x00AAFF);
+            // Convertir a textura
+            this.texturaJugador = this.aplicacion.renderer.generateTexture(naveGraphics);
+            
+            // Crear Graphics para el asteroide
+            const astroGraphics = new PIXI.Graphics();
+            astroGraphics.circle(0, 0, 30);
+            astroGraphics.fill(0xCC0000);
+            // Agregar algunos cráteres
+            astroGraphics.circle(-10, -5, 8);
+            astroGraphics.fill(0x990000);
+            astroGraphics.circle(8, 10, 5);
+            astroGraphics.fill(0x990000);
+            // Convertir a textura
+            this.texturaAsteroide = this.aplicacion.renderer.generateTexture(astroGraphics);
+            
+            console.log('Fallback listo - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
+        }
     }
     
     /**
@@ -296,15 +319,15 @@ export class Game {
     _actualizarUI() {
         if (this.elementoPuntuacion) {
             // Obtener los escudos del jugador (porcentaje)
-            let shield = this.jugador ? this.jugador.shield : 0;
-            const isOverheated = this.jugador ? this.jugador.isOverheated : false;
+            let shield = this.jugador ? this.jugador.escudos : 0;
+            const isOverheated = this.jugador ? this.jugador.sobrecalentado : false;
             
             // Texto base de escudos
             let shieldText = `Escudos: ${Math.round(shield)}%`;
             
             // Si está en sobrecalentamiento, mostrar en rojo y agregar timer
             if (isOverheated) {
-                const timer = this.jugador ? Math.ceil(this.jugador.overheatTimer) : 0;
+                const timer = this.jugador ? Math.ceil(this.jugador.temporizadorEnfriamiento) : 0;
                 shieldText = `⚠️ ENFRIAMIENTO: ${Math.round(shield)}% (${timer}s)`;
                 
                 // Aplicar color rojo usando HTML
@@ -318,7 +341,7 @@ export class Game {
             }
             
             // Verificar si el ataque especial está listo
-            const ultiStatus = this.jugador && this.jugador.ultiReady ? ' [ULTI LISTO]' : '';
+            const ultiStatus = this.jugador && this.jugador.ultiListo ? ' [ULTI LISTO]' : '';
             
             // Verificar porcentaje de mejora de velocidad de disparo
             const speedBoost = this.jugador ? this.jugador.obtenerPorcentajeMejoraVelocidad() : 0;
@@ -342,7 +365,7 @@ export class Game {
      * @param {number} y - Posición Y donde nace el proyectil
      * @param {number} direction - Dirección del proyectil en radianes (ángulo)
      */
-    createProjectile(x, y, direction) {
+    crearProyectil(x, y, direction) {
         // Crear el proyectil
         const projectile = new Proyectil(x, y, direction, this.anchoJuego, this.altoJuego);
         
@@ -357,7 +380,7 @@ export class Game {
      * Activa el ataque especial (Ulti)
      * Crea un aro expansivo que destruye todos los asteroides en pantalla
      */
-    triggerUlti() {
+    activarUlti() {
         // Guardar referencia a "this" para usar dentro del callback
         const game = this;
         
@@ -963,28 +986,28 @@ export class Game {
                 if (!enemy2.active) continue;
                 
                 // Verificar si alguno está en cooldown de colisión
-                if (enemy1.collisionCooldown > 0 || enemy2.collisionCooldown > 0) continue;
+                if (enemy1.enfriamientoColision > 0 || enemy2.enfriamientoColision > 0) continue;
                 
                 // Verificar colisión entre los dos asteroides
                 if (this._verificarColision(enemy1, enemy2)) {
                     // Alterar dirección de los rezagados
-                    if (enemy1.isRezagado) {
+                    if (enemy1.esRezagado) {
                         enemy1.alterDirection();
-                        enemy1.collisionCooldown = 0.5;
+                        enemy1.enfriamientoColision = 0.5;
                     }
-                    if (enemy2.isRezagado) {
+                    if (enemy2.esRezagado) {
                         enemy2.alterDirection();
-                        enemy2.collisionCooldown = 0.5;
+                        enemy2.enfriamientoColision = 0.5;
                     }
                     
                     // Si el otro no es rezagado, también alterar su dirección
-                    if (!enemy1.isRezagado && enemy2.isRezagado) {
+                    if (!enemy1.esRezagado && enemy2.esRezagado) {
                         enemy1.alterDirection();
-                        enemy1.collisionCooldown = 0.5;
+                        enemy1.enfriamientoColision = 0.5;
                     }
-                    if (!enemy2.isRezagado && enemy1.isRezagado) {
+                    if (!enemy2.esRezagado && enemy1.esRezagado) {
                         enemy2.alterDirection();
-                        enemy2.collisionCooldown = 0.5;
+                        enemy2.enfriamientoColision = 0.5;
                     }
                 }
             }
@@ -996,10 +1019,10 @@ export class Game {
      * 
      * @param {number} points - Puntos a agregar
      */
-    addScore(points) {
+    agregarPuntuacion(points) {
         this.puntuacion += points;
         if (this.elementoPuntuacion) {
-            const shield = this.jugador ? this.jugador.shield : 0;
+            const shield = this.jugador ? this.jugador.escudos : 0;
             this.elementoPuntuacion.textContent = `Puntuación: ${this.puntuacion} | Escudos: ${shield}%`;
         }
     }

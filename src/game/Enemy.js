@@ -90,6 +90,13 @@ export class Enemigo extends GameObject {
         // Después de una colisión, no puede chocar por 0.5 segundos
         this.enfriamientoColision = 0;
         
+        // Temporizador de desaceleración (slowdown) cuando recibe daño
+        this.slowdownTimer = 0;
+        
+        // Flags para trayectoria heredada
+        this.tieneTrayectoriaHeredada = tieneHerencia;
+        this.temporizadorTrayectoria = tieneHerencia ? 60 : 0;
+        
         // Crear el sprite del asteroide
         this._crearSprite();
         
@@ -377,13 +384,13 @@ export class Enemigo extends GameObject {
         const fragment = new Enemigo(
             this.x + offsetX, 
             this.y + offsetY, 
-            size, 
+            tamanio, 
             this.objetivo, 
             this.textura, 
             trajectory, 
             inheritOrbit, 
-            this.gameWidth, 
-            this.gameHeight
+            this.anchoJuego, 
+            this.altoJuego
         );
         
         return fragment;
@@ -414,14 +421,14 @@ export class Enemigo extends GameObject {
             this.textura, 
             null, 
             false, 
-            this.gameWidth, 
-            this.gameHeight
+            this.anchoJuego, 
+            this.altoJuego
         );
         
         // Asignar dirección rezagada
-        fragment.isRezagado = true;
-        fragment.directionX = directionX;
-        fragment.directionY = directionY;
+        fragment.esRezagado = true;
+        fragment.direccionX = directionX;
+        fragment.direccionY = directionY;
         
         return fragment;
     }
@@ -478,22 +485,22 @@ export class Enemigo extends GameObject {
         if (!this.active || !this.imagen) return;
         
         // Reducir el cooldown de colisión
-        if (this.collisionCooldown > 0) {
-            this.collisionCooldown -= delta;
+        if (this.enfriamientoColision > 0) {
+            this.enfriamientoColision -= delta;
         }
         
         // === TRAYECTORIA HEREDADA ===
         // Si tiene trayectoria heredada del padre, aplicarla primero
-        if (this.hasInheritedTrajectory && this.trajectoryTimer > 0) {
+        if (this.tieneTrayectoriaHeredada && this.temporizadorTrayectoria > 0) {
             this.x += this.vx * delta;
             this.y += this.vy * delta;
             
             // Reducir el timer
-            this.trajectoryTimer -= delta;
+            this.temporizadorTrayectoria -= delta;
             
             // Cuando el timer termina, transición al movimiento normal
-            if (this.trajectoryTimer <= 0) {
-                this.hasInheritedTrajectory = false;
+            if (this.temporizadorTrayectoria <= 0) {
+                this.tieneTrayectoriaHeredada = false;
             }
         }
         // === MOVIMIENTO NORMAL ===
@@ -542,8 +549,8 @@ export class Enemigo extends GameObject {
      */
     _moverRezagado(delta, velocidad) {
         // Mover en la dirección asignada
-        this.x += this.direccionX * speed * delta;
-        this.y += this.direccionY * speed * delta;
+        this.x += this.direccionX * velocidad * delta;
+        this.y += this.direccionY * velocidad * delta;
     }
     
     /**
@@ -555,8 +562,8 @@ export class Enemigo extends GameObject {
             const margin = this.radio + 50;
             
             // Si está fuera de los bordes, destruir
-            if (this.x < -margin || this.x > this.gameWidth + margin ||
-                this.y < -margin || this.y > this.gameHeight + margin) {
+            if (this.x < -margin || this.x > this.anchoJuego + margin ||
+                this.y < -margin || this.y > this.altoJuego + margin) {
                 this.destroy();
             }
         }
@@ -600,8 +607,8 @@ export class Enemigo extends GameObject {
         
         if (dist > 0) {
             // Calcular vector unitario hacia la nave
-            this.vx = (dx / dist) * speed;
-            this.vy = (dy / dist) * speed;
+            this.vx = (dx / dist) * velocidad;
+            this.vy = (dy / dist) * velocidad;
             
             // Mover el asteroide
             this.x += this.vx * delta;
@@ -663,16 +670,16 @@ export class Enemigo extends GameObject {
             const orbitY = dx / dist;
             
             // Velocidad orbital
-            this.vx = orbitX * speed;
-            this.vy = orbitY * speed;
+            this.vx = orbitX * velocidad;
+            this.vy = orbitY * velocidad;
             
             // Mover en dirección perpendicular
             this.x += this.vx * delta;
             this.y += this.vy * delta;
             
             // También acercarse un poco (30% de la velocidad)
-            this.x += (dx / dist) * (speed * 0.3) * delta;
-            this.y += (dy / dist) * (speed * 0.3) * delta;
+            this.x += (dx / dist) * (velocidad * 0.3) * delta;
+            this.y += (dy / dist) * (velocidad * 0.3) * delta;
         }
     }
     
