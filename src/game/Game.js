@@ -143,14 +143,22 @@ export class Game {
         // Crear el InputManager para manejar el teclado
         this.gestorEntrada = new GestorEntrada();
         
+        console.log('GestorEntrada creado');
+        
         // Cargar los assets (imágenes) del juego
         await this._cargarRecursos();
+        
+        console.log('Recursos cargados, texturas:', this.texturaJugador, this.texturaAsteroide);
         
         // Crear el fondo con estrellas
         this._crearFondo();
         
+        console.log('Fondo creado');
+        
         // Crear el jugador (nave)
         this._crearJugador();
+        
+        console.log('Jugador creado y renderizado');
         
         // Configurar la interfaz de usuario (UI)
         this._configurarUI();
@@ -200,10 +208,14 @@ export class Game {
      * Se dibuja un rectángulo negro y encima puntos blancos aleatorios (estrellas)
      */
     _crearFondo() {
+        console.log('Creando fondo...');
+        
         // Crear objeto gráfico para dibujar
         const graphics = new PIXI.Graphics();
         const w = this.anchoJuego;
         const h = this.altoJuego;
+        
+        console.log('Fondo tamaño:', w, h);
         
         // Dibujar rectángulo negro que cubre toda la pantalla
         graphics.rect(0, 0, w, h);
