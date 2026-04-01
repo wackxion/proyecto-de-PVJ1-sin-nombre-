@@ -64,6 +64,9 @@ export class Player extends GameObject {
         this.shootCooldownMax = 0.2;
         // baseShootCooldown: Valor original del cooldown para resetear
         this.baseShootCooldown = 0.2;
+        // speedBoostLevel: Contador de mejoras de velocidad de disparo
+        // Se incrementa cada vez que se destruye un asteroide especial
+        this.speedBoostLevel = 0;
         
         // Game reference: Referencia al objeto principal del juego
         // Se usa para crear proyectiles y acceder a otras funciones del juego
@@ -311,6 +314,9 @@ export class Player extends GameObject {
         // Math.max(0.05, ...) = no dejar que baje de 0.05 segundos
         this.shootCooldownMax = Math.max(0.05, this.shootCooldownMax * 0.8);
         
+        // Incrementar contador de mejoras
+        this.speedBoostLevel++;
+        
         // Actualizar también en el InputManager
         // Esto asegura que el juego respete el nuevo cooldown
         if (this.game && this.game.inputManager) {
@@ -324,11 +330,26 @@ export class Player extends GameObject {
      */
     resetShootSpeed() {
         this.shootCooldownMax = this.baseShootCooldown;
+        this.speedBoostLevel = 0;
         
         // Actualizar en InputManager
         if (this.game && this.game.inputManager) {
             this.game.inputManager.setShootCooldown(this.shootCooldownMax);
         }
+    }
+    
+    /**
+     * Retorna el porcentaje de mejora de velocidad de disparo
+     * Se calcula basado en el nivel actual vs nivel base
+     * 
+     * @returns {number} Porcentaje de mejora (0 = sin mejora, 100 = máximo)
+     */
+    getSpeedBoostPercentage() {
+        // Cada nivel de mejora representa ~20% de velocidad extra
+        // Máximo 5 niveles = 100%
+        const maxLevels = 5;
+        const percentage = Math.min(100, this.speedBoostLevel * 20);
+        return percentage;
     }
     
     /**

@@ -264,8 +264,12 @@ export class Game {
             // Verificar si el ataque especial está listo
             const ultiStatus = this.player && this.player.ultiReady ? ' [ULTI LISTO]' : '';
             
+            // Verificar porcentaje de mejora de velocidad de disparo
+            const speedBoost = this.player ? this.player.getSpeedBoostPercentage() : 0;
+            const speedText = speedBoost > 0 ? ` | Velocidad: +${Math.round(speedBoost)}%` : '';
+            
             // Actualizar el texto del elemento HTML
-            this.scoreElement.textContent = `Puntuación: ${this.score} | ${shieldText}${ultiStatus}`;
+            this.scoreElement.textContent = `Puntuación: ${this.score} | ${shieldText}${ultiStatus}${speedText}`;
         }
         
         // Actualizar display de oleada
