@@ -68,7 +68,7 @@ export class Game {
         this.spawnTimer = 0;
         
         // SpawnInterval = tiempo en segundos entre cada oleada de asteroides
-        this.spawnInterval = 1;
+        this.spawnInterval = 2;
         
         // MaxEnemies = cantidad máxima de asteroides en pantalla
         this.maxEnemies = 30;
@@ -418,6 +418,32 @@ export class Game {
     }
     
     /**
+     * Elimina enemigos que están muy lejos de la pantalla
+     * Se llama después de actualizar los enemigos
+     */
+    _cleanupFarEnemies() {
+        const margin = 200; // Margen fuera de la pantalla
+        
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
+            
+            // Si está muy lejos de la pantalla, destruirlo
+            if (enemy.x < -margin || enemy.x > this.gameWidth + margin ||
+                enemy.y < -margin || enemy.y > this.gameHeight + margin) {
+                
+                // Remover el sprite si existe
+                if (enemy.sprite && enemy.sprite.parent) {
+                    enemy.sprite.parent.removeChild(enemy.sprite);
+                }
+                
+                // Destruir el enemigo
+                enemy.destroy();
+                this.enemies.splice(i, 1);
+            }
+        }
+    }
+    
+    /**
      * Procesa las colisiones entre proyectiles y enemigos
      * Se llama en cada frame del juego
      */
@@ -764,6 +790,9 @@ export class Game {
         for (const enemy of this.enemies) {
             enemy.update(delta);
         }
+        
+        // Eliminar enemigos que están muy lejos de la pantalla (fuera de vista)
+        this._cleanupFarEnemies();
         
         // === ACTUALIZAR EFECTO ULTI ===
         if (this.ultiEffect && this.ultiEffect.active) {
