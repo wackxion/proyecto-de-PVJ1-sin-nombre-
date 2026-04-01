@@ -86,6 +86,10 @@ export class Enemy extends GameObject {
         // Cuando llega a 0, el asteroide usa su movimiento normal
         this.trajectoryTimer = hasInheritance ? 60 : 0;
         
+        // Collision cooldown - evita que los asteroides se queden pegados
+        // Después de una colisión, no puede chocar por 0.5 segundos
+        this.collisionCooldown = 0;
+        
         // Crear el sprite del asteroide
         this._createSprite();
         
@@ -475,6 +479,11 @@ export class Enemy extends GameObject {
     update(delta) {
         // Si el asteroide no está activo o no tiene sprite, salir
         if (!this.active || !this.sprite) return;
+        
+        // Reducir el cooldown de colisión
+        if (this.collisionCooldown > 0) {
+            this.collisionCooldown -= delta;
+        }
         
         // === TRAYECTORIA HEREDADA ===
         // Si tiene trayectoria heredada del padre, aplicarla primero

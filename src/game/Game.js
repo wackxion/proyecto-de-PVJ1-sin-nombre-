@@ -862,19 +862,29 @@ export class Game {
                 const enemy2 = this.enemies[j];
                 if (!enemy2.active) continue;
                 
+                // Verificar si alguno está en cooldown de colisión
+                if (enemy1.collisionCooldown > 0 || enemy2.collisionCooldown > 0) continue;
+                
                 // Verificar colisión entre los dos asteroides
                 if (this._checkCollision(enemy1, enemy2)) {
-                    // Si es rezagado, solo alterar dirección
-                    if (enemy1.isRezagado) enemy1.alterDirection();
-                    if (enemy2.isRezagado) enemy2.alterDirection();
-                    
-                    // Si ambos son rezagados, también alterar la dirección del otro
-                    if (enemy1.isRezagado && enemy2.isRezagado) {
-                        // Ambos rebotan
-                    } else if (enemy1.isRezagado) {
-                        // El normal también altera su dirección si es rezagado el otro
-                    } else if (enemy2.isRezagado) {
+                    // Alterar dirección de los rezagados
+                    if (enemy1.isRezagado) {
                         enemy1.alterDirection();
+                        enemy1.collisionCooldown = 0.5;
+                    }
+                    if (enemy2.isRezagado) {
+                        enemy2.alterDirection();
+                        enemy2.collisionCooldown = 0.5;
+                    }
+                    
+                    // Si el otro no es rezagado, también alterar su dirección
+                    if (!enemy1.isRezagado && enemy2.isRezagado) {
+                        enemy1.alterDirection();
+                        enemy1.collisionCooldown = 0.5;
+                    }
+                    if (!enemy2.isRezagado && enemy1.isRezagado) {
+                        enemy2.alterDirection();
+                        enemy2.collisionCooldown = 0.5;
                     }
                 }
             }
