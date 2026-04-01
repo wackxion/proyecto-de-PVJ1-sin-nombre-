@@ -417,10 +417,10 @@ export class Game {
         const h = this.altoJuego;
         let x, y;
         
-        // Verificar si es un tipo rezagado
-        const isRezagado = size === TamanioAsteroide.LARGE_REZAGADO || 
-                          size === TamanioAsteroide.MEDIUM_REZAGADO || 
-                          size === TamanioAsteroide.SMALL_REZAGADO;
+        // Verificar si es un tipo rezagado usando strings
+        const isRezagado = size === 'large_rezagado' || 
+                          size === 'medium_rezagado' || 
+                          size === 'small_rezagado';
         
         if (size === 'special') {
             // Los especiales aparecen desde el centro de los bordes
