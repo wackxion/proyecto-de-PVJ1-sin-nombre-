@@ -434,8 +434,8 @@ export class Game {
         const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
         
         // Renderizar y agregar a la lista
-        enemy.render(this.aplicacion.stage);
-        this.enemigos.push(enemy);
+        enemigo.render(this.aplicacion.stage);
+        this.enemigos.push(enemigo);
     }
     
     /**
