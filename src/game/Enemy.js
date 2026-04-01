@@ -635,20 +635,29 @@ export class Enemigo extends GameObject {
     }
     
     /**
-     * Recibe daño de un proyectil
-     * Reduce la salud y verifica si debe destruirse
+     * Recibe daño del proyectil
+     * Reduce la salud del asteroide y verifica si se destruye
      * 
-     * @param {number} damage - Cantidad de daño a recibir
+     * @param {number} dano - Cantidad de daño a recibir
      * @returns {Array} - Nuevos asteroides generados (si se rompe)
      */
-    takeDamage(damage) {
+    recibirDano(dano) {
         // Reducir salud
-        this.salud -= damage;
+        this.salud -= dano;
         
         // Si no se destruye, activar desaceleración temporal
         if (this.salud > 0) {
             this._activarRalentizacion();
         }
+        
+        // Si la salud llegó a 0, destruir y crear fragmentos
+        if (this.salud <= 0) {
+            return this._romper();
+        }
+        
+        // Si no se destruyó, retornar array vacío
+        return [];
+    }
         
         // Si la salud llegó a 0, destruir y crear fragmentos
         if (this.salud <= 0) {

@@ -11,7 +11,7 @@
  * Actúa como el "director" del juego, coordinando todas las demás clases.
  */
 import { Jugador } from './Player.js';
-import { Projectile } from './Projectile.js';
+import { Proyectil } from './Projectile.js';
 import { Enemigo, TamanioAsteroide } from './Enemy.js';
 import { UltiEffect } from './UltiEffect.js';
 import { BurstEffect } from './BurstEffect.js';
@@ -306,7 +306,7 @@ export class Game {
      */
     createProjectile(x, y, direction) {
         // Crear el proyectil
-        const projectile = new Projectile(x, y, direction, this.anchoJuego, this.altoJuego);
+        const projectile = new Proyectil(x, y, direction, this.anchoJuego, this.altoJuego);
         
         // Renderizarlo en el stage
         projectile.render(this.aplicacion.stage);
@@ -515,8 +515,8 @@ export class Game {
                     this.efectosImpacto.push(hit);
                     
                     // El proyectil hace daño al enemigo
-                    // takeDamage() devuelve un array con nuevos asteroides si se rompió
-                    const newAsteroids = enemy.takeDamage(projectile.damage);
+                    // recibirDano() devuelve un array con nuevos asteroides si se rompió
+                    const newAsteroids = enemy.recibirDano(projectile.dano);
                     
                     // Agregar los nuevos fragmentos a la lista
                     for (const nuevoEnemigo of newAsteroids) {
@@ -581,7 +581,7 @@ export class Game {
                 if (enemy.tamanio !== TamanioAsteroide.SPECIAL) {
                     // El jugador recibe daño (reduce los escudos)
                     // Si está en sobrecalentamiento, pierde el enfriamiento al recibir daño
-                    this.jugador.takeDamage(enemy.damage);
+                    this.jugador.recibirDano(enemy.dano);
                 }
                 
                 // Destruir el enemigo (siempre se destruye al chocar)
