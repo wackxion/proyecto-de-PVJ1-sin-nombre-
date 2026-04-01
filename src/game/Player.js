@@ -120,7 +120,7 @@ export class Jugador extends GameObject {
      * 
      * Esto alerta al jugador que perdió escudos
      */
-    _createDamageEffect() {
+    _crearEfectoDano() {
         // Si ya existe un efecto anterior, destruirlo primero
         // Esto evita tener múltiples efectos acumulados
         if (this.damageEffect) {
@@ -147,8 +147,8 @@ export class Jugador extends GameObject {
         
         // Agregar el efecto al stage (pantalla principal del juego)
         // Solo si el juego existe y tiene un stage
-        if (this.juego && this.juego.app && this.juego.app.stage) {
-            this.juego.app.stage.addChild(this.damageEffect);
+        if (this.juego && this.juego.app && this.juego.aplicacion.stage) {
+            this.juego.aplicacion.stage.addChild(this.damageEffect);
         }
         
         // Establecer timer = 0.5 segundos para que desaparezca el efecto
@@ -205,7 +205,7 @@ export class Jugador extends GameObject {
      * 
      * @param {number} delta - Tiempo transcurrido
      */
-    _updateOverheat(delta) {
+    _actualizarSobrecalentamiento(delta) {
         // Si está en sobrecalentamiento
         if (this.sobrecalentado && this.temporizadorEnfriamiento > 0) {
             // Reducir el timer
@@ -228,7 +228,7 @@ export class Jugador extends GameObject {
      * 
      * @param {number} delta - Tiempo transcurrido
      */
-    _updateDamageEffect(delta) {
+    _actualizarEfectoDano(delta) {
         // Si el timer es mayor a 0, el efecto está activo
         if (this.damageEffectTimer > 0) {
             // Reducir el timer
@@ -358,10 +358,10 @@ export class Jugador extends GameObject {
         // Si no está en sobrecalentamiento
         if (!this.sobrecalentado) {
             // Reducir escudos
-            this.escudos = Math.max(0, this.escudos - damage);
+            this.escudos = Math.max(0, this.escudos - dano);
             
             // Crear efecto visual de daño
-            this._createDamageEffect();
+            this._crearEfectoDano();
             
             // Si los escudos llegaron a 0, entrar en modo sobrecalentamiento
             if (this.escudos <= 0) {
@@ -386,7 +386,7 @@ export class Jugador extends GameObject {
     /**
      * Crea efecto visual cuando se pierde el sobrecalentamiento
      */
-    _createOverheatLostEffect() {
+    _crearEfectoPerdidaEnfriamiento() {
         if (this.damageEffect) {
             this.damageEffect.destroy();
         }
@@ -400,8 +400,8 @@ export class Jugador extends GameObject {
         this.damageEffect.x = this.x;
         this.damageEffect.y = this.y;
         
-        if (this.juego && this.juego.app && this.juego.app.stage) {
-            this.juego.app.stage.addChild(this.damageEffect);
+        if (this.juego && this.juego.app && this.juego.aplicacion.stage) {
+            this.juego.aplicacion.stage.addChild(this.damageEffect);
         }
         
         this.damageEffectTimer = 0.5;
@@ -411,7 +411,7 @@ export class Jugador extends GameObject {
      * Mantiene al jugador dentro de los límites del juego
      * Evita que la nave se salga de la pantalla
      */
-    _clampToBounds() {
+    _mantenerEnPantalla() {
         // Definir límites del área de juego
         const bounds = { width: this.juegoWidth, height: this.juegoHeight };
         

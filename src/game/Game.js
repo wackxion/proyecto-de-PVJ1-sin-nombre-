@@ -220,7 +220,7 @@ export class Game {
         
         // Guardar referencia al juego en el jugador
         // Esto permite que el jugador pueda crear proyectiles
-        this.jugador.game = this;
+        this.jugador.juego = this;
         
         // Resetear la velocidad de disparo al valor inicial
         this.jugador.reiniciarVelocidadDisparo();
