@@ -68,7 +68,7 @@ export class Game {
         this.spawnTimer = 0;
         
         // SpawnInterval = tiempo en segundos entre cada oleada de asteroides
-        this.spawnInterval = 2;
+        this.spawnInterval = 1;
         
         // MaxEnemies = cantidad máxima de asteroides en pantalla
         this.maxEnemies = 30;
