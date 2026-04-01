@@ -343,54 +343,6 @@ export class Enemigo extends GameObject {
         
         return newAsteroids;
     }
-        // Si es MEDIUM, crear 2 SMALL
-        else if (this.tamanio === TamanioAsteroide.MEDIANO) {
-            newAsteroids.push(
-                this._crearFragmentoConOffset(TamanioAsteroide.PEQUENO, 0),
-                this._crearFragmentoConOffset(TamanioAsteroide.PEQUENO, 1)
-            );
-        }
-        // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
-        if (this.tamanio === TamanioAsteroide.LARGE_REZAGADO) {
-            // Crear fragmentos rezagados con direcciones diferentes
-            newAsteroids.push(
-                this._crearFragmentoRezagado(TamanioAsteroide.MEDIANO_REZAGADO, 0),
-                this._crearFragmentoRezagado(TamanioAsteroide.MEDIANO_REZAGADO, 1)
-            );
-        }
-        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
-        else if (this.tamanio === TamanioAsteroide.MEDIANO_REZAGADO) {
-            newAsteroids.push(
-                this._crearFragmentoRezagado(TamanioAsteroide.PEQUENO_REZAGADO, 0),
-                this._crearFragmentoRezagado(TamanioAsteroide.PEQUENO_REZAGADO, 1)
-            );
-        }
-        // Si es MEDIUM, crear 2 SMALL
-        else if (this.size === TamanioAsteroide.MEDIUM) {
-            newAsteroids.push(
-                this._crearFragmentoConOffset(TamanioAsteroide.SMALL, 0),
-                this._crearFragmentoConOffset(TamanioAsteroide.SMALL, 1)
-            );
-        }
-        // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
-        if (this.size === TamanioAsteroide.LARGE_REZAGADO) {
-            // Crear fragmentos rezagados con direcciones diferentes
-            newAsteroids.push(
-                this._crearFragmentoRezagado(TamanioAsteroide.MEDIUM_REZAGADO, 0),
-                this._crearFragmentoRezagado(TamanioAsteroide.MEDIUM_REZAGADO, 1)
-            );
-        }
-        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
-        else if (this.size === TamanioAsteroide.MEDIUM_REZAGADO) {
-            newAsteroids.push(
-                this._crearFragmentoRezagado(TamanioAsteroide.SMALL_REZAGADO, 0),
-                this._crearFragmentoRezagado(TamanioAsteroide.SMALL_REZAGADO, 1)
-            );
-        }
-        // SPECIAL no suelta fragmentos
-        
-        return newAsteroids;
-    }
     
     /**
      * Crea un fragmento con posición separada y dirección única
