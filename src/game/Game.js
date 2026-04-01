@@ -208,42 +208,34 @@ export class Game {
      * Se dibuja un rectángulo negro y encima puntos blancos aleatorios (estrellas)
      */
     _crearFondo() {
-        console.log('Creando fondo...');
+        console.log('Creando fondo, stage:', this.aplicacion.stage);
         
         // Crear objeto gráfico para dibujar
         const graphics = new PIXI.Graphics();
         const w = this.anchoJuego;
         const h = this.altoJuego;
         
-        console.log('Fondo tamaño:', w, h);
-        
         // Dibujar rectángulo negro que cubre toda la pantalla
         graphics.rect(0, 0, w, h);
         graphics.fill(0x0D0D1A); // Color negro espacial
         
         // Calcular cantidad de estrellas según el tamaño de la pantalla
-        // Dividir el área por 4000 para tener una densidad razonable
         const starCount = Math.floor((w * h) / 4000);
         
         // Dibujar cada estrella
         for (let i = 0; i < starCount; i++) {
-            // Posición aleatoria
             const x = Math.random() * w;
             const y = Math.random() * h;
-            
-            // Tamaño aleatorio (entre 1 y 3)
             const size = Math.random() * 2 + 1;
-            
-            // Brillo aleatorio (entre 30% y 80%)
             const alpha = Math.random() * 0.5 + 0.3;
             
-            // Dibujar círculo blanco
             graphics.circle(x, y, size);
             graphics.fill({ color: 0xFFFFFF, alpha: alpha });
         }
         
-        // Agregar el fondo al stage (pantalla principal)
+        // Agregar el fondo al stage
         this.aplicacion.stage.addChild(graphics);
+        console.log('Fondo agregado al stage, children:', this.aplicacion.stage.children.length);
     }
     
     /**
@@ -401,6 +393,8 @@ export class Game {
         const rand = Math.random();
         let size;
         
+        console.log('rand:', rand);
+        
         // Distribución de probabilidad:
         // 5% SPECIAL (power-up)
         if (rand < 0.05) {
@@ -430,6 +424,8 @@ export class Game {
         else {
             size = TamanioAsteroide.SMALL;
         }
+        
+        console.log('Size asignado:', size, 'TamanioAsteroide:', TamanioAsteroide);
         
         // Determinar posición de spawn (los asteroides aparecen desde los bordes)
         const w = this.anchoJuego;
