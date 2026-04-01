@@ -12,7 +12,7 @@
  */
 import { Jugador } from './Player.js';
 import { Proyectil } from './Projectile.js';
-import { Enemigo, TamanioAsteroide } from './Enemy.js';
+import { Enemigo } from './Enemy.js';
 import { UltiEffect } from './UltiEffect.js';
 import { BurstEffect } from './BurstEffect.js';
 import { HitEffect } from './HitEffect.js';
@@ -391,41 +391,26 @@ export class Game {
         
         // Elegir un tamaño aleatorio
         const rand = Math.random();
+        
+        // Usar switch en lugar de if-else para evitar problemas
         let size;
-        
-        console.log('rand:', rand);
-        
-        // Distribución de probabilidad:
-        // 5% SPECIAL (power-up)
         if (rand < 0.05) {
-            size = TamanioAsteroide.SPECIAL;
-        }
-        // 10% LARGE_REZAGADO (pasa de largo)
-        else if (rand < 0.15) {
-            size = TamanioAsteroide.LARGE_REZAGADO;
-        }
-        // 10% MEDIUM_REZAGADO
-        else if (rand < 0.25) {
-            size = TamanioAsteroide.MEDIUM_REZAGADO;
-        }
-        // 10% SMALL_REZAGADO
-        else if (rand < 0.35) {
-            size = TamanioAsteroide.SMALL_REZAGADO;
-        }
-        // 30% LARGE normal (orbita)
-        else if (rand < 0.65) {
-            size = TamanioAsteroide.LARGE;
-        }
-        // 20% MEDIUM normal
-        else if (rand < 0.85) {
-            size = TamanioAsteroide.MEDIUM;
-        }
-        // 15% SMALL normal
-        else {
-            size = TamanioAsteroide.SMALL;
+            size = 'special';
+        } else if (rand < 0.15) {
+            size = 'large_rezagado';
+        } else if (rand < 0.25) {
+            size = 'medium_rezagado';
+        } else if (rand < 0.35) {
+            size = 'small_rezagado';
+        } else if (rand < 0.65) {
+            size = 'large';
+        } else if (rand < 0.85) {
+            size = 'medium';
+        } else {
+            size = 'small';
         }
         
-        console.log('Size asignado:', size, 'TamanioAsteroide:', TamanioAsteroide);
+        console.log('Size asignado directamente:', size);
         
         // Determinar posición de spawn (los asteroides aparecen desde los bordes)
         const w = this.anchoJuego;
@@ -437,7 +422,7 @@ export class Game {
                           size === TamanioAsteroide.MEDIUM_REZAGADO || 
                           size === TamanioAsteroide.SMALL_REZAGADO;
         
-        if (size === TamanioAsteroide.SPECIAL) {
+        if (size === 'special') {
             // Los especiales aparecen desde el centro de los bordes
             if (Math.random() < 0.5) {
                 // Aparece desde izquierda o derecha (eje horizontal)
@@ -448,7 +433,7 @@ export class Game {
                 x = w / 2; // Centro horizontal
                 y = Math.random() < 0.5 ? -120 : h + 120;
             }
-        } else if (isRezagado) {
+        } else if (size === 'large_rezagado' || size === 'medium_rezagado' || size === 'small_rezagado') {
             // Los rezagados aparecen desde un borde y van hacia el otro
             if (Math.random() < 0.5) {
                 // Eje horizontal: izquierda o derecha
@@ -581,7 +566,7 @@ export class Game {
                         this.jugador.agregarCargaUlti(enemy.cargaUlti);
                         
                         // Si es el asteroide especial, dar power-up
-                        if (enemy.tamanio === TamanioAsteroide.SPECIAL) {
+                        if (enemy.tamanio === 'special') {
                             // Aumentar velocidad de disparo
                             this.jugador.aumentarVelocidadDisparo();
                             
@@ -626,7 +611,7 @@ export class Game {
             if (this._verificarColision(this.jugador, enemy)) {
                 // Si NO es el asteroide especial, hacer daño
                 // El especial es un power-up y no hace daño al chocar
-                if (enemy.tamanio !== TamanioAsteroide.SPECIAL) {
+                if (enemy.tamanio !== 'special') {
                     // El jugador recibe daño (reduce los escudos)
                     // Si está en sobrecalentamiento, pierde el enfriamiento al recibir daño
                     this.jugador.recibirDano(enemy.dano);

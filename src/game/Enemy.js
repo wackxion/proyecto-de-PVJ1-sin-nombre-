@@ -39,7 +39,7 @@ export class Enemigo extends GameObject {
      * @param {number} anchoJuego - Ancho del área de juego
      * @param {number} altoJuego - Alto del área de juego
      */
-    constructor(x, y, tamanio = TamanioAsteroide.GRANDE, objetivo = null, textura = null, velocidadHeredada = null, orbitarObjetivo = false, anchoJuego = 800, altoJuego = 600) {
+    constructor(x, y, tamanio = 'large', objetivo = null, textura = null, velocidadHeredada = null, orbitarObjetivo = false, anchoJuego = 800, altoJuego = 600) {
         // Llamar al constructor de ObjetoJuego
         super(x, y);
         
@@ -115,84 +115,68 @@ export class Enemigo extends GameObject {
      */
     _configurarPorTamanio(forzarOrbita = false) {
         switch (this.tamanio) {
-            case TamanioAsteroide.PEQUENO:
+            case 'small':
                 // Pequeño: radio 36px, escala 1x
                 this.radio = 36;
                 this.escala = 1.0;
-                this.velocidad = 150;      // Velocidad alta (el más rápido después de special)
-                this.salud = 25;     // Poca salud
-                this.puntos = 30;     // Puntos por destruirlo
-                this.cargaUlti = 10; // Carga para el ulti
-                this.dano = 10;     // 10% de escudos al tocar
-                this.debeOrbitar = forceOrbit; // Va directo a la nave
-                this.esRomptible = true; // Se rompe en fragmentos
+                this.velocidad = 150;
+                this.salud = 25;
+                this.puntos = 30;
+                this.cargaUlti = 10;
+                this.dano = 10;
+                this.debeOrbitar = forzarOrbita;
+                this.esRomptible = true;
                 break;
                 
-            case TamanioAsteroide.MEDIUM:
+            case 'medium':
                 // Mediano: radio 72px, escala 2x
                 this.radio = 72;
                 this.escala = 2.0;
-                this.velocidad = 100;     // Velocidad media
-                this.salud = 50;    // Salud media
-                this.puntos = 20;    // Puntos medios
+                this.velocidad = 100;
+                this.salud = 50;
+                this.puntos = 20;
                 this.cargaUlti = 15;
-                this.dano = 25;    // 25% de escudos
-                this.debeOrbitar = forceOrbit;
+                this.dano = 25;
+                this.debeOrbitar = forzarOrbita;
                 this.esRomptible = true;
                 break;
                 
-            case TamanioAsteroide.LARGE:
+            case 'large':
                 // Grande: radio 120px, escala 4x
                 this.radio = 120;
                 this.escala = 4.0;
-                this.velocidad = 50;      // Velocidad baja
-                this.salud = 75;    // Mucha salud
-                this.puntos = 10;    // Pocos puntos (es fácil de pegar)
+                this.velocidad = 50;
+                this.salud = 75;
+                this.puntos = 10;
                 this.cargaUlti = 25;
-                this.dano = 50;    // 50% de escudos
-                this.debeOrbitar = true; // Siempre orbita
+                this.dano = 50;
+                this.debeOrbitar = true;
                 this.esRomptible = true;
                 break;
                 
-            case TamanioAsteroide.SPECIAL:
+            case 'special':
                 // Especial: apariencia grande como LARGE
                 this.radio = 120;
                 this.escala = 4.0;
-                this.velocidad = 120;    // El más rápido
-                this.salud = 200;   // Mucha salud
-                this.puntos = 100;   // Muchos puntos
+                this.velocidad = 120;
+                this.salud = 200;
+                this.puntos = 100;
                 this.cargaUlti = 50;
-                this.dano = 0;      // NO hace daño - es un power-up
-                this.debeOrbitar = false; // Va directo como SMALL
-                this.esRomptible = true; // Se puede romper
-                this.esRezagado = false; // No es rezagado
+                this.dano = 0;
+                this.debeOrbitar = false;
+                this.esRomptible = true;
+                this.esRezagado = false;
                 break;
                 
-            case TamanioAsteroide.LARGE_REZAGADO:
+            case 'large_rezagado':
                 // Grande rezagado: pasa de largo, no sigue a la nave
                 this.radio = 120;
                 this.escala = 4.0;
-                this.velocidad = 60;      // Velocidad media-baja
-                this.salud = 75;    // Mucha salud
-                this.puntos = 10;    // Pocos puntos
+                this.velocidad = 60;
+                this.salud = 75;
+                this.puntos = 10;
                 this.cargaUlti = 25;
-                this.dano = 50;    // 50% de escudos
-                this.debeOrbitar = false;
-                this.esRomptible = true;
-                this.esRezagado = true; // Es rezagado
-                this.direccionX = Math.random() < 0.5 ? 1 : -1; // Dirección horizontal
-                this.direccionY = 0;
-                break;
-                
-            case TamanioAsteroide.MEDIUM_REZAGADO:
-                // Mediano rezagado
-                this.radio = 72;
-                this.escala = 2.0;
-                this.velocidad = 80;     // Velocidad media
-                this.salud = 50;    // Salud media
-                this.puntos = 20;    // Puntos medios
-                this.cargaUlti = 15;
-                this.dano = 25;    // 25% de escudos
+                this.dano = 50;
                 this.debeOrbitar = false;
                 this.esRomptible = true;
                 this.esRezagado = true;
@@ -200,15 +184,31 @@ export class Enemigo extends GameObject {
                 this.direccionY = 0;
                 break;
                 
-            case TamanioAsteroide.SMALL_REZAGADO:
+            case 'medium_rezagado':
+                // Mediano rezagado
+                this.radio = 72;
+                this.escala = 2.0;
+                this.velocidad = 80;
+                this.salud = 50;
+                this.puntos = 20;
+                this.cargaUlti = 15;
+                this.dano = 25;
+                this.debeOrbitar = false;
+                this.esRomptible = true;
+                this.esRezagado = true;
+                this.direccionX = Math.random() < 0.5 ? 1 : -1;
+                this.direccionY = 0;
+                break;
+                
+            case 'small_rezagado':
                 // Pequeño rezagado
                 this.radio = 36;
                 this.escala = 1.0;
-                this.velocidad = 120;    // Velocidad alta
-                this.salud = 25;    // Poca salud
-                this.puntos = 30;    // Puntos por destruirlo
+                this.velocidad = 120;
+                this.salud = 25;
+                this.puntos = 30;
                 this.cargaUlti = 10;
-                this.dano = 10;     // 10% de escudos
+                this.dano = 10;
                 this.debeOrbitar = false;
                 this.esRomptible = true;
                 this.esRezagado = true;
@@ -235,7 +235,7 @@ export class Enemigo extends GameObject {
             this.imagen.scale.set(this.escala);
             
             // Aplicar tinte según el tipo de asteroide
-            if (this.tamanio === TamanioAsteroide.SPECIAL) {
+            if (this.tamanio === 'special') {
                 // Verde para el special (power-up)
                 this.imagen.tint = 0x00CC44;
             } else if (this.esRezagado) {
@@ -249,7 +249,7 @@ export class Enemigo extends GameObject {
         } else {
             // Determinar color según el tipo
             let color;
-            if (this.tamanio === TamanioAsteroide.SPECIAL) {
+            if (this.tamanio === 'special') {
                 color = 0x00CC44; // Verde
             } else if (this.esRezagado) {
                 color = 0x8800CC; // Violeta
@@ -276,7 +276,7 @@ export class Enemigo extends GameObject {
                     craterRadius
                 );
                 // Color más oscuro que el base
-                if (this.tamanio === TamanioAsteroide.SPECIAL) {
+                if (this.tamanio === 'special') {
                     this.graphics.fill({ color: 0x008833 });
                 } else if (this.esRezagado) {
                     this.graphics.fill({ color: 0x550088 });
@@ -313,13 +313,36 @@ export class Enemigo extends GameObject {
         const newAsteroids = [];
         
         // Si es LARGE, crear 2 MEDIUM
-        if (this.tamanio === TamanioAsteroide.LARGE) {
-            // Crear fragmentos con direcciones opuestas
+        if (this.tamanio === 'large') {
             newAsteroids.push(
-                this._crearFragmentoConOffset(TamanioAsteroide.MEDIANO, 0),
-                this._crearFragmentoConOffset(TamanioAsteroide.MEDIANO, 1)
+                this._crearFragmentoConOffset('medium', 0),
+                this._crearFragmentoConOffset('medium', 1)
             );
         } 
+        // Si es MEDIUM, crear 2 SMALL
+        else if (this.tamanio === 'medium') {
+            newAsteroids.push(
+                this._crearFragmentoConOffset('small', 0),
+                this._crearFragmentoConOffset('small', 1)
+            );
+        }
+        // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
+        else if (this.tamanio === 'large_rezagado') {
+            newAsteroids.push(
+                this._crearFragmentoRezagado('medium_rezagado', 0),
+                this._crearFragmentoRezagado('medium_rezagado', 1)
+            );
+        }
+        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
+        else if (this.tamanio === 'medium_rezagado') {
+            newAsteroids.push(
+                this._crearFragmentoRezagado('small_rezagado', 0),
+                this._crearFragmentoRezagado('small_rezagado', 1)
+            );
+        }
+        
+        return newAsteroids;
+    }
         // Si es MEDIUM, crear 2 SMALL
         else if (this.tamanio === TamanioAsteroide.MEDIANO) {
             newAsteroids.push(
