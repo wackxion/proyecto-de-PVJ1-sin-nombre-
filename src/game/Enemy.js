@@ -377,7 +377,7 @@ export class Enemigo extends GameObject {
         }
         
         // Crear el fragmento con posición desplazada
-        const fragment = new Enemy(
+        const fragment = new Enemigo(
             this.x + offsetX, 
             this.y + offsetY, 
             size, 
@@ -409,7 +409,7 @@ export class Enemigo extends GameObject {
         const offsetX = offsetIndex === 0 ? -baseOffset : baseOffset;
         
         // Crear el fragmento con posición desplazada
-        const fragment = new Enemy(
+        const fragment = new Enemigo(
             this.x + offsetX, 
             this.y, 
             size, 
