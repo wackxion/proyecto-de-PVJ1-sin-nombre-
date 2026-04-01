@@ -166,14 +166,27 @@ export class Game {
      * Son las imágenes que se usan en el juego
      */
     async _cargarRecursos() {
-        // Cargar la textura de la nave desde la carpeta assets
-        // PIXI.Assets.load() carga una imagen y la convierte en una textura
-        const playerTexture = await PIXI.Assets.load('assets/nave.png');
-        this.texturaJugador = playerTexture;
+        console.log('Cargando assets...');
         
-        // Cargar la textura del asteroide
-        const asteroidTexture = await PIXI.Assets.load('assets/asteroide.png');
-        this.texturaAsteroide = asteroidTexture;
+        try {
+            // Cargar la textura de la nave desde la carpeta assets
+            // En PixiJS v8, usamos load con la URL directa
+            const playerTexture = await PIXI.Assets.load('assets/nave.png');
+            console.log('Textura jugador cargada:', playerTexture);
+            this.texturaJugador = playerTexture;
+            
+            // Cargar la textura del asteroide
+            const asteroidTexture = await PIXI.Assets.load('assets/asteroide.png');
+            console.log('Textura asteroide cargada:', asteroidTexture);
+            this.texturaAsteroide = asteroidTexture;
+            
+            console.log('Assets cargados correctamente');
+        } catch (error) {
+            console.error('Error cargando assets:', error);
+            // Crear texturas vacías como fallback
+            this.texturaJugador = PIXI.Texture.WHITE;
+            this.texturaAsteroide = PIXI.Texture.WHITE;
+        }
     }
     
     /**
@@ -449,6 +462,7 @@ export class Game {
         const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
         
         console.log('Enemigo creado:', size, 'imagen:', enemigo.imagen);
+        console.log('TexturaAsteroide:', this.texturaAsteroide);
         
         // Renderizar y agregar a la lista
         enemigo.render(this.aplicacion.stage);
