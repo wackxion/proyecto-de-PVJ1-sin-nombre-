@@ -72,7 +72,7 @@ export class BurstEffect extends GameObject {
         this.sprite.y = y;
         
         // Dibujar las partículas por primera vez
-        this._draw();
+        this._dibujar();
     }
     
     /**
@@ -130,7 +130,7 @@ export class BurstEffect extends GameObject {
         }
         
         // Redibujar las partículas con las nuevas posiciones
-        this._draw();
+        this._dibujar();
     }
     
     /**

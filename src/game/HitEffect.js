@@ -48,7 +48,7 @@ export class HitEffect extends GameObject {
         this.sprite.y = y;
         
         // Dibujar las partículas
-        this._draw();
+        this._dibujar();
     }
     
     /**
