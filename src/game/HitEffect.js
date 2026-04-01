@@ -35,7 +35,7 @@ export class HitEffect extends GameObject {
         this.particles = [];
         
         // Configurar según el tipo de efecto
-        this._configureByType();
+        this._configurarPorTipo();
         
         // Color: Naranja Birome (#FF8800)
         this.color = 0xFF8800;
@@ -55,7 +55,7 @@ export class HitEffect extends GameObject {
      * Configura las partículas según el tipo de efecto
      * Define cantidad, velocidad y desaceleración según el tipo
      */
-    _configureByType() {
+    _configurarPorTipo() {
         switch (this.type) {
             case 'hit':
                 // Efecto de impacto básico
@@ -106,7 +106,7 @@ export class HitEffect extends GameObject {
     /**
      * Dibuja las partículas en el graphics
      */
-    _draw() {
+    _dibujar() {
         // Limpiar dibujos anteriores
         this.graphics.clear();
         

@@ -60,7 +60,7 @@ export class UltiEffect extends GameObject {
         this.graphics = new PIXI.Graphics();
         
         // Dibujar el aro inicial
-        this._drawRing();
+        this._dibujarAnillo();
         
         this.sprite = this.graphics;
         this.sprite.x = x;
@@ -71,7 +71,7 @@ export class UltiEffect extends GameObject {
      * Dibuja el aro en el graphics
      * Se llama en cada frame para actualizar el tamaño
      */
-    _drawRing() {
+    _dibujarAnillo() {
         // Limpiar el graphics anterior
         this.graphics.clear();
         
@@ -115,10 +115,10 @@ export class UltiEffect extends GameObject {
         this.radius += this.expansionSpeed * delta;
         
         // Redibujar el aro con el nuevo tamaño
-        this._drawRing();
+        this._dibujarAnillo();
         
         // Verificar si el aro toca algún asteroide
-        this._checkCollisions();
+        this._verificarColisiones();
         
         // Si el radio llegó al máximo, destruir el efecto
         if (this.radius >= this.maxRadius) {
@@ -130,7 +130,7 @@ export class UltiEffect extends GameObject {
      * Verifica colisiones con los enemigos
      * Destruye cualquier asteroide que el aro toque
      */
-    _checkCollisions() {
+    _verificarColisiones() {
         // Recorrer todos los enemigos
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];

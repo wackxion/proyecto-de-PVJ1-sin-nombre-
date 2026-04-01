@@ -222,7 +222,7 @@ export class Enemigo extends GameObject {
      * Crea el sprite (imagen visual) del asteroide
      * Usa la textura proporcionada o crea uno con Graphics si no hay
      */
-    _createSprite() {
+    _crearSprite() {
         // Si hay una textura proporcionada
         if (this.textura !== null) {
             // Crear sprite con la textura
@@ -305,7 +305,7 @@ export class Enemigo extends GameObject {
      * 
      * @returns {Array} - Array con los nuevos Enemy creados
      */
-    _break() {
+    _romper() {
         // Destruir el asteroide actual
         this.destroy();
         
@@ -316,30 +316,30 @@ export class Enemigo extends GameObject {
         if (this.size === TamanioAsteroide.LARGE) {
             // Crear fragmentos con direcciones opuestas
             newAsteroids.push(
-                this._createFragmentWithOffset(TamanioAsteroide.MEDIUM, 0),
-                this._createFragmentWithOffset(TamanioAsteroide.MEDIUM, 1)
+                this._crearFragmentoConOffset(TamanioAsteroide.MEDIUM, 0),
+                this._crearFragmentoConOffset(TamanioAsteroide.MEDIUM, 1)
             );
         } 
         // Si es MEDIUM, crear 2 SMALL
         else if (this.size === TamanioAsteroide.MEDIUM) {
             newAsteroids.push(
-                this._createFragmentWithOffset(TamanioAsteroide.SMALL, 0),
-                this._createFragmentWithOffset(TamanioAsteroide.SMALL, 1)
+                this._crearFragmentoConOffset(TamanioAsteroide.SMALL, 0),
+                this._crearFragmentoConOffset(TamanioAsteroide.SMALL, 1)
             );
         }
         // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
         if (this.size === TamanioAsteroide.LARGE_REZAGADO) {
             // Crear fragmentos rezagados con direcciones diferentes
             newAsteroids.push(
-                this._createRezagadoFragment(TamanioAsteroide.MEDIUM_REZAGADO, 0),
-                this._createRezagadoFragment(TamanioAsteroide.MEDIUM_REZAGADO, 1)
+                this._crearFragmentoRezagado(TamanioAsteroide.MEDIUM_REZAGADO, 0),
+                this._crearFragmentoRezagado(TamanioAsteroide.MEDIUM_REZAGADO, 1)
             );
         }
         // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
         else if (this.size === TamanioAsteroide.MEDIUM_REZAGADO) {
             newAsteroids.push(
-                this._createRezagadoFragment(TamanioAsteroide.SMALL_REZAGADO, 0),
-                this._createRezagadoFragment(TamanioAsteroide.SMALL_REZAGADO, 1)
+                this._crearFragmentoRezagado(TamanioAsteroide.SMALL_REZAGADO, 0),
+                this._crearFragmentoRezagado(TamanioAsteroide.SMALL_REZAGADO, 1)
             );
         }
         // SPECIAL no suelta fragmentos
@@ -354,7 +354,7 @@ export class Enemigo extends GameObject {
      * @param {number} offsetIndex - Índice para calcular offset (0 o 1)
      * @returns {Enemy} - Nuevo asteroide
      */
-    _createFragmentWithOffset(size, offsetIndex) {
+    _crearFragmentoConOffset(tamanio, indiceOffset) {
         // Offset para separar los fragmentos
         const baseOffset = 60;
         const offsetX = offsetIndex === 0 ? -baseOffset : baseOffset;
@@ -366,7 +366,7 @@ export class Enemigo extends GameObject {
         let inheritOrbit = false;
         
         if (this.debeOrbitar) {
-            trajectory = this._calculateTrajectory();
+            trajectory = this._calcularTrayectoria();
             inheritOrbit = true;
             
             // Modificar ligeramente la trayectoria para que no sea idéntica
@@ -399,7 +399,7 @@ export class Enemigo extends GameObject {
      * @param {number} offsetIndex - Índice para calcular offset (0 o 1)
      * @returns {Enemy} - Nuevo asteroide rezagado
      */
-    _createRezagadoFragment(size, offsetIndex = 0) {
+    _crearFragmentoRezagado(tamanio, indiceOffset = 0) {
         // Dirección aleatoria para el fragmento
         const directionX = Math.random() < 0.5 ? 1 : -1;
         const directionY = 0;
@@ -438,7 +438,7 @@ export class Enemigo extends GameObject {
      * 
      * @returns {Object} - Velocidad {x, y} en dirección orbital
      */
-    _calculateTrajectory() {
+    _calcularTrayectoria() {
         // Si no hay objetivo (jugador), retornar velocidad cero
         if (!this.objetivo) return { x: 0, y: 0 };
         
@@ -502,23 +502,23 @@ export class Enemigo extends GameObject {
         // === MOVIMIENTO NORMAL ===
         else if (this.objetivo) {
             // Si hay slowdown activo, mover más lento (30% de velocidad)
-            let currentSpeed = this.velocidad;
+            let velocidadActual = this.velocidad;
             if (this.slowdownTimer > 0) {
-                currentSpeed *= 0.3;
+                velocidadActual *= 0.3;
                 this.slowdownTimer -= delta;
             }
             
             // Si es rezagado, moverse en línea recta sin seguir a la nave
             if (this.esRezagado) {
-                this._moveRezagado(delta, currentSpeed);
+                this._moverRezagado(delta, velocidadActual);
             }
             // Si no es rezagado, movimiento normal
             else if (this.debeOrbitar) {
                 // Orbitar alrededor de la nave
-                this._orbitTarget(delta, currentSpeed);
+                this._orbitarObjetivo(delta, velocidadActual);
             } else {
                 // Moverse directamente hacia la nave
-                this._moveConcentric(delta, currentSpeed);
+                this._moverConcéntrico(delta, velocidadActual);
             }
         }
         
@@ -527,7 +527,7 @@ export class Enemigo extends GameObject {
         this.imagen.y = this.y;
         
         // Verificar si está fuera de los bordes (para rezagados)
-        this._checkBounds();
+        this._verificarLimites();
         
         // Rotar el sprite para efecto visual
         if (this.imagen) {
@@ -543,7 +543,7 @@ export class Enemigo extends GameObject {
      * @param {number} delta - Tiempo transcurrido
      * @param {number} speed - Velocidad actual
      */
-    _moveRezagado(delta, speed) {
+    _moverRezagado(delta, velocidad) {
         // Mover en la dirección asignada
         this.x += this.direccionX * speed * delta;
         this.y += this.direccionY * speed * delta;
@@ -553,7 +553,7 @@ export class Enemigo extends GameObject {
      * Verifica si el asteroide está fuera de los bordes
      * Para rezagados: los destruye cuando salen de la pantalla
      */
-    _checkBounds() {
+    _verificarLimites() {
         if (this.esRezagado) {
             const margin = this.radio + 50;
             
@@ -596,7 +596,7 @@ export class Enemigo extends GameObject {
      * @param {number} delta - Tiempo transcurrido
      * @param {number} speed - Velocidad actual (puede ser reducida por slowdown)
      */
-    _moveConcentric(delta, speed) {
+    _moverConcéntrico(delta, velocidad) {
         const dx = this.objetivo.x - this.x;
         const dy = this.objetivo.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -625,12 +625,12 @@ export class Enemigo extends GameObject {
         
         // Si no se destruye, activar desaceleración temporal
         if (this.salud > 0) {
-            this._activateSlowdown();
+            this._activarRalentizacion();
         }
         
         // Si la salud llegó a 0, destruir y crear fragmentos
         if (this.salud <= 0) {
-            return this._break();
+            return this._romper();
         }
         
         // Si no se destruyó, retornar array vacío
@@ -642,7 +642,7 @@ export class Enemigo extends GameObject {
      * Se llama cuando un asteroide recibe daño pero no se destruye
      * Hace que el asteroide se mueva más lento por 1 segundo
      */
-    _activateSlowdown() {
+    _activarRalentizacion() {
         // Establecer timer a 1 segundo
         // Si ya estaba activo, se resetea (no se acumula)
         this.slowdownTimer = 1.0;
@@ -655,7 +655,7 @@ export class Enemigo extends GameObject {
      * @param {number} delta - Tiempo transcurrido
      * @param {number} speed - Velocidad actual
      */
-    _orbitTarget(delta, speed) {
+    _orbitarObjetivo(delta, velocidad) {
         const dx = this.objetivo.x - this.x;
         const dy = this.objetivo.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);

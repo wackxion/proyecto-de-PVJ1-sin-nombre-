@@ -79,7 +79,7 @@ export class BurstEffect extends GameObject {
      * Dibuja todas las partículas
      * Se llama en cada frame para actualizar el efecto visual
      */
-    _draw() {
+    _dibujar() {
         // Limpiar los gráficos anteriores
         this.graphics.clear();
         

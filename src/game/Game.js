@@ -135,16 +135,16 @@ export class Game {
         this.gestorEntrada = new GestorEntrada();
         
         // Cargar los assets (imágenes) del juego
-        await this._loadAssets();
+        await this._cargarRecursos();
         
         // Crear el fondo con estrellas
-        this._createBackground();
+        this._crearFondo();
         
         // Crear el jugador (nave)
-        this._createPlayer();
+        this._crearJugador();
         
         // Configurar la interfaz de usuario (UI)
-        this._setupUI();
+        this._configurarUI();
         
         // Iniciar el bucle del juego
         // ticker.add() registra una función que se llama en cada frame (60 veces por segundo)
@@ -156,7 +156,7 @@ export class Game {
      * Carga los assets (recursos) del juego
      * Son las imágenes que se usan en el juego
      */
-    async _loadAssets() {
+    async     _cargarRecursos() {
         // Cargar la textura de la nave desde la carpeta assets
         // PIXI.Assets.load() carga una imagen y la convierte en una textura
         const playerTexture = await PIXI.Assets.load('assets/nave.png');
@@ -171,7 +171,7 @@ export class Game {
      * Crea el fondo del juego con estrellas
      * Se dibuja un rectángulo negro y encima puntos blancos aleatorios (estrellas)
      */
-    _createBackground() {
+    _crearFondo() {
         // Crear objeto gráfico para dibujar
         const graphics = new PIXI.Graphics();
         const w = this.anchoJuego;
@@ -210,7 +210,7 @@ export class Game {
      * Crea el jugador (nave espacial)
      * Se posiciona en el centro de la pantalla
      */
-    _createPlayer() {
+    _crearJugador() {
         // Calcular posición central
         const centerX = this.anchoJuego / 2;
         const centerY = this.altoJuego / 2;
@@ -233,7 +233,7 @@ export class Game {
      * Configura la interfaz de usuario
      * Busca los elementos HTML donde se muestra la puntuación
      */
-    _setupUI() {
+    _configurarUI() {
         // Buscar el elemento HTML con id="score"
         this.elementoPuntuacion = document.getElementById('score');
         
@@ -247,7 +247,7 @@ export class Game {
         }
         
         // Actualizar la UI por primera vez
-        this._updateUI();
+        this._actualizarUI();
     }
     
     /**
@@ -255,7 +255,7 @@ export class Game {
      * Muestra la puntuación actual, los escudos y si el ulti está listo
      * Si está en sobrecalentamiento, muestra en rojo
      */
-    _updateUI() {
+    _actualizarUI() {
         if (this.elementoPuntuacion) {
             // Obtener los escudos del jugador (porcentaje)
             let shield = this.jugador ? this.jugador.shield : 0;
@@ -347,7 +347,7 @@ export class Game {
      * Genera un nuevo asteroide
      * Se llama periódicamente para crear nuevos enemigos
      */
-    _spawnEnemy() {
+    _generarEnemigo() {
         // Si ya hay demasiados asteroides, no crear más
         if (this.enemigos.length >= this.maximoEnemigos) return;
         
@@ -446,7 +446,7 @@ export class Game {
      * @param {Object} obj2 - Segundo objeto (debe tener x, y, radius)
      * @returns {boolean} - true si hay colisión, false si no
      */
-    _checkCollision(obj1, obj2) {
+    _verificarColision(obj1, obj2) {
         // Calcular la distancia entre los centros de los dos objetos
         const dx = obj1.x - obj2.x;  // Diferencia en X
         const dy = obj1.y - obj2.y;  // Diferencia en Y
@@ -463,7 +463,7 @@ export class Game {
      * Elimina enemigos que están muy lejos de la pantalla
      * Se llama después de actualizar los enemigos
      */
-    _cleanupFarEnemies() {
+    _limpiarEnemigosLejanos() {
         const margin = 200; // Margen fuera de la pantalla
         
         for (let i = this.enemigos.length - 1; i >= 0; i--) {
@@ -489,7 +489,7 @@ export class Game {
      * Procesa las colisiones entre proyectiles y enemigos
      * Se llama en cada frame del juego
      */
-    _processProjectileCollisions() {
+    _procesarColisionesProyectiles() {
         // Recorrer todos los proyectiles (de atrás hacia adelante para poder eliminar)
         for (let i = this.proyectiles.length - 1; i >= 0; i--) {
             const projectile = this.proyectiles[i];
@@ -503,7 +503,7 @@ export class Game {
                 if (!enemy.active) continue;
                 
                 // Verificar si hay colisión
-                if (this._checkCollision(projectile, enemy)) {
+                if (this._verificarColision(projectile, enemy)) {
                     // Crear efecto visual de impacto
                     const hit = new HitEffect(enemy.x, enemy.y, 'hit');
                     hit.render(this.aplicacion.stage);
@@ -547,7 +547,7 @@ export class Game {
                     this.proyectiles.splice(i, 1);
                     
                     // Actualizar la UI
-                    this._updateUI();
+                    this._actualizarUI();
                     
                     // Salir del for de enemigos (el proyectil solo puede golpear uno)
                     break;
@@ -560,7 +560,7 @@ export class Game {
      * Procesa las colisiones entre el jugador y los enemigos
      * Se llama en cada frame del juego
      */
-    _processPlayerCollisions() {
+    _procesarColisionesJugador() {
         // Si no hay jugador o no está activo, salir
         if (!this.jugador || !this.jugador.active) return;
         
@@ -570,7 +570,7 @@ export class Game {
             if (!enemy.active) continue;
             
             // Verificar colisión con el jugador
-            if (this._checkCollision(this.jugador, enemy)) {
+            if (this._verificarColision(this.jugador, enemy)) {
                 // Si NO es el asteroide especial, hacer daño
                 // El especial es un power-up y no hace daño al chocar
                 if (enemy.size !== TamanioAsteroide.SPECIAL) {
@@ -584,7 +584,7 @@ export class Game {
                 this.enemigos.splice(i, 1);
                 
                 // Actualizar la UI
-                this._updateUI();
+                this._actualizarUI();
             }
         }
     }
@@ -697,8 +697,8 @@ export class Game {
         
         // Acción cuando se hace click en el botón
         buttonContainer.on('pointerdown', () => {
-            this._cleanupGameOver();
-            this._restart();
+            this._limpiarFinJuego();
+            this._reiniciarJuego();
         });
         
         this.aplicacion.stage.addChild(buttonContainer);
@@ -708,8 +708,8 @@ export class Game {
         const restartHandler = (e) => {
             if (e.code === 'Enter') {
                 window.removeEventListener('keydown', restartHandler);
-                this._cleanupGameOver();
-                this._restart();
+                this._limpiarFinJuego();
+                this._reiniciarJuego();
             }
         };
         window.addEventListener('keydown', restartHandler);
@@ -718,8 +718,8 @@ export class Game {
         const clickHandler = () => {
             window.removeEventListener('keydown', restartHandler);
             this.aplicacion.stage.off('pointerdown', clickHandler);
-            this._cleanupGameOver();
-            this._restart();
+            this._limpiarFinJuego();
+            this._reiniciarJuego();
         };
         this.aplicacion.stage.eventMode = 'static';
         this.aplicacion.stage.on('pointerdown', clickHandler);
@@ -729,7 +729,7 @@ export class Game {
      * Limpia los elementos de la pantalla de Game Over
      * Se llama antes de reiniciar el juego
      */
-    _cleanupGameOver() {
+    _limpiarFinJuego() {
         // Flag para evitar múltiples limpiezas simultáneas
         if (this.limpiezaEnProgreso) return;
         this.limpiezaEnProgreso = true;
@@ -768,7 +768,7 @@ export class Game {
      * Reinicia el juego a su estado inicial
      * Se llama cuando el jugador pierde y elige jugar de nuevo
      */
-    _restart() {
+    _reiniciarJuego() {
         // Limpiar todo el stage (eliminar todos los objetos anteriores)
         if (this.aplicacion && this.aplicacion.stage) {
             this.aplicacion.stage.removeChildren();
@@ -782,13 +782,13 @@ export class Game {
         this.efectoUlti = null;
         
         // Recrear el fondo
-        this._createBackground();
+        this._crearFondo();
         
         // Recrear el jugador
-        this._createPlayer();
+        this._crearJugador();
         
         // Actualizar la UI
-        this._updateUI();
+        this._actualizarUI();
         
         // Marcar el juego como corriendo
         this.ejecutando = true;
@@ -834,7 +834,7 @@ export class Game {
         }
         
         // Eliminar enemigos que están muy lejos de la pantalla (fuera de vista)
-        this._cleanupFarEnemies();
+        this._limpiarEnemigosLejanos();
         
         // === ACTUALIZAR EFECTO ULTI ===
         if (this.efectoUlti && this.efectoUlti.active) {
@@ -875,15 +875,15 @@ export class Game {
         }
         
         // === PROCESAR COLISIONES ===
-        this._processProjectileCollisions();
-        this._processPlayerCollisions();
-        this._processEnemyCollisions();
+        this._procesarColisionesProyectiles();
+        this._procesarColisionesJugador();
+        this._procesarColisionesEnemigos();
         
         // === GENERAR NUEVOS ENEMIGOS ===
         this.temporizadorSpawn += delta;
         if (this.temporizadorSpawn >= this.intervaloSpawn) {
             this.temporizadorSpawn = 0;
-            this._spawnEnemy();
+            this._generarEnemigo();
             
             // Aumentar contador de oleadas
             this.contadorOleadas++;
@@ -903,14 +903,14 @@ export class Game {
         }
         
         // === ACTUALIZAR UI ===
-        this._updateUI();
+        this._actualizarUI();
     }
     
     /**
      * Procesa colisiones entre asteroides
      * Cuando dos asteroides chocan, rebotan en dirección opuesta
      */
-    _processEnemyCollisions() {
+    _procesarColisionesEnemigos() {
         // Verificar colisiones entre todos los asteroides
         for (let i = 0; i < this.enemigos.length; i++) {
             const enemy1 = this.enemigos[i];
@@ -924,7 +924,7 @@ export class Game {
                 if (enemy1.collisionCooldown > 0 || enemy2.collisionCooldown > 0) continue;
                 
                 // Verificar colisión entre los dos asteroides
-                if (this._checkCollision(enemy1, enemy2)) {
+                if (this._verificarColision(enemy1, enemy2)) {
                     // Alterar dirección de los rezagados
                     if (enemy1.isRezagado) {
                         enemy1.alterDirection();
