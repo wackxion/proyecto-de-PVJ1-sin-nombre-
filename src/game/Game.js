@@ -156,7 +156,7 @@ export class Game {
      * Carga los assets (recursos) del juego
      * Son las imágenes que se usan en el juego
      */
-    async     _cargarRecursos() {
+    async _cargarRecursos() {
         // Cargar la textura de la nave desde la carpeta assets
         // PIXI.Assets.load() carga una imagen y la convierte en una textura
         const playerTexture = await PIXI.Assets.load('assets/nave.png');
@@ -215,8 +215,12 @@ export class Game {
         const centerX = this.anchoJuego / 2;
         const centerY = this.altoJuego / 2;
         
+        console.log('Creando jugador en:', centerX, centerY, 'textura:', this.texturaJugador);
+        
         // Crear el objeto Player con la textura de la nave
         this.jugador = new Jugador(centerX, centerY, this.texturaJugador, this.anchoJuego, this.altoJuego);
+        
+        console.log('Jugador creado, imagen:', this.jugador.imagen);
         
         // Guardar referencia al juego en el jugador
         // Esto permite que el jugador pueda crear proyectiles
@@ -227,6 +231,8 @@ export class Game {
         
         // Renderizar el jugador en el stage
         this.jugador.render(this.aplicacion.stage);
+        
+        console.log('Jugador renderizado, parent:', this.jugador.imagen?.parent);
     }
     
     /**
@@ -433,8 +439,13 @@ export class Game {
         // Crear el enemigo con todos los parámetros necesarios
         const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
         
+        console.log('Enemigo creado:', size, 'imagen:', enemigo.imagen);
+        
         // Renderizar y agregar a la lista
         enemigo.render(this.aplicacion.stage);
+        
+        console.log('Enemigo renderizado, parent:', enemigo.imagen?.parent);
+        
         this.enemigos.push(enemigo);
     }
     
