@@ -168,25 +168,31 @@ export class Game {
     async _cargarRecursos() {
         console.log('Cargando assets...');
         
-        try {
-            // Cargar la textura de la nave desde la carpeta assets
-            // En PixiJS v8, usamos load con la URL directa
-            const playerTexture = await PIXI.Assets.load('assets/nave.png');
-            console.log('Textura jugador cargada:', playerTexture);
-            this.texturaJugador = playerTexture;
-            
-            // Cargar la textura del asteroide
-            const asteroidTexture = await PIXI.Assets.load('assets/asteroide.png');
-            console.log('Textura asteroide cargada:', asteroidTexture);
-            this.texturaAsteroide = asteroidTexture;
-            
-            console.log('Assets cargados correctamente');
-        } catch (error) {
-            console.error('Error cargando assets:', error);
-            // Crear texturas vacías como fallback
-            this.texturaJugador = PIXI.Texture.WHITE;
-            this.texturaAsteroide = PIXI.Texture.WHITE;
-        }
+        // Crear Graphics para la nave
+        const naveGraphics = new PIXI.Graphics();
+        // Triángulo de nave
+        naveGraphics.moveTo(25, 0);
+        naveGraphics.lineTo(-15, -15);
+        naveGraphics.lineTo(-10, 0);
+        naveGraphics.lineTo(-15, 15);
+        naveGraphics.closePath();
+        naveGraphics.fill(0x00AAFF);
+        // Convertir a textura
+        this.texturaJugador = this.aplicacion.renderer.generateTexture(naveGraphics);
+        
+        // Crear Graphics para el asteroide
+        const astroGraphics = new PIXI.Graphics();
+        astroGraphics.circle(0, 0, 30);
+        astroGraphics.fill(0xCC0000);
+        // Agregar algunos cráteres
+        astroGraphics.circle(-10, -5, 8);
+        astroGraphics.fill(0x990000);
+        astroGraphics.circle(8, 10, 5);
+        astroGraphics.fill(0x990000);
+        // Convertir a textura
+        this.texturaAsteroide = this.aplicacion.renderer.generateTexture(astroGraphics);
+        
+        console.log('Assets creados - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
     }
     
     /**
