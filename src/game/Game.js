@@ -90,6 +90,8 @@ export class Game {
         // Elementos UI
         this.elementoPuntuacion = null;
         this.elementoOleada = null;
+        this.elementoBarraUlti = null;
+        this.contenedorBarraUlti = null;
         
         // Elementos de fin de juego
         this.elementosFinJuego = [];
@@ -297,6 +299,10 @@ export class Game {
         // Buscar el elemento HTML con id="score"
         this.elementoPuntuacion = document.getElementById('score');
         
+        // Referencia a la barra de carga del Ulti
+        this.elementoBarraUlti = document.getElementById('ulti-bar-fill');
+        this.contenedorBarraUlti = document.getElementById('ulti-bar-container');
+        
         // Crear elemento para mostrar la oleada (wave)
         this.elementoOleada = document.getElementById('wave');
         if (!this.elementoOleada) {
@@ -353,6 +359,22 @@ export class Game {
         // Actualizar display de oleada
         if (this.elementoOleada) {
             this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Intervalo: ${this.intervaloSpawn.toFixed(2)}s`;
+        }
+        
+        // Actualizar barra de carga del Ulti
+        if (this.elementoBarraUlti && this.jugador) {
+            // Calcular porcentaje de carga (0 a 100)
+            const porcentajeCarga = Math.min(100, (this.jugador.cargaUlti / this.jugador.cargaMaxUlti) * 100);
+            
+            // Actualizar ancho de la barra
+            this.elementoBarraUlti.style.width = `${porcentajeCarga}%`;
+            
+            // Agregar efecto visual cuando está listo
+            if (this.jugador.ultiListo && this.contenedorBarraUlti) {
+                this.contenedorBarraUlti.classList.add('ready');
+            } else if (this.contenedorBarraUlti) {
+                this.contenedorBarraUlti.classList.remove('ready');
+            }
         }
     }
     

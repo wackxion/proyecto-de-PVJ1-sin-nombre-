@@ -46,10 +46,12 @@ export class Jugador extends GameObject {
         this.altoJuego = altoJuego;
         
         // SISTEMA DE ATAQUE ESPECIAL (ULTI)
-        // cargaUlti: carga actual acumulada (0-100)
+        // cargaUlti: carga actual acumulada (0-300)
+        // Se necesita destruir varios asteroides para llenarla
         this.cargaUlti = 0;
         // cargaMaxUlti: carga necesaria para poder usar el ataque especial
-        this.cargaMaxUlti = 100;
+        // 300 = más difícil de cargar (antes era 100)
+        this.cargaMaxUlti = 300;
         // ultiListo: flag que indica si el ataque está listo
         this.ultiListo = false;
         
