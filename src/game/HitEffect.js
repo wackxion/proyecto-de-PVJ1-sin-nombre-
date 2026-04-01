@@ -147,7 +147,7 @@ export class HitEffect extends GameObject {
         }
         
         // Redibujar
-        this._draw();
+        this._dibujar();
     }
     
     /**
