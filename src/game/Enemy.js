@@ -230,12 +230,29 @@ export class Enemy extends GameObject {
             // Aplicar escala según el tamaño
             this.sprite.scale.set(this.scale);
             
-            // Aplicar tinte rojo (color Birome Rojo) para que todos los asteroides sean rojos
-            this.sprite.tint = 0xCC0000;
+            // Aplicar tinte según el tipo de asteroide
+            if (this.size === AsteroidSize.SPECIAL) {
+                // Verde para el special (power-up)
+                this.sprite.tint = 0x00CC44;
+            } else if (this.isRezagado) {
+                // Violeta para los rezagados
+                this.sprite.tint = 0x8800CC;
+            } else {
+                // Rojo para los normales
+                this.sprite.tint = 0xCC0000;
+            }
             
         } else {
-            // Si no hay textura, crear un gráfico (círculo rojo)
-            const color = 0xCC0000;
+            // Determinar color según el tipo
+            let color;
+            if (this.size === AsteroidSize.SPECIAL) {
+                color = 0x00CC44; // Verde
+            } else if (this.isRezagado) {
+                color = 0x8800CC; // Violeta
+            } else {
+                color = 0xCC0000; // Rojo
+            }
+            
             this.graphics = new PIXI.Graphics();
             
             // Dibujar círculo base
@@ -254,7 +271,14 @@ export class Enemy extends GameObject {
                     Math.sin(angle) * dist,
                     craterRadius
                 );
-                this.graphics.fill({ color: 0x990000 }); // Color más oscuro
+                // Color más oscuro que el base
+                if (this.size === AsteroidSize.SPECIAL) {
+                    this.graphics.fill({ color: 0x008833 });
+                } else if (this.isRezagado) {
+                    this.graphics.fill({ color: 0x550088 });
+                } else {
+                    this.graphics.fill({ color: 0x990000 });
+                }
             }
             
             this.sprite = this.graphics;
@@ -286,18 +310,83 @@ export class Enemy extends GameObject {
         
         // Si es LARGE, crear 2 MEDIUM
         if (this.size === AsteroidSize.LARGE) {
-            // Calcular la trayectoria orbital del padre
-            const trajectory = this._calculateTrajectory();
-            
-            // Los fragmentos heredan órbita (el padre orbitaba)
-            const inheritOrbit = true;
-            
-            // Crear dos fragmentos medianos
+            // Crear fragmentos con direcciones opuestas
             newAsteroids.push(
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight),
-                new Enemy(this.x, this.y, AsteroidSize.MEDIUM, this.target, this.texture, trajectory, inheritOrbit, this.gameWidth, this.gameHeight)
+                this._createFragmentWithOffset(AsteroidSize.MEDIUM, 0),
+                this._createFragmentWithOffset(AsteroidSize.MEDIUM, 1)
             );
         } 
+        // Si es MEDIUM, crear 2 SMALL
+        else if (this.size === AsteroidSize.MEDIUM) {
+            newAsteroids.push(
+                this._createFragmentWithOffset(AsteroidSize.SMALL, 0),
+                this._createFragmentWithOffset(AsteroidSize.SMALL, 1)
+            );
+        }
+        // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
+        if (this.size === AsteroidSize.LARGE_REZAGADO) {
+            // Crear fragmentos rezagados con direcciones diferentes
+            newAsteroids.push(
+                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO, 0),
+                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO, 1)
+            );
+        }
+        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
+        else if (this.size === AsteroidSize.MEDIUM_REZAGADO) {
+            newAsteroids.push(
+                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO, 0),
+                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO, 1)
+            );
+        }
+        // SPECIAL no suelta fragmentos
+        
+        return newAsteroids;
+    }
+    
+    /**
+     * Crea un fragmento con posición separada y dirección única
+     * 
+     * @param {string} size - Tamaño del fragmento
+     * @param {number} offsetIndex - Índice para calcular offset (0 o 1)
+     * @returns {Enemy} - Nuevo asteroide
+     */
+    _createFragmentWithOffset(size, offsetIndex) {
+        // Offset para separar los fragmentos
+        const baseOffset = 60;
+        const offsetX = offsetIndex === 0 ? -baseOffset : baseOffset;
+        const offsetY = (Math.random() - 0.5) * baseOffset;
+        
+        // Calcular trayectoria única para cada fragmento
+        // Si el padre orbitaba, usar esa trayectoria
+        let trajectory = null;
+        let inheritOrbit = false;
+        
+        if (this.shouldOrbit) {
+            trajectory = this._calculateTrajectory();
+            inheritOrbit = true;
+            
+            // Modificar ligeramente la trayectoria para que no sea idéntica
+            if (trajectory) {
+                trajectory.x += (Math.random() - 0.5) * 20;
+                trajectory.y += (Math.random() - 0.5) * 20;
+            }
+        }
+        
+        // Crear el fragmento con posición desplazada
+        const fragment = new Enemy(
+            this.x + offsetX, 
+            this.y + offsetY, 
+            size, 
+            this.target, 
+            this.texture, 
+            trajectory, 
+            inheritOrbit, 
+            this.gameWidth, 
+            this.gameHeight
+        );
+        
+        return fragment;
+    }
         // Si es MEDIUM, crear 2 SMALL
         else if (this.size === AsteroidSize.MEDIUM) {
             // Solo hereda trayectoria si el padre orbitaba
@@ -323,13 +412,6 @@ export class Enemy extends GameObject {
             newAsteroids.push(
                 this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO, 0),
                 this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO, 1)
-            );
-        }
-        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
-        else if (this.size === AsteroidSize.MEDIUM_REZAGADO) {
-            newAsteroids.push(
-                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO),
-                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO)
             );
         }
         // SPECIAL no suelta fragmentos
