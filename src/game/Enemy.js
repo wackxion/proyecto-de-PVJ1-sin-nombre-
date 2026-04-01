@@ -311,11 +311,18 @@ export class Enemy extends GameObject {
             );
         }
         // Si es LARGE_REZAGADO, crear 2 MEDIUM_REZAGADO
-        else if (this.size === AsteroidSize.LARGE_REZAGADO) {
-            // Crear fragmentos rezagados con dirección aleatoria
+        if (this.size === AsteroidSize.LARGE_REZAGADO) {
+            // Crear fragmentos rezagados con dirección aleatoria y separados
             newAsteroids.push(
-                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO),
-                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO)
+                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO, 0),
+                this._createRezagadoFragment(AsteroidSize.MEDIUM_REZAGADO, 1)
+            );
+        }
+        // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
+        else if (this.size === AsteroidSize.MEDIUM_REZAGADO) {
+            newAsteroids.push(
+                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO, 0),
+                this._createRezagadoFragment(AsteroidSize.SMALL_REZAGADO, 1)
             );
         }
         // Si es MEDIUM_REZAGADO, crear 2 SMALL_REZAGADO
@@ -334,16 +341,21 @@ export class Enemy extends GameObject {
      * Crea un fragmento rezagado con dirección aleatoria
      * 
      * @param {string} size - Tamaño del fragmento
+     * @param {number} offsetIndex - Índice para calcular offset (0 o 1)
      * @returns {Enemy} - Nuevo asteroide rezagado
      */
-    _createRezagadoFragment(size) {
+    _createRezagadoFragment(size, offsetIndex = 0) {
         // Dirección aleatoria para el fragmento
         const directionX = Math.random() < 0.5 ? 1 : -1;
         const directionY = 0;
         
-        // Crear el fragmento
+        // Calcular offset para que los fragmentos aparezcan separados
+        const baseOffset = 50; // distancia mínima entre fragmentos
+        const offsetX = offsetIndex === 0 ? -baseOffset : baseOffset;
+        
+        // Crear el fragmento con posición desplazada
         const fragment = new Enemy(
-            this.x, 
+            this.x + offsetX, 
             this.y, 
             size, 
             this.target, 

@@ -355,8 +355,18 @@ export class Player extends GameObject {
                 // Crear efecto visual de daño
                 this._createDamageEffect();
             } else {
-                // Si no está al 100%, perder escudos normalmente
-                this.shield = Math.max(0, this.shield - damage);
+                // Si los escudos están debajo de 100% Y el daño hace que bajen de 100
+                // entrar en sobrecalentamiento
+                const newShield = Math.max(0, this.shield - damage);
+                
+                if (newShield < 100) {
+                    // Entrar en sobrecalentamiento con los escudos que quedan
+                    this.overheatShield = newShield;
+                    this.isOverheated = true;
+                    this.overheatTimer = this.overheatDuration;
+                }
+                
+                this.shield = newShield;
                 
                 // Crear efecto visual de daño
                 this._createDamageEffect();

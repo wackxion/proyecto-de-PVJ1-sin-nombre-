@@ -507,6 +507,7 @@ export class Game {
                 // El especial es un power-up y no hace daño al chocar
                 if (enemy.size !== AsteroidSize.SPECIAL) {
                     // El jugador recibe daño (reduce los escudos)
+                    // Si está en sobrecalentamiento, pierde el enfriamiento al recibir daño
                     this.player.takeDamage(enemy.damage);
                 }
                 
@@ -516,11 +517,6 @@ export class Game {
                 
                 // Actualizar la UI
                 this._updateUI();
-                
-                // Verificar si es game over (escudos en 0)
-                if (this.player.shield <= 0) {
-                    this.gameOver();
-                }
             }
         }
     }
@@ -824,37 +820,33 @@ export class Game {
     }
     
     /**
-     * Procesa colisiones entre asteroides rezagados
-     * Cuando dos asteroides rezagados chocan, alteran su dirección
+     * Procesa colisiones entre asteroides
+     * Cuando dos asteroides chocan, rebotan en dirección opuesta
      */
     _processEnemyCollisions() {
-        // Verificar colisiones entre asteroides rezagados
+        // Verificar colisiones entre todos los asteroides
         for (let i = 0; i < this.enemies.length; i++) {
             const enemy1 = this.enemies[i];
-            if (!enemy1.active || !enemy1.isRezagado) continue;
+            if (!enemy1.active) continue;
             
             for (let j = i + 1; j < this.enemies.length; j++) {
                 const enemy2 = this.enemies[j];
-                if (!enemy2.active || !enemy2.isRezagado) continue;
+                if (!enemy2.active) continue;
                 
                 // Verificar colisión entre los dos asteroides
                 if (this._checkCollision(enemy1, enemy2)) {
-                    // Ambos alteran su dirección
-                    enemy1.alterDirection();
-                    enemy2.alterDirection();
-                }
-            }
-        }
-        
-        // También verificar si los rezagados chocan con asteroides normales
-        for (const enemy of this.enemies) {
-            if (!enemy.active || !enemy.isRezagado) continue;
-            
-            for (const other of this.enemies) {
-                if (!other.active || other.isRezagado || other === enemy) continue;
-                
-                if (this._checkCollision(enemy, other)) {
-                    enemy.alterDirection();
+                    // Si es rezagado, solo alterar dirección
+                    if (enemy1.isRezagado) enemy1.alterDirection();
+                    if (enemy2.isRezagado) enemy2.alterDirection();
+                    
+                    // Si ambos son rezagados, también alterar la dirección del otro
+                    if (enemy1.isRezagado && enemy2.isRezagado) {
+                        // Ambos rebotan
+                    } else if (enemy1.isRezagado) {
+                        // El normal también altera su dirección si es rezagado el otro
+                    } else if (enemy2.isRezagado) {
+                        enemy1.alterDirection();
+                    }
                 }
             }
         }
