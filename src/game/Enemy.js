@@ -658,15 +658,6 @@ export class Enemigo extends GameObject {
         // Si no se destruyó, retornar array vacío
         return [];
     }
-        
-        // Si la salud llegó a 0, destruir y crear fragmentos
-        if (this.salud <= 0) {
-            return this._romper();
-        }
-        
-        // Si no se destruyó, retornar array vacío
-        return [];
-    }
     
     /**
      * Activa la desaceleración temporal
