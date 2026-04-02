@@ -416,8 +416,7 @@ export class Game {
             function(enemy) {
                 // Sumar puntos
                 game.puntuacion += enemy.puntos;
-                // Agregar carga al ulti
-                game.jugador.agregarCargaUlti(enemy.cargaUlti);
+                // NOTA: El ulti no carga cuando se usa - solo da puntos
             }
         );
         
@@ -440,13 +439,13 @@ export class Game {
         let size;
         if (rand < 0.05) {
             size = 'special';
-        } else if (rand < 0.15) {
+        } else if (rand < 0.20) {
             size = 'large_rezagado';
-        } else if (rand < 0.25) {
-            size = 'medium_rezagado';
         } else if (rand < 0.35) {
+            size = 'medium_rezagado';
+        } else if (rand < 0.50) {
             size = 'small_rezagado';
-        } else if (rand < 0.65) {
+        } else if (rand < 0.70) {
             size = 'large';
         } else if (rand < 0.85) {
             size = 'medium';
