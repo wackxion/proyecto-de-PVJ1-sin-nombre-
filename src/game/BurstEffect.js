@@ -1,14 +1,14 @@
 /**
  * BurstEffect - Efecto visual de explosión al destruir asteroide especial
  * 
- * Esta clase crea un efecto visual de "explosión" de partículas
+ * Esta clase muestra una animación de explosión usando un sprite sheet
  * cuando se destruye un asteroide especial (power-up).
  * 
  * Características:
- * - 20 partículas que salen disparadas en todas las direcciones
- * - Color azul (Birome)
- * - Dura 0.5 segundos
- * - Las partículas se expanden y se desvanecen
+ * - Usa un sprite sheet de 4 frames en horizontal
+ * - Cada frame es 32x36 píxeles
+ * - La animación dura 0.3 segundos (más rápida que antes)
+ * - Se reproduce una sola vez y luego se destruye
  */
 import { GameObject } from './GameObject.js';
 
@@ -18,44 +18,98 @@ export class BurstEffect extends GameObject {
      * 
      * @param {number} x - Posición X donde ocurre la explosión
      * @param {number} y - Posición Y donde ocurre la explosión
+     * @param {PIXI.Texture} textura - Texture del sprite sheet de explosión (128x36, 4 frames horizontales)
      */
-    constructor(x, y) {
+    constructor(x, y, textura = null) {
         // Llamar al constructor de GameObject
         super(x, y);
         
         // El efecto está activo
         this.active = true;
         
-        // Lifetime (tiempo de vida): 0.5 segundos
-        this.lifetime = 0.5;
+        // Lifetime (tiempo de vida): 0.3 segundos para la animación
+        this.lifetime = 0.3;
         
+        // Total de frames en el sprite sheet
+        this.totalFrames = 4;
+        
+        // Ancho y alto de cada frame (32x36)
+        this.frameWidth = 32;
+        this.frameHeight = 36;
+        
+        // Frame actual (0 a 3)
+        this.frameActual = 0;
+        
+        // Tiempo por frame (0.3s / 4 frames = 0.075s por frame)
+        this.tiempoPorFrame = this.lifetime / this.totalFrames;
+        
+        // Timer para controlar el cambio de frame
+        this.timerFrame = 0;
+        
+        // Si tenemos una textura, crear el sprite animado
+        if (textura) {
+            // Crear un array de texturas (un frame cada una)
+            this.frames = [];
+            
+            for (let i = 0; i < this.totalFrames; i++) {
+                // Extraer cada frame del sprite sheet
+                // La textura tiene width 128 (32 * 4), height 36
+                // Cortamos cada frame de 32x36 en posición i*32
+                const frameRect = new PIXI.Rectangle(
+                    i * this.frameWidth,  // x
+                    0,                     // y
+                    this.frameWidth,       // width
+                    this.frameHeight       // height
+                );
+                
+                // Crear una textura para este frame
+                const frameTexture = new PIXI.Texture({
+                    source: textura.source,
+                    frame: frameRect
+                });
+                
+                this.frames.push(frameTexture);
+            }
+            
+            // Crear el sprite con el primer frame
+            this.imagen = new PIXI.Sprite(this.frames[0]);
+            
+            // Centrar el sprite (anchor en el centro)
+            this.imagen.anchor.set(0.5);
+            
+            // Escalar un poco para que se vea más grande (1.5x)
+            this.imagen.scale.set(1.5);
+            
+            // Posicionar en las coordenadas dadas
+            this.imagen.x = x;
+            this.imagen.y = y;
+            
+        } else {
+            // Fallback: si no hay textura, crear efecto de partículas
+            this._crearEfectoFallback();
+        }
+    }
+    
+    /**
+     * Crea un efecto de partículas por fallback
+     * Se usa si no se proporciona una textura
+     */
+    _crearEfectoFallback() {
         // Array para almacenar las partículas
         this.particles = [];
         
-        // Crear las partículas
-        // particleCount = cantidad de partículas
+        // Crear 20 partículas
         const particleCount = 20;
         
         for (let i = 0; i < particleCount; i++) {
-            // angle = ángulo uniformly distribuido en círculo (360°)
             const angle = (Math.PI * 2 / particleCount) * i;
-            
-            // speed = velocidad aleatoria entre 200 y 500
             const speed = 200 + Math.random() * 300;
             
-            // push = agregar una nueva partícula al array
             this.particles.push({
-                // Posición inicial (centro de la explosión)
                 x: 0,
                 y: 0,
-                
-                // Velocidad en X e Y (vector de dirección)
-                // cos(angle) * speed = componente X
-                // sin(angle) * speed = componente Y
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
-                
-                // Tamaño aleatorio entre 3 y 8
                 size: 3 + Math.random() * 5
             });
         }
@@ -66,41 +120,32 @@ export class BurstEffect extends GameObject {
         // Crear el graphics para dibujar las partículas
         this.graphics = new PIXI.Graphics();
         
-        // Asignar como sprite
-        this.sprite = this.graphics;
-        this.sprite.x = x;
-        this.sprite.y = y;
+        // Asignar como imagen (para mantener compatibilidad)
+        this.imagen = this.graphics;
+        this.imagen.x = this.x;
+        this.imagen.y = this.y;
         
-        // Dibujar las partículas por primera vez
-        this._dibujar();
+        // Dibujar las partículas
+        this._dibujarFallback();
     }
     
     /**
-     * Dibuja todas las partículas
-     * Se llama en cada frame para actualizar el efecto visual
+     * Dibuja las partículas (fallback)
      */
-    _dibujar() {
-        // Limpiar los gráficos anteriores
+    _dibujarFallback() {
         this.graphics.clear();
         
-        // Calcular la opacidad basada en el tiempo de vida
-        // Más tiempo = más opaco, menos tiempo = más transparente
-        // lifetime * 2 porque lifetime va de 0.5 a 0
         const alpha = this.lifetime * 2;
         
-        // Dibujar cada partícula
         for (const p of this.particles) {
-            // Dibujar un círculo en la posición de la partícula
             this.graphics.circle(p.x, p.y, p.size);
-            
-            // Llenar con color y opacidad
             this.graphics.fill({ color: this.color, alpha: alpha });
         }
     }
     
     /**
-     * Update: Actualiza las partículas
-     * Se llama cada frame para mover y dibujar las partículas
+     * Update: Actualiza la animación
+     * Se llama cada frame para avanzar la animación
      * 
      * @param {number} delta - Tiempo transcurrido (segundos)
      */
@@ -117,20 +162,37 @@ export class BurstEffect extends GameObject {
             return;
         }
         
-        // Actualizar cada partícula
-        for (const p of this.particles) {
-            // Mover la partícula según su velocidad
-            p.x += p.vx * delta;
-            p.y += p.vy * delta;
+        // Si tenemos frames de animación, actualizar el sprite
+        if (this.frames && this.imagen) {
+            // Incrementar el timer
+            this.timerFrame += delta;
             
-            // Reducir la velocidad (deceleración)
-            // Multiplicar por 0.95 = reducir 5% por frame
-            p.vx *= 0.95;
-            p.vy *= 0.95;
+            // Si pasó suficiente tiempo, cambiar al siguiente frame
+            if (this.timerFrame >= this.tiempoPorFrame) {
+                this.timerFrame = 0;
+                
+                // Avanzar al siguiente frame
+                this.frameActual++;
+                
+                // Si llegamos al final, mantener el último frame
+                if (this.frameActual >= this.totalFrames) {
+                    this.frameActual = this.totalFrames - 1;
+                }
+                
+                // Actualizar el sprite con el nuevo frame
+                this.imagen.texture = this.frames[this.frameActual];
+            }
+        } else if (this.particles) {
+            // Fallback: actualizar partículas
+            for (const p of this.particles) {
+                p.x += p.vx * delta;
+                p.y += p.vy * delta;
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+            }
+            
+            this._dibujarFallback();
         }
-        
-        // Redibujar las partículas con las nuevas posiciones
-        this._dibujar();
     }
     
     /**
@@ -139,8 +201,9 @@ export class BurstEffect extends GameObject {
      * @param {PIXI.Container} container - Contenedor donde agregar
      */
     render(container) {
-        if (this.sprite && !this.sprite.parent) {
-            container.addChild(this.sprite);
+        // Solo agregar si la imagen existe y no está ya en un contenedor
+        if (this.imagen && !this.imagen.parent) {
+            container.addChild(this.imagen);
         }
     }
 }
