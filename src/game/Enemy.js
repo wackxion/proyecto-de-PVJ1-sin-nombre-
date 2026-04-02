@@ -553,7 +553,7 @@ export class Enemigo extends GameObject {
      */
     _moverRezagado(delta, velocidad) {
         // Mover en la dirección asignada (línea recta a través de la pantalla)
-        this.x += (this.direccionX - 100) * velocidad * delta;
+        this.x += this.direccionX * velocidad * delta;
         this.y += this.direccionY * velocidad * delta;
     }
     

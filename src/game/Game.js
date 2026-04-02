@@ -668,8 +668,8 @@ export class Game {
                 
                 // Verificar si hay colisión
                 if (this._verificarColision(projectile, enemy)) {
-                    // Crear efecto visual de impacto
-                    const hit = new HitEffect(enemy.x, enemy.y, 'hit');
+                    // Crear efecto visual de impacto (doble tamaño: escala = 2)
+                    const hit = new HitEffect(enemy.x, enemy.y, 'hit', 2);
                     hit.render(this.aplicacion.stage);
                     this.efectosImpacto.push(hit);
                     
@@ -1093,6 +1093,13 @@ export class Game {
                 
                 // Verificar colisión entre los dos asteroides
                 if (this._verificarColision(enemy1, enemy2)) {
+                    // Crear efecto visual de impacto cuando asteroides chocan (doble tamaño)
+                    const puntoMedioX = (enemy1.x + enemy2.x) / 2;
+                    const puntoMedioY = (enemy1.y + enemy2.y) / 2;
+                    const hit = new HitEffect(puntoMedioX, puntoMedioY, 'hit', 2);
+                    hit.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(hit);
+                    
                     // Alterar dirección de los rezagados
                     if (enemy1.esRezagado) {
                         enemy1.alterDirection();

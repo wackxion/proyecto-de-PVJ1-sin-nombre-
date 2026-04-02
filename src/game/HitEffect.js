@@ -19,8 +19,9 @@ export class HitEffect extends GameObject {
      * @param {number} x - Posición X donde ocurre el impacto
      * @param {number} y - Posición Y donde ocurre el impacto
      * @param {string} type - Tipo de efecto ('hit', 'spark', 'explosion')
+     * @param {number} escala - Escala del efecto (1 = normal, 2 = doble tamaño)
      */
-    constructor(x, y, type = 'hit') {
+    constructor(x, y, type = 'hit', escala = 1) {
         super(x, y);
         
         this.active = true;
@@ -46,6 +47,9 @@ export class HitEffect extends GameObject {
         this.sprite = this.graphics;
         this.sprite.x = x;
         this.sprite.y = y;
+        
+        // Aplicar escala al sprite
+        this.sprite.scale.set(escala);
         
         // Dibujar las partículas
         this._dibujar();
