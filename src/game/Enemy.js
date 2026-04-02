@@ -553,7 +553,7 @@ export class Enemigo extends GameObject {
      */
     _moverRezagado(delta, velocidad) {
         // Mover en la dirección asignada (línea recta a través de la pantalla)
-        this.x += this.direccionX * velocidad * delta;
+        this.x += (this.direccionX - 100) * velocidad * delta;
         this.y += this.direccionY * velocidad * delta;
     }
     
@@ -687,38 +687,6 @@ export class Enemigo extends GameObject {
         // Establecer timer a 1 segundo
         // Si ya estaba activo, se resetea (no se acumula)
         this.slowdownTimer = 1.0;
-    }
-    
-    /**
-     * Mueve el asteroide rezagado
-     * Se mueve en línea recta hacia el centro de la pantalla y se destruye ahí
-     * No cruza toda la pantalla, se destruye al llegar al centro
-     * 
-     * @param {number} delta - Tiempo transcurrido
-     * @param {number} velocidad - Velocidad actual
-     */
-    _moverRezagado(delta, velocidad) {
-        // Calcular posición del centro de la pantalla
-        const centroX = this.anchoJuego / 2;
-        const centroY = this.altoJuego / 2;
-        
-        // Calcular vector hacia el centro
-        const dx = centroX - this.x;
-        const dy = centroY - this.y;
-        const distCentro = Math.sqrt(dx * dx + dy * dy);
-        
-        // Si está muy cerca del centro (menos de 80px), destruirse
-        if (distCentro < 80) {
-            this.destroy();
-            return;
-        }
-        
-        // Normalizar la dirección y mover hacia el centro
-        const dirX = dx / distCentro;
-        const dirY = dy / distCentro;
-        
-        this.x += dirX * velocidad * delta;
-        this.y += dirY * velocidad * delta;
     }
     
     /**
