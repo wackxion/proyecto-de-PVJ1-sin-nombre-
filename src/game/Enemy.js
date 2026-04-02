@@ -512,9 +512,8 @@ export class Enemigo extends GameObject {
                 this.slowdownTimer -= delta;
             }
             
-            // Si es rezagado, moverse en línea recta sin seguir a la nave
+            // Si es rezagado, moverse hacia el centro y destruirse
             if (this.esRezagado) {
-                // Los rezagados van en línea recta, NO usan this.objetivo
                 this._moverRezagado(delta, velocidadActual);
             }
             // Si no es rezagado, verificar si debe orbitar (solo large)
