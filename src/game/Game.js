@@ -343,7 +343,7 @@ export class Game {
         if (!this.elementoOleada) {
             this.elementoOleada = document.createElement('div');
             this.elementoOleada.id = 'wave';
-            this.elementoOleada.style.cssText = 'position: absolute; top: 60px; left: 20px; color: #00FF00; font-family: monospace; font-size: 16px;';
+            // El estilo ahora está en CSS (#wave en style.css)
             document.body.appendChild(this.elementoOleada);
         }
         
@@ -512,15 +512,22 @@ export class Game {
                 y = Math.random() < 0.5 ? -120 : h + 120;
             }
         } else if (size === 'large_rezagado' || size === 'medium_rezagado' || size === 'small_rezagado') {
-            // Los rezagados aparecen desde un borde y van hacia el otro
+            // Los rezagados aparecen desde un borde pero pasan más cerca del centro (donde está la nave)
+            // Primero elegimos si es horizontal o vertical
             if (Math.random() < 0.5) {
-                // Eje horizontal: izquierda o derecha
+                // Eje horizontal: aparecen a izquierda/derecha
                 x = Math.random() < 0.5 ? -60 : w + 60;
-                y = Math.random() * h;
+                // Y pasa más cerca del centro (30% del alto centrado)
+                const rangoCentro = h * 0.3; // 30% del alto
+                const centro = h / 2;
+                y = centro + (Math.random() - 0.5) * rangoCentro;
             } else {
-                // Eje vertical: arriba o abajo
-                x = Math.random() * w;
+                // Eje vertical: aparecen arriba/abajo
                 y = Math.random() < 0.5 ? -60 : h + 60;
+                // X pasa más cerca del centro (30% del ancho)
+                const rangoCentro = w * 0.3;
+                const centro = w / 2;
+                x = centro + (Math.random() - 0.5) * rangoCentro;
             }
         } else {
             // Asteroides normales aparecen desde cualquier borde
@@ -1016,8 +1023,8 @@ export class Game {
                 );
             }
             
-            // Aumentar máximo de enemigos gradualmente
-            if (this.contadorOleadas % 10 === 0 && this.maximoEnemigos < 50) {
+            // Aumentar máximo de enemigos gradualmente (sin límite máximo)
+            if (this.contadorOleadas % 10 === 0) {
                 this.maximoEnemigos += 5;
             }
         }
