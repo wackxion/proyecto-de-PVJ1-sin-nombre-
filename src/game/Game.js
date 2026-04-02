@@ -87,7 +87,6 @@ export class Game {
         this.texturaJugador = null;
         this.texturaAsteroide = null;
         this.texturaFondo = null;
-        this.texturaFondoPuntuacion = null;
         
         // Elementos UI
         this.elementoPuntuacion = null;
@@ -186,18 +185,16 @@ export class Game {
             
             // Cargar las imágenes desde la carpeta assets/
             // Usar el API de PixiJS v8
-            const [naveTexture, asteroideTexture, fondoTexture, fondoPuntuacionTexture] = await Promise.all([
+            const [naveTexture, asteroideTexture, fondoTexture] = await Promise.all([
                 PIXI.Assets.load('assets/nave.png'),
                 PIXI.Assets.load('assets/asteroide.png'),
-                PIXI.Assets.load('assets/fondoEspacio.png'),
-                PIXI.Assets.load('assets/fondo de puntuacion.jpg')
+                PIXI.Assets.load('assets/fondoEspacio.png')
             ]);
             
             // Asignar las texturas cargadas
             this.texturaJugador = naveTexture;
             this.texturaAsteroide = asteroideTexture;
             this.texturaFondo = fondoTexture;
-            this.texturaFondoPuntuacion = fondoPuntuacionTexture;
             
             // console.log('Assets cargados correctamente - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
         } catch (error) {
@@ -348,19 +345,6 @@ export class Game {
             this.elementoOleada.id = 'wave';
             // El estilo ahora está en CSS (#wave en style.css)
             document.body.appendChild(this.elementoOleada);
-        }
-        
-        // Crear fondo de puntuación si la textura existe
-        if (this.texturaFondoPuntuacion) {
-            const fondoPuntuacionSprite = new PIXI.Sprite(this.texturaFondoPuntuacion);
-            // Escalar a un tamaño fijo (150px de ancho)
-            const escala = 150 / fondoPuntuacionSprite.width;
-            fondoPuntuacionSprite.scale.set(escala);
-            // Posicionar debajo del score
-            fondoPuntuacionSprite.x = 15;
-            fondoPuntuacionSprite.y = 50;
-            // Agregar al stage
-            this.aplicacion.stage.addChild(fondoPuntuacionSprite);
         }
         
         // Actualizar la UI por primera vez
