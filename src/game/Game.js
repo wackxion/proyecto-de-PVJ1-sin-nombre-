@@ -123,13 +123,12 @@ export class Game {
         
         // Inicializar la aplicación con configuración
         await this.aplicacion.init({
-            width: width,           // Ancho del canvas
-            height: height,         // Alto del canvas
-            backgroundColor: 0x0D0D1A, // Color de fondo (negro espacial)
-            antialias: true,        // Suavizar bordes (mejora visual)
-            resolution: 1,          // Resolución fija para mantener tamaño normal
-            autoDensity: true,      // Ajustar densidad automáticamente
-            resizeTo: window         // Redimensionar cuando cambia la ventana
+            width: 800,              // Ancho fijo
+            height: 600,            // Alto fijo  
+            backgroundColor: 0x0D0D1A,
+            antialias: true,
+            resolution: 1,
+            autoDensity: true
         });
 
         // console.log('Aplicación PixiJS iniciada, canvas:', this.aplicacion.canvas);
@@ -139,9 +138,9 @@ export class Game {
         
         // console.log('Canvas agregado al container');
         
-        // Guardar las dimensiones del área de juego
-        this.anchoJuego = width;
-        this.altoJuego = height;
+        // Guardar las dimensiones del área de juego (fijas)
+        this.anchoJuego = 800;
+        this.altoJuego = 600;
         
         // Crear el InputManager para manejar el teclado
         this.gestorEntrada = new GestorEntrada();
