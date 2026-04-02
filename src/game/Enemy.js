@@ -523,6 +523,9 @@ export class Enemigo extends GameObject {
             }
         }
         
+        // Si ya no está activo o no tiene imagen, salir
+        if (!this.active || !this.imagen) return;
+        
         // Actualizar posición del sprite
         this.imagen.x = this.x;
         this.imagen.y = this.y;
