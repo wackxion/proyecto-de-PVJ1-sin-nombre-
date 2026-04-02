@@ -512,22 +512,31 @@ export class Game {
                 y = Math.random() < 0.5 ? -120 : h + 120;
             }
         } else if (size === 'large_rezagado' || size === 'medium_rezagado' || size === 'small_rezagado') {
-            // Los rezagados aparecen desde un borde y pasan más cerca del centro (donde está la nave)
-            // Primero elegimos si es horizontal o vertical
+            // Los rezagados aparecen desde un borde y cruzan la pantalla
+            // pero NO pasan por la zona central (donde está la nave)
+            // Se divide la pantalla en zonas para evitar el centro
             if (Math.random() < 0.5) {
                 // Eje horizontal: aparecen a izquierda/derecha
                 x = Math.random() < 0.5 ? -60 : w + 60;
-                // Y pasa más cerca del centro (30% del alto centrado)
-                const rangoCentro = h * 0.3;
-                const centro = h / 2;
-                y = centro + (Math.random() - 0.5) * rangoCentro;
+                // Y se divide en: arriba del centro O abajo del centro (evitando el centro)
+                if (Math.random() < 0.5) {
+                    // Arriba del centro (0% al 35% del alto)
+                    y = Math.random() * (h * 0.35);
+                } else {
+                    // Abajo del centro (65% al 100% del alto)
+                    y = h * 0.65 + Math.random() * (h * 0.35);
+                }
             } else {
                 // Eje vertical: aparecen arriba/abajo
                 y = Math.random() < 0.5 ? -60 : h + 60;
-                // X pasa más cerca del centro (30% del ancho)
-                const rangoCentro = w * 0.3;
-                const centro = w / 2;
-                x = centro + (Math.random() - 0.5) * rangoCentro;
+                // X se divide en: izquierda del centro O derecha del centro
+                if (Math.random() < 0.5) {
+                    // Izquierda del centro (0% al 35% del ancho)
+                    x = Math.random() * (w * 0.35);
+                } else {
+                    // Derecha del centro (65% al 100% del ancho)
+                    x = w * 0.65 + Math.random() * (w * 0.35);
+                }
             }
         } else {
             // Asteroides normales aparecen desde cualquier borde

@@ -648,8 +648,8 @@ export class Enemigo extends GameObject {
             
             // También acercarse un poco a la nave (30% de la velocidad)
             // Esto hace que se acerque gradualmente de manera elíptica
-            this.x += (dx / dist) * (velocidad * 0.3) * delta;
-            this.y += (dy / dist) * (velocidad * 0.3) * delta;
+            this.x += (dx / dist) * (velocidad * 0.5) * delta;
+            this.y += (dy / dist) * (velocidad * 0.5) * delta;
         }
     }
     
