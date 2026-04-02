@@ -86,7 +86,6 @@ export class Game {
         // Texturas cargadas desde assets
         this.texturaJugador = null;
         this.texturaAsteroide = null;
-        this.texturaExplosion = null;
         
         // Elementos UI
         this.elementoPuntuacion = null;
@@ -185,16 +184,14 @@ export class Game {
             
             // Cargar las imágenes desde la carpeta assets/
             // Usar el API de PixiJS v8
-            const [naveTexture, asteroideTexture, explosionTexture] = await Promise.all([
+            const [naveTexture, asteroideTexture] = await Promise.all([
                 PIXI.Assets.load('assets/nave.png'),
-                PIXI.Assets.load('assets/asteroide.png'),
-                PIXI.Assets.load('assets/animacion de explosion.png')
+                PIXI.Assets.load('assets/asteroide.png')
             ]);
             
             // Asignar las texturas cargadas
             this.texturaJugador = naveTexture;
             this.texturaAsteroide = asteroideTexture;
-            this.texturaExplosion = explosionTexture;
             
             // console.log('Assets cargados correctamente - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
         } catch (error) {
@@ -617,9 +614,8 @@ export class Game {
                             // Aumentar velocidad de disparo
                             this.jugador.aumentarVelocidadDisparo();
                             
-                            // Crear efecto de burst (animación de explosión)
-                            // Pasar la textura de explosión para la animación
-                            const burst = new BurstEffect(enemy.x, enemy.y, this.texturaExplosion);
+                            // Crear efecto de burst (explosión de partículas)
+                            const burst = new BurstEffect(enemy.x, enemy.y);
                             burst.render(this.aplicacion.stage);
                             this.efectosExplosion.push(burst);
                         }
