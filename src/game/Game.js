@@ -513,29 +513,33 @@ export class Game {
             }
         } else if (size === 'large_rezagado' || size === 'medium_rezagado' || size === 'small_rezagado') {
             // Los rezagados aparecen desde un borde y cruzan la pantalla
-            // pero NO pasan por la zona central (donde está la nave)
-            // Se divide la pantalla en zonas para evitar el centro
+            // pero evitan la zona central (donde está la nave)
+            // Mantienen una línea recta SIN dirigirse a la nave
             if (Math.random() < 0.5) {
                 // Eje horizontal: aparecen a izquierda/derecha
+                // Determinar dirección: si nace izquierda, va derecha; si nace derecha, va izquierda
                 x = Math.random() < 0.5 ? -60 : w + 60;
-                // Y se divide en: arriba del centro O abajo del centro (evitando el centro)
+                const direccionX = x < 0 ? 1 : -1;
+                
+                // Y en zona superior O inferior (evitando el centro 30%)
                 if (Math.random() < 0.5) {
-                    // Arriba del centro (0% al 35% del alto)
-                    y = Math.random() * (h * 0.35);
+                    // Zona superior (0% al 40% del alto)
+                    y = Math.random() * (h * 0.4);
                 } else {
-                    // Abajo del centro (65% al 100% del alto)
-                    y = h * 0.65 + Math.random() * (h * 0.35);
+                    // Zona inferior (60% al 100% del alto)
+                    y = h * 0.6 + Math.random() * (h * 0.4);
                 }
             } else {
                 // Eje vertical: aparecen arriba/abajo
                 y = Math.random() < 0.5 ? -60 : h + 60;
-                // X se divide en: izquierda del centro O derecha del centro
+                
+                // X en zona izquierda O derecha (evitando el centro 30%)
                 if (Math.random() < 0.5) {
-                    // Izquierda del centro (0% al 35% del ancho)
-                    x = Math.random() * (w * 0.35);
+                    // Zona izquierda (0% al 40% del ancho)
+                    x = Math.random() * (w * 0.4);
                 } else {
-                    // Derecha del centro (65% al 100% del ancho)
-                    x = w * 0.65 + Math.random() * (w * 0.35);
+                    // Zona derecha (60% al 100% del ancho)
+                    x = w * 0.6 + Math.random() * (w * 0.4);
                 }
             }
         } else {
