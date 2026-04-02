@@ -515,11 +515,20 @@ export class Game {
             // Los rezagados aparecen desde un borde y cruzan la pantalla
             // pero evitan la zona central (donde está la nave)
             // Mantienen una línea recta SIN dirigirse a la nave
+            let dirX = 0;
+            let dirY = 0;
+            
             if (Math.random() < 0.5) {
                 // Eje horizontal: aparecen a izquierda/derecha
-                // Determinar dirección: si nace izquierda, va derecha; si nace derecha, va izquierda
-                x = Math.random() < 0.5 ? -60 : w + 60;
-                const direccionX = x < 0 ? 1 : -1;
+                if (Math.random() < 0.5) {
+                    // Nace a la izquierda, va hacia la derecha
+                    x = -60;
+                    dirX = 1;
+                } else {
+                    // Nace a la derecha, va hacia la izquierda
+                    x = w + 60;
+                    dirX = -1;
+                }
                 
                 // Y en zona superior O inferior (evitando el centro 30%)
                 if (Math.random() < 0.5) {
@@ -531,7 +540,15 @@ export class Game {
                 }
             } else {
                 // Eje vertical: aparecen arriba/abajo
-                y = Math.random() < 0.5 ? -60 : h + 60;
+                if (Math.random() < 0.5) {
+                    // Nace arriba, va hacia abajo
+                    y = -60;
+                    dirY = 1;
+                } else {
+                    // Nace abajo, va hacia arriba
+                    y = h + 60;
+                    dirY = -1;
+                }
                 
                 // X en zona izquierda O derecha (evitando el centro 30%)
                 if (Math.random() < 0.5) {
@@ -542,6 +559,18 @@ export class Game {
                     x = w * 0.6 + Math.random() * (w * 0.4);
                 }
             }
+            
+            // Crear el enemigo
+            const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
+            
+            // Asignar la dirección correcta al rezagado
+            enemigo.direccionX = dirX;
+            enemigo.direccionY = dirY;
+            
+            // Renderizar y agregar a la lista
+            enemigo.render(this.aplicacion.stage);
+            this.enemigos.push(enemigo);
+            return;
         } else {
             // Asteroides normales aparecen desde cualquier borde
             if (Math.random() < 0.5) {
