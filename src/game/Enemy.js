@@ -683,7 +683,6 @@ export class Enemigo extends GameObject {
         this.x += dirX * velocidad * delta;
         this.y += dirY * velocidad * delta;
     }
-    }
     
     /**
      * Renderiza el enemigo en el contenedor
