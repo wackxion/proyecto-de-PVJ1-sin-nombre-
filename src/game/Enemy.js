@@ -516,7 +516,11 @@ export class Enemigo extends GameObject {
             if (this.esRezagado) {
                 this._moverRezagado(delta, velocidadActual);
             }
-            // Si no es rezagado, movimiento normal (ir directo a la nave)
+            // Si no es rezagado, verificar si debe orbitar (solo large)
+            else if (this.debeOrbitar) {
+                this._orbitarAlrededor(delta, velocidadActual);
+            }
+            // asteroids normales (medium, small) van directo a la nave
             else {
                 this._moverConcéntrico(delta, velocidadActual);
             }
