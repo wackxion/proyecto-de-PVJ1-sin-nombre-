@@ -525,10 +525,6 @@ export class Game {
                 // X aleatorio en todo el ancho
                 x = Math.random() * w;
             }
-        }
-                const centro = w / 2;
-                x = centro + (Math.random() - 0.5) * rangoCentro;
-            }
         } else {
             // Asteroides normales aparecen desde cualquier borde
             if (Math.random() < 0.5) {
