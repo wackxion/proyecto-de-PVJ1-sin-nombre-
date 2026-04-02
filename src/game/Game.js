@@ -524,12 +524,10 @@ export class Game {
                     // Nace a la izquierda, va hacia la derecha
                     x = -60;
                     dirX = 1;
-                    dirY = 0; // Sin movimiento vertical
                 } else {
                     // Nace a la derecha, va hacia la izquierda
                     x = w + 60;
                     dirX = -1;
-                    dirY = 0; // Sin movimiento vertical
                 }
                 
                 // Y en zona superior O inferior (evitando el centro 30%)
@@ -542,17 +540,14 @@ export class Game {
                 }
             } else {
                 // Eje vertical: aparecen arriba/abajo
-                // IMPORTANTE: también debemos establecer dirX = 0 para movimiento vertical puro
                 if (Math.random() < 0.5) {
                     // Nace arriba, va hacia abajo
                     y = -60;
                     dirY = 1;
-                    dirX = 0; // Sin movimiento horizontal
                 } else {
                     // Nace abajo, va hacia arriba
                     y = h + 60;
                     dirY = -1;
-                    dirX = 0; // Sin movimiento horizontal
                 }
                 
                 // X en zona izquierda O derecha (evitando el centro 30%)
