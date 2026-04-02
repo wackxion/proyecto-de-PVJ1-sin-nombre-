@@ -419,8 +419,8 @@ export class Game {
             function(enemy) {
                 // Sumar puntos
                 game.puntuacion += enemy.puntos;
-                // NOTA: No se agrega carga al ulti cuando se usa el ulti
-                // El ulti solo da puntos, no carga el ataque especial
+                // Agregar carga al ulti
+                game.jugador.agregarCargaUlti(enemy.cargaUlti);
             }
         );
         
