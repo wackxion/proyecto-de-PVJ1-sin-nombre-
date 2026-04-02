@@ -622,6 +622,7 @@ export class Enemigo extends GameObject {
     /**
      * Movimiento orbital - orbita alrededor de la nave en círculos
      * Los asteroides grandes (large) usan este movimiento
+     * Se va acercando gradualmente a la nave
      * 
      * @param {number} delta - Tiempo transcurrido
      * @param {number} velocidad - Velocidad actual
@@ -636,10 +637,23 @@ export class Enemigo extends GameObject {
         
         if (dist === 0) return;
         
-        // Mantener una distancia mínima de órbita
-        const distanciaOrbita = 150;
+        // Distance de órbita inicial (se reduce con el tiempo)
+        // Si no tiene distanciaOrbita asignada, inicializar
+        if (!this.distanciaOrbita) {
+            this.distanciaOrbita = 200; // Empezar más lejos
+        }
         
-        if (dist > distanciaOrbita) {
+        // Reducir gradualmente la distancia de órbita (acercarse)
+        // Reducir 5px por segundo
+        this.distanciaOrbita -= 5 * delta;
+        
+        // Mantener una distancia mínima (no acercarse más de 80px)
+        const distanciaMinima = 80;
+        if (this.distanciaOrbita < distanciaMinima) {
+            this.distanciaOrbita = distanciaMinima;
+        }
+        
+        if (dist > this.distanciaOrbita) {
             // Si está lejos, acercarse
             this.x += (dx / dist) * velocidad * delta;
             this.y += (dy / dist) * velocidad * delta;
@@ -648,13 +662,13 @@ export class Enemigo extends GameObject {
             // Calcular ángulo actual
             let angulo = Math.atan2(this.y - this.objetivo.y, this.x - this.objetivo.x);
             
-            // Girar en círculo (0.02 radianes por frame = ~1 grado)
+            // Girar en círculo
             const velocidadAngular = 0.03;
             angulo += velocidadAngular * velocidad * delta;
             
             // Nueva posición en el círculo
-            this.x = this.objetivo.x + Math.cos(angulo) * distanciaOrbita;
-            this.y = this.objetivo.y + Math.sin(angulo) * distanciaOrbita;
+            this.x = this.objetivo.x + Math.cos(angulo) * this.distanciaOrbita;
+            this.y = this.objetivo.y + Math.sin(angulo) * this.distanciaOrbita;
         }
     }
     
