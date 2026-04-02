@@ -621,52 +621,36 @@ export class Enemigo extends GameObject {
     }
     
     /**
-     * Movimiento orbital elíptico - se acerca gradualmente a la nave
-     * Los asteroides grandes starts outside y se acercan de manera elíptica
+     * Movimiento orbital
+     * El asteroide orbita alrededor de la nave (movimiento circular)
+     * Se acerca un poco mientras orbita
      * 
      * @param {number} delta - Tiempo transcurrido
      * @param {number} velocidad - Velocidad actual
      */
     _orbitarAlrededor(delta, velocidad) {
-        if (!this.objetivo) return;
-        
-        // Calcular distancia al objetivo
         const dx = this.objetivo.x - this.x;
         const dy = this.objetivo.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
-        if (dist === 0) return;
-        
-        // Si no tiene distanciaOrbita asignada, inicializar (comienza lejos)
-        if (!this.distanciaOrbita) {
-            this.distanciaOrbita = 300; // Empezar lejos
+        if (dist > 0) {
+            // Dirección perpendicular para órbita (movimiento circular)
+            const orbitX = -dy / dist;
+            const orbitY = dx / dist;
+            
+            // Velocidad orbital
+            this.vx = orbitX * velocidad;
+            this.vy = orbitY * velocidad;
+            
+            // Mover en dirección perpendicular (órbita)
+            this.x += this.vx * delta;
+            this.y += this.vy * delta;
+            
+            // También acercarse un poco a la nave (30% de la velocidad)
+            // Esto hace que se acerque gradualmente de manera elíptica
+            this.x += (dx / dist) * (velocidad * 0.3) * delta;
+            this.y += (dy / dist) * (velocidad * 0.3) * delta;
         }
-        
-        // Reducir gradualmente la distancia (se acerca a la nave)
-        // Reducir 3px por segundo
-        this.distanciaOrbita -= 3 * delta;
-        
-        // Mantener distancia mínima (no acercarse más de 50px)
-        if (this.distanciaOrbita < 50) {
-            this.distanciaOrbita = 50;
-        }
-        
-        // Si está fuera de la distancia de órbita, acercarse
-        if (dist > this.distanciaOrbita + 10) {
-            this.x += (dx / dist) * velocidad * 0.4 * delta;
-            this.y += (dy / dist) * velocidad * 0.4 * delta;
-        }
-        
-        // Girar en círculo mientras se acerca (movimiento elíptico)
-        let angulo = Math.atan2(this.y - this.objetivo.y, this.x - this.objetivo.x);
-        
-        // Velocidad de rotación
-        const velocidadAngular = 0.015;
-        angulo += velocidadAngular * velocidad * delta;
-        
-        // Nueva posición manteniendo la distancia que se reduce
-        this.x = this.objetivo.x + Math.cos(angulo) * this.distanciaOrbita;
-        this.y = this.objetivo.y + Math.sin(angulo) * this.distanciaOrbita;
     }
     
     /**
