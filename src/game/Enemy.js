@@ -516,12 +516,8 @@ export class Enemigo extends GameObject {
             if (this.esRezagado) {
                 this._moverRezagado(delta, velocidadActual);
             }
-            // Si no es rezagado, verificar si orbita o va directo
-            else if (this.debeOrbitar) {
-                // Orbitar alrededor de la nave (movimiento circular)
-                this._orbitarAlrededor(delta, velocidadActual);
-            } else {
-                // Moverse directamente hacia la nave
+            // Si no es rezagado, movimiento normal (ir directo a la nave)
+            else {
                 this._moverConcéntrico(delta, velocidadActual);
             }
         }
