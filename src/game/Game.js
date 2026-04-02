@@ -123,8 +123,8 @@ export class Game {
         
         // Inicializar la aplicación con configuración
         await this.aplicacion.init({
-            width: 800,              // Ancho fijo
-            height: 600,            // Alto fijo  
+            width: width,           
+            height: height,         
             backgroundColor: 0x0D0D1A,
             antialias: true,
             resolution: 1,
@@ -138,9 +138,9 @@ export class Game {
         
         // console.log('Canvas agregado al container');
         
-        // Guardar las dimensiones del área de juego (fijas)
-        this.anchoJuego = 800;
-        this.altoJuego = 600;
+        // Guardar las dimensiones del área de juego
+        this.anchoJuego = width;
+        this.altoJuego = height;
         
         // Crear el InputManager para manejar el teclado
         this.gestorEntrada = new GestorEntrada();
