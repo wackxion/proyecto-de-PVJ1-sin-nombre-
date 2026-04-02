@@ -637,39 +637,30 @@ export class Enemigo extends GameObject {
         
         if (dist === 0) return;
         
-        // Distance de órbita inicial (se reduce con el tiempo)
-        // Si no tiene distanciaOrbita asignada, inicializar
-        if (!this.distanciaOrbita) {
-            this.distanciaOrbita = 200; // Empezar más lejos
+        // Distance de órbita fija (mantener siempre la misma distancia)
+        const distanciaOrbita = 180;
+        
+        // Si está fuera de la distancia de órbita, acercarse
+        if (dist > distanciaOrbita + 20) {
+            // Acércase gradualmente pero mantien distancia
+            this.x += (dx / dist) * velocidad * 0.5 * delta;
+            this.y += (dy / dist) * velocidad * 0.5 * delta;
+        } else if (dist < distanciaOrbita - 20) {
+            // Si está muy cerca, alejarse un poco
+            this.x -= (dx / dist) * velocidad * 0.3 * delta;
+            this.y -= (dy / dist) * velocidad * 0.3 * delta;
         }
         
-        // Reducir gradualmente la distancia de órbita (acercarse)
-        // Reducir 5px por segundo
-        this.distanciaOrbita -= 5 * delta;
+        // Siempre orbitar (girar en círculo)
+        let angulo = Math.atan2(this.y - this.objetivo.y, this.x - this.objetivo.x);
         
-        // Mantener una distancia mínima (no acercarse más de 80px)
-        const distanciaMinima = 80;
-        if (this.distanciaOrbita < distanciaMinima) {
-            this.distanciaOrbita = distanciaMinima;
-        }
+        // Velocidad de rotación (más lenta para órbita estable)
+        const velocidadAngular = 0.02;
+        angulo += velocidadAngular * velocidad * delta;
         
-        if (dist > this.distanciaOrbita) {
-            // Si está lejos, acercarse
-            this.x += (dx / dist) * velocidad * delta;
-            this.y += (dy / dist) * velocidad * delta;
-        } else {
-            // Si está en distancia de órbita, girar alrededor
-            // Calcular ángulo actual
-            let angulo = Math.atan2(this.y - this.objetivo.y, this.x - this.objetivo.x);
-            
-            // Girar en círculo
-            const velocidadAngular = 0.03;
-            angulo += velocidadAngular * velocidad * delta;
-            
-            // Nueva posición en el círculo
-            this.x = this.objetivo.x + Math.cos(angulo) * this.distanciaOrbita;
-            this.y = this.objetivo.y + Math.sin(angulo) * this.distanciaOrbita;
-        }
+        // Mantener distancia de órbita
+        this.x = this.objetivo.x + Math.cos(angulo) * distanciaOrbita;
+        this.y = this.objetivo.y + Math.sin(angulo) * distanciaOrbita;
     }
     
     /**

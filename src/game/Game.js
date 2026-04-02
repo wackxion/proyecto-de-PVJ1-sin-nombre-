@@ -352,31 +352,13 @@ export class Game {
         
         // Crear fondo de puntuación si la textura existe
         if (this.texturaFondoPuntuacion) {
-            // Obtener el ancho del texto actual (score + escudos)
-            let anchoTexto = 300;
-            if (this.elementoPuntuacion) {
-                // Medir el texto aproximadamente
-                anchoTexto = this.elementoPuntuacion.offsetWidth || 300;
-            }
-            
-            // Calcular alto aproximado (2 líneas: score + oleada)
-            const altoTexto = 60;
-            
-            // Crear sprite
             const fondoPuntuacionSprite = new PIXI.Sprite(this.texturaFondoPuntuacion);
-            
-            // Escalar para que coincida con el tamaño del texto
-            // Mantener proporción de la imagen original
-            const escalaX = anchoTexto / fondoPuntuacionSprite.width;
-            const escalaY = altoTexto / fondoPuntuacionSprite.height;
-            // Usar la escala más grande para cubrir todo
-            const escala = Math.max(escalaX, escalaY);
+            // Escalar a un tamaño fijo (150px de ancho)
+            const escala = 150 / fondoPuntuacionSprite.width;
             fondoPuntuacionSprite.scale.set(escala);
-            
             // Posicionar debajo del score
             fondoPuntuacionSprite.x = 15;
             fondoPuntuacionSprite.y = 50;
-            
             // Agregar al stage
             this.aplicacion.stage.addChild(fondoPuntuacionSprite);
         }
