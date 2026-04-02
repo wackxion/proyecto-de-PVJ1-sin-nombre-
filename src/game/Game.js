@@ -439,13 +439,13 @@ export class Game {
         let size;
         if (rand < 0.05) {
             size = 'special';
-        } else if (rand < 0.20) {
+        } else if (rand < 0.15) {
             size = 'large_rezagado';
-        } else if (rand < 0.35) {
+        } else if (rand < 0.25) {
             size = 'medium_rezagado';
-        } else if (rand < 0.50) {
+        } else if (rand < 0.35) {
             size = 'small_rezagado';
-        } else if (rand < 0.70) {
+        } else if (rand < 0.65) {
             size = 'large';
         } else if (rand < 0.85) {
             size = 'medium';
