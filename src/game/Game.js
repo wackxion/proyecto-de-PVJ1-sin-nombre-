@@ -561,7 +561,7 @@ export class Game {
             }
             
             // Crear el enemigo
-            const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
+            const enemigo = new Enemigo(x, y, size, null, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
             
             // Asignar la dirección correcta al rezagado
             enemigo.direccionX = dirX;
