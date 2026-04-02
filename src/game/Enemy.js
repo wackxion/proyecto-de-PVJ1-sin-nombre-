@@ -544,14 +544,15 @@ export class Enemigo extends GameObject {
     
     /**
      * Movimiento rezagado
-     * El asteroide se mueve en línea recta sin seguir a la nave
-     * Desaparece cuando sale de la pantalla
+     * El asteroide aparece desde fuera, pasa por la pantalla y sale por el otro lado
+     * No va directo a la nave, sigue una línea recta
+     * Se destruye cuando sale de la pantalla
      * 
      * @param {number} delta - Tiempo transcurrido
-     * @param {number} speed - Velocidad actual
+     * @param {number} velocidad - Velocidad actual
      */
     _moverRezagado(delta, velocidad) {
-        // Mover en la dirección asignada
+        // Mover en la dirección asignada (línea recta a través de la pantalla)
         this.x += this.direccionX * velocidad * delta;
         this.y += this.direccionY * velocidad * delta;
     }
