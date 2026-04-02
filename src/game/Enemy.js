@@ -512,12 +512,15 @@ export class Enemigo extends GameObject {
                 this.slowdownTimer -= delta;
             }
             
-            // Si es rezagado, moverse en línea recta sin seguir a la nave
+            // Si es rezagado, moverse hacia el centro y destruirse
             if (this.esRezagado) {
                 this._moverRezagado(delta, velocidadActual);
             }
-            // Si no es rezagado, movimiento normal (ir hacia la nave)
-            else {
+            // Si no es rezagado, verificar si orbita o va directo
+            else if (this.debeOrbitar) {
+                // Orbitar alrededor de la nave (movimiento circular)
+                this._orbitarAlrededor(delta, velocidadActual);
+            } else {
                 // Moverse directamente hacia la nave
                 this._moverConcéntrico(delta, velocidadActual);
             }
@@ -613,6 +616,45 @@ export class Enemigo extends GameObject {
             // Mover el asteroide
             this.x += this.vx * delta;
             this.y += this.vy * delta;
+        }
+    }
+    
+    /**
+     * Movimiento orbital - orbita alrededor de la nave en círculos
+     * Los asteroides grandes (large) usan este movimiento
+     * 
+     * @param {number} delta - Tiempo transcurrido
+     * @param {number} velocidad - Velocidad actual
+     */
+    _orbitarAlrededor(delta, velocidad) {
+        if (!this.objetivo) return;
+        
+        // Calcular distancia al objetivo
+        const dx = this.objetivo.x - this.x;
+        const dy = this.objetivo.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist === 0) return;
+        
+        // Mantener una distancia mínima de órbita
+        const distanciaOrbita = 150;
+        
+        if (dist > distanciaOrbita) {
+            // Si está lejos, acercarse
+            this.x += (dx / dist) * velocidad * delta;
+            this.y += (dy / dist) * velocidad * delta;
+        } else {
+            // Si está en distancia de órbita, girar alrededor
+            // Calcular ángulo actual
+            let angulo = Math.atan2(this.y - this.objetivo.y, this.x - this.objetivo.x);
+            
+            // Girar en círculo (0.02 radianes por frame = ~1 grado)
+            const velocidadAngular = 0.03;
+            angulo += velocidadAngular * velocidad * delta;
+            
+            // Nueva posición en el círculo
+            this.x = this.objetivo.x + Math.cos(angulo) * distanciaOrbita;
+            this.y = this.objetivo.y + Math.sin(angulo) * distanciaOrbita;
         }
     }
     
