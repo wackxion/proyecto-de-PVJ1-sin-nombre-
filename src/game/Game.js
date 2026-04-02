@@ -86,6 +86,7 @@ export class Game {
         // Texturas cargadas desde assets
         this.texturaJugador = null;
         this.texturaAsteroide = null;
+        this.texturaFondo = null;
         
         // Elementos UI
         this.elementoPuntuacion = null;
@@ -184,14 +185,16 @@ export class Game {
             
             // Cargar las imágenes desde la carpeta assets/
             // Usar el API de PixiJS v8
-            const [naveTexture, asteroideTexture] = await Promise.all([
+            const [naveTexture, asteroideTexture, fondoTexture] = await Promise.all([
                 PIXI.Assets.load('assets/nave.png'),
-                PIXI.Assets.load('assets/asteroide.png')
+                PIXI.Assets.load('assets/asteroide.png'),
+                PIXI.Assets.load('assets/fondoEspacio.png')
             ]);
             
             // Asignar las texturas cargadas
             this.texturaJugador = naveTexture;
             this.texturaAsteroide = asteroideTexture;
+            this.texturaFondo = fondoTexture;
             
             // console.log('Assets cargados correctamente - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
         } catch (error) {
@@ -228,16 +231,49 @@ export class Game {
     }
     
     /**
-     * Crea el fondo del juego con estrellas
-     * Se dibuja un rectángulo negro y encima puntos blancos aleatorios (estrellas)
+     * Crea el fondo del juego usando una imagen
+     * Si no hay imagen, dibuja estrellas programáticamente
      */
     _crearFondo() {
         // console.log('Creando fondo, stage:', this.aplicacion.stage);
         
-        // Crear objeto gráfico para dibujar
-        const graphics = new PIXI.Graphics();
         const w = this.anchoJuego;
         const h = this.altoJuego;
+        
+        // Verificar si hay una textura de fondo cargada
+        if (this.texturaFondo) {
+            // Crear sprite con la imagen de fondo
+            const fondoSprite = new PIXI.Sprite(this.texturaFondo);
+            
+            // Escalar la imagen para que cubra toda la pantalla
+            // Mantener la proporción original
+            const escalaX = w / this.texturaFondo.width;
+            const escalaY = h / this.texturaFondo.height;
+            const escala = Math.max(escalaX, escalaY); // Usar la más grande para cubrir
+            
+            fondoSprite.scale.set(escala);
+            
+            // Centrar la imagen
+            fondoSprite.x = (w - this.texturaFondo.width * escala) / 2;
+            fondoSprite.y = (h - this.texturaFondo.height * escala) / 2;
+            
+            // Agregar al stage
+            this.aplicacion.stage.addChild(fondoSprite);
+        } else {
+            // Fallback: dibujar estrellas programáticamente
+            this._crearFondoConEstrellas(w, h);
+        }
+        
+        // console.log('Fondo agregado al stage, children:', this.aplicacion.stage.children.length);
+    }
+    
+    /**
+     * Dibuja estrellas programáticamente (fallback)
+     * Se usa si no hay imagen de fondo
+     */
+    _crearFondoConEstrellas(w, h) {
+        // Crear objeto gráfico para dibujar
+        const graphics = new PIXI.Graphics();
         
         // Dibujar rectángulo negro que cubre toda la pantalla
         graphics.rect(0, 0, w, h);
@@ -259,7 +295,6 @@ export class Game {
         
         // Agregar el fondo al stage
         this.aplicacion.stage.addChild(graphics);
-        // console.log('Fondo agregado al stage, children:', this.aplicacion.stage.children.length);
     }
     
     /**
