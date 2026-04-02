@@ -653,34 +653,36 @@ export class Enemigo extends GameObject {
     }
     
     /**
-     * Movimiento orbital
-     * El asteroide orbita alrededor de la nave (movimiento circular)
+     * Mueve el asteroide rezagado
+     * Se mueve en línea recta hacia el centro de la pantalla y se destruye ahí
+     * No cruza toda la pantalla, se destruye al llegar al centro
      * 
      * @param {number} delta - Tiempo transcurrido
-     * @param {number} speed - Velocidad actual
+     * @param {number} velocidad - Velocidad actual
      */
-    _orbitarObjetivo(delta, velocidad) {
-        const dx = this.objetivo.x - this.x;
-        const dy = this.objetivo.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+    _moverRezagado(delta, velocidad) {
+        // Calcular posición del centro de la pantalla
+        const centroX = this.anchoJuego / 2;
+        const centroY = this.altoJuego / 2;
         
-        if (dist > 0) {
-            // Dirección perpendicular para órbita
-            const orbitX = -dy / dist;
-            const orbitY = dx / dist;
-            
-            // Velocidad orbital
-            this.vx = orbitX * velocidad;
-            this.vy = orbitY * velocidad;
-            
-            // Mover en dirección perpendicular
-            this.x += this.vx * delta;
-            this.y += this.vy * delta;
-            
-            // También acercarse un poco (30% de la velocidad)
-            this.x += (dx / dist) * (velocidad * 0.3) * delta;
-            this.y += (dy / dist) * (velocidad * 0.3) * delta;
+        // Calcular vector hacia el centro
+        const dx = centroX - this.x;
+        const dy = centroY - this.y;
+        const distCentro = Math.sqrt(dx * dx + dy * dy);
+        
+        // Si está muy cerca del centro (menos de 80px), destruirse
+        if (distCentro < 80) {
+            this.destroy();
+            return;
         }
+        
+        // Normalizar la dirección y mover hacia el centro
+        const dirX = dx / distCentro;
+        const dirY = dy / distCentro;
+        
+        this.x += dirX * velocidad * delta;
+        this.y += dirY * velocidad * delta;
+    }
     }
     
     /**
