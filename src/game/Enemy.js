@@ -74,6 +74,12 @@ export class Enemigo extends GameObject {
         const tieneHerencia = velocidadHeredada !== null;
         this._configurarPorTamanio(tieneHerencia);
         
+        // Si es un rezagado Y las direcciones ya fueron establecidas por Game.js, NO sobrescribir
+        // Solo asignar dirección aleatoria si no fue establecida antes
+        if (this.esRezagado && this.direccionX === 0 && this.direccionY === 0) {
+            // Asignar dirección aleatoria solo si no se ha establecido antes
+            // (esto pasa cuando se crean fragmentos desde _crearFragmentoRezagado)
+        
         // Aplicar velocidad heredada (trayectoria orbital del padre)
         // Se usa cuando un asteroide se rompe y crea fragmentos
         this.vx = velocidadHeredada ? velocidadHeredada.x : 0;
