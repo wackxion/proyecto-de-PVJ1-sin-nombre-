@@ -46,15 +46,15 @@ body {
     text-shadow: 0 0 10px #0044CC;
 }
 
-/* Estilo para la oleada - mismo color y tamaño que score */
+/* Estilo para la oleada - mismo color azul que score */
 #wave {
     position: absolute;
     top: 60px;
     left: 20px;
-    color: #00FF00;
+    color: #0044CC;
     font-size: 16px;
     font-family: 'Courier New', monospace;
-    text-shadow: 0 0 10px #00FF00;
+    text-shadow: 0 0 10px #0044CC;
 }
 
 #controls {
@@ -79,28 +79,28 @@ body {
 }
 
 #ulti-bar-label {
-    color: #0004ff;
+    color: #0044CC;
     font-size: 16px;
     font-weight: bold;
-    text-shadow: 0 0 10px #0004ff;
+    text-shadow: 0 0 10px #0044CC;
 }
 
 #ulti-bar-bg {
     width: 150px;
     height: 20px;
     background-color: #1a1a2e;
-    border: 2px solid #0004ff;
+    border: 2px solid #0044CC;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    box-shadow: 0 0 10px rgba(0, 68, 204, 0.3);
 }
 
 #ulti-bar-fill {
     width: 0%;
     height: 100%;
-    background: linear-gradient(90deg, #0004ff, #0004ff);
+    background: linear-gradient(90deg, #0044CC, #0044CC);
     transition: width 0.3s ease-out;
-    box-shadow: 0 0 10px #0004ff;
+    box-shadow: 0 0 10px #0044CC;
 }
 
 /* Cuando el ulti está listo, la barra parpadea */
