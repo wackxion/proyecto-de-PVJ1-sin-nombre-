@@ -127,7 +127,7 @@ export class Game {
             height: height,         // Alto del canvas
             backgroundColor: 0x0D0D1A, // Color de fondo (negro espacial)
             antialias: true,        // Suavizar bordes (mejora visual)
-            resolution: window.devicePixelRatio || 1, // Resolución de pantalla
+            resolution: 1,          // Resolución fija para mantener tamaño normal
             autoDensity: true,      // Ajustar densidad automáticamente
             resizeTo: window         // Redimensionar cuando cambia la ventana
         });
