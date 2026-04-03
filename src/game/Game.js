@@ -71,7 +71,7 @@ export class Game {
         // Se reduce progresivamente para aumentar la dificultad
         this.intervaloSpawn = 1.5;
         this.intervaloMinimoSpawn = 0.3; // Mínimo intervalo (máxima dificultad)
-        this.tasaDisminucionSpawn = 0.02; // Cuánto se reduce el intervalo por oleada
+        this.tasaDisminucionSpawn = 0.05; // Cuánto se reduce el intervalo por oleada (5 centésimas)
         
         // ContadorOleadas = contador de oleadas para determinar dificultad
         this.contadorOleadas = 0;
@@ -193,7 +193,7 @@ export class Game {
             const [naveTexture, asteroideTexture, fondoTexture] = await Promise.all([
                 PIXI.Assets.load('assets/nave322.png'),
                 PIXI.Assets.load('assets/asteroide250.png'),
-                PIXI.Assets.load('assets/fondoEspacio.png')
+                PIXI.Assets.load('assets/fondoEspacio2.png')
             ]);
             
             // Asignar las texturas cargadas
@@ -492,8 +492,8 @@ export class Game {
      * Se llama periódicamente para crear nuevos enemigos
      */
     _generarEnemigo() {
-        // Si ya hay demasiados asteroides, no crear más
-        if (this.enemigos.length >= this.maximoEnemigos) return;
+        // SIN LÍMITE - los asteroides siempre aparecen
+        // if (this.enemigos.length >= this.maximoEnemigos) return;
         
         // Elegir un tamaño aleatorio
         const rand = Math.random();

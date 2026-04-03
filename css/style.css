@@ -40,7 +40,7 @@ body {
 #left-panel {
     position: absolute;
     top: 0px;
-    left: 40px;
+    left: 35px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -76,7 +76,7 @@ body {
 }
 
 #ulti-bar-bg {
-    width: 150px;
+    width: 100px;
     height: 20px;
     background-color: #1a1a2e00;
     border: 2px solid #0044CC;
