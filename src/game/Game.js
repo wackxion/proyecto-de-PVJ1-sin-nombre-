@@ -76,12 +76,18 @@ export class Game {
         // ContadorOleadas = contador de oleadas para determinar dificultad
         this.contadorOleadas = 0;
         
+        // AsteroidesDestruidos = contador de asteroides destruidos en la oleada actual
+        // La oleada avanza cuando se destruyen 10, 20, 30, etc.
+        this.asteroidesDestruidos = 0;
+        this.objetivoOleada = 10; // Asteroides a destruir para completar la primera oleada
+        this.multiplicadorOleada = 1; // Multiplicador para siguiente oleada (10, 20, 30...)
+        
         // MaximoEnemigos = cantidad máxima de asteroides en pantalla
         this.maximoEnemigos = 30;
         
         // Ancho y alto del área de juego
-        this.anchoJuego = 800;
-        this.altoJuego = 600;
+        this.anchoJuego = 1080;
+        this.altoJuego = 720;
         
         // Texturas cargadas desde assets
         this.texturaJugador = null;
@@ -335,7 +341,7 @@ export class Game {
         
         // Referencia a la barra de carga del Ulti
         this.elementoBarraUlti = document.getElementById('ulti-bar-fill');
-        this.contenedorBarraUlti = document.getElementById('ulti-bar-container');
+        this.contenedorBarraUlti = document.getElementById('ulti-container');
         
         // Crear elemento para mostrar la oleada (wave)
         this.elementoOleada = document.getElementById('wave');
@@ -367,9 +373,9 @@ export class Game {
             // Si está en sobrecalentamiento, mostrar en rojo y agregar timer
             if (isOverheated) {
                 const timer = this.jugador ? Math.ceil(this.jugador.temporizadorEnfriamiento) : 0;
-                shieldText = `⚠️ ENFRIAMIENTO: ${Math.round(shield)}% (${timer}s)`;
+                shieldText = `ENFRIAMIENTO: ${Math.round(shield)}% (${timer}s)`;
                 
-                // Aplicar color rojo usando HTML
+                // Aplicar color usando HTML
                 this.elementoPuntuacion.innerHTML = `Puntuación: ${this.puntuacion} | <span style="color: #FF0000;">${shieldText}</span>`;
                 
                 // También actualizar el style del elemento padre si existe
@@ -392,7 +398,8 @@ export class Game {
         
         // Actualizar display de oleada
         if (this.elementoOleada) {
-            this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Intervalo: ${this.intervaloSpawn.toFixed(2)}s`;
+            const faltantes = this.objetivoOleada - this.asteroidesDestruidos;
+            this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Faltan: ${faltantes} | Intervalo: ${this.intervaloSpawn.toFixed(2)}s`;
         }
         
         // Actualizar barra de carga del Ulti
@@ -450,7 +457,29 @@ export class Game {
             function(enemy) {
                 // Sumar puntos
                 game.puntuacion += enemy.puntos;
-                // NOTA: El ulti no carga cuando se usa - solo da puntos
+                
+                // Agregar carga al ataque especial
+                game.jugador.agregarCargaUlti(enemy.cargaUlti);
+                
+                // CONTAR para la oleada (igual que los proyectiles)
+                game.asteroidesDestruidos++;
+                
+                // Verificar si completamos la oleada (cada 10 asteroides)
+                if (game.asteroidesDestruidos >= game.objetivoOleada) {
+                    game.contadorOleadas++;
+                    game.asteroidesDestruidos = 0;
+                    
+                    // La siguiente oleada necesita 10 asteroides más
+                    game.objetivoOleada = 10 + (game.contadorOleadas * 10);
+                    
+                    // Reducir el intervalo de spawn (aumentar dificultad)
+                    if (game.intervaloSpawn > game.intervaloMinimoSpawn) {
+                        game.intervaloSpawn = Math.max(
+                            game.intervaloMinimoSpawn,
+                            game.intervaloSpawn - game.tasaDisminucionSpawn
+                        );
+                    }
+                }
             }
         );
         
@@ -691,6 +720,27 @@ export class Game {
                         // Agregar carga al ataque especial
                         this.jugador.agregarCargaUlti(enemy.cargaUlti);
                         
+                        // Incrementar contador de asteroides destroyed en la oleada actual
+                        this.asteroidesDestruidos++;
+                        
+                        // Verificar si completamos la oleada (cada 10 asteroides)
+                        if (this.asteroidesDestruidos >= this.objetivoOleada) {
+                            this.contadorOleadas++;
+                            this.asteroidesDestruidos = 0;
+                            
+                            // La siguiente oleada necesita 10 asteroides más
+                            this.objetivoOleada = 10 + (this.contadorOleadas * 10);
+                            
+                            // Reducir el intervalo de spawn (aumentar dificultad)
+                            // Pero ahora de forma más gradual
+                            if (this.intervaloSpawn > this.intervaloMinimoSpawn) {
+                                this.intervaloSpawn = Math.max(
+                                    this.intervaloMinimoSpawn,
+                                    this.intervaloSpawn - this.tasaDisminucionSpawn
+                                );
+                            }
+                        }
+                        
                         // Si es el asteroide especial, dar power-up
                         if (enemy.tamanio === 'special') {
                             // Aumentar velocidad de disparo
@@ -757,7 +807,7 @@ export class Game {
      * Finaliza el juego (Game Over)
      * Muestra la pantalla de fin de juego con puntuación y opción de reiniciar
      */
-    gameOver() {
+    async gameOver() {
         // Marcar el juego como no corriendo
         this.ejecutando = false;
         
@@ -771,20 +821,47 @@ export class Game {
         this.aplicacion.stage.addChild(bg);
         this.elementosFinJuego.push(bg);
         
+        // Cargar imagen de Game Over
+        const gameOverTexture = await PIXI.Assets.load('assets/gameOver.jpg');
+        
+        // Crear sprite con la imagen
+        const gameOverSprite = new PIXI.Sprite(gameOverTexture);
+        
+        // Ajustar el tamaño de la imagen (escalar para que no sea muy grande)
+        const maxWidth = this.anchoJuego * 0.7;
+        const maxHeight = this.altoJuego * 0.4;
+        const scale = Math.min(maxWidth / gameOverSprite.width, maxHeight / gameOverSprite.height);
+        gameOverSprite.scale.set(scale);
+        
+        // Centrar la imagen
+        gameOverSprite.anchor.set(0.5);
+        gameOverSprite.x = this.anchoJuego / 2;
+        gameOverSprite.y = this.altoJuego / 2;
+        
+        // Agregar la imagen al stage (para que quede detrás del botón)
+        this.aplicacion.stage.addChild(gameOverSprite);
+        this.elementosFinJuego.push(gameOverSprite);
+        
+        // Estilo de letra manuscrita (como Birome)
+        const fontStyle = {
+            fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
+            fontSize: 30,
+            fill: 0x0044CC,
+            fontWeight: 'bold'
+        };
+        
         // Crear texto "GAME OVER"
         const titleText = new PIXI.Text({
             text: 'GAME OVER',
             style: {
-                fontFamily: 'Courier New',
-                fontSize: 64,
-                fill: 0xCC0000,       // Color rojo
-                fontWeight: 'bold'
+                ...fontStyle,
+                fontSize: 40,
+                fill: 0xCC0000
             }
         });
-        
-        // Centrar el texto horizontalmente
-        titleText.x = this.anchoJuego / 2 - titleText.width / 2;
-        titleText.y = this.altoJuego / 2 - 100;
+        titleText.anchor.set(0.5);
+        titleText.x = this.anchoJuego / 2;
+        titleText.y = this.altoJuego / 2 - (gameOverSprite.height * scale) / 2 + 40;
         this.aplicacion.stage.addChild(titleText);
         this.elementosFinJuego.push(titleText);
         
@@ -792,34 +869,21 @@ export class Game {
         const scoreText = new PIXI.Text({
             text: `Puntuación Final: ${this.puntuacion}`,
             style: {
-                fontFamily: 'Courier New',
-                fontSize: 32,
-                fill: 0x0044CC       // Color azul
+                ...fontStyle,
+                fontSize: 36
             }
         });
-        scoreText.x = this.anchoJuego / 2 - scoreText.width / 2;
-        scoreText.y = this.altoJuego / 2 - 20;
+        scoreText.anchor.set(0.5);
+        scoreText.x = this.anchoJuego / 2;
+        scoreText.y = this.altoJuego / 2 + 10;
         this.aplicacion.stage.addChild(scoreText);
         this.elementosFinJuego.push(scoreText);
         
-        // Crear texto de instrucciones
-        const instructText = new PIXI.Text({
-            text: 'Presiona ENTER o haz click para jugar de nuevo',
-            style: {
-                fontFamily: 'Courier New',
-                fontSize: 20,
-                fill: 0xFFFFFF       // Color blanco
-            }
-        });
-        instructText.x = this.anchoJuego / 2 - instructText.width / 2;
-        instructText.y = this.altoJuego / 2 + 40;
-        this.aplicacion.stage.addChild(instructText);
-        this.elementosFinJuego.push(instructText);
         
-        // Crear botón de reinicio
+        // Crear botón de reinicio DENTRO de la imagen
         const buttonContainer = new PIXI.Container();
         buttonContainer.x = this.anchoJuego / 2;
-        buttonContainer.y = this.altoJuego / 2 + 100;
+        buttonContainer.y = this.altoJuego / 2 + (gameOverSprite.height * scale) / 2 - 20;
         
         // Habilitar eventos de puntero (click/touch)
         buttonContainer.eventMode = 'static';
@@ -835,8 +899,8 @@ export class Game {
         const buttonText = new PIXI.Text({
             text: 'REINICIAR',
             style: {
-                fontFamily: 'Courier New',
-                fontSize: 20,
+                fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
+                fontSize: 22,
                 fill: 0xFFFFFF,
                 fontWeight: 'bold'
             }
@@ -944,6 +1008,12 @@ export class Game {
         this.enemigos = [];
         this.efectosExplosion = [];
         this.efectoUlti = null;
+        
+        // Reiniciar variables de oleadas y dificultad
+        this.contadorOleadas = 0;
+        this.asteroidesDestruidos = 0;
+        this.objetivoOleada = 10;
+        this.intervaloSpawn = 1.5;
         
         // Recrear el fondo
         this._crearFondo();
@@ -1053,21 +1123,8 @@ export class Game {
             this.temporizadorSpawn = 0;
             this._generarEnemigo();
             
-            // Aumentar contador de oleadas
-            this.contadorOleadas++;
-            
-            // Reducir intervalo de spawn progresivamente (aumentar dificultad)
-            if (this.intervaloSpawn > this.intervaloMinimoSpawn) {
-                this.intervaloSpawn = Math.max(
-                    this.intervaloMinimoSpawn, 
-                    this.intervaloSpawn - this.tasaDisminucionSpawn
-                );
-            }
-            
-            // Aumentar máximo de enemigos gradualmente (sin límite máximo)
-            if (this.contadorOleadas % 10 === 0) {
-                this.maximoEnemigos += 5;
-            }
+            // NOTA: El avance de oleadas ahora se maneja cuando se destruyen asteroides
+            // en _procesarColisionesProyectiles()
         }
         
         // === ACTUALIZAR UI ===

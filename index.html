@@ -11,16 +11,26 @@
 <body>
     <div id="game-container"></div>
     <div id="ui-overlay">
-        <div id="score">Puntuación: 0 | Escudos: 100%</div>
-        <div id="ulti-bar-container">
-            <div id="ulti-bar-label">ULTI</div>
-            <div id="ulti-bar-bg">
-                <div id="ulti-bar-fill"></div>
+        <!-- Panel izquierdo: Score, Oleada y Ulti -->
+         <!-- Imagen decorativa debajo -->
+        <img id="ship-icon" src="assets/puntuacion2.png" alt="Puntuación">
+        <div id="left-panel">
+            <div id="score">Puntuación: 0 | Escudos: 100%</div>
+            <div id="wave">Oleada: 0 | Faltan: 10</div>
+            <div id="ulti-container">
+                <div id="ulti-bar-label">ULTI</div>
+                <div id="ulti-bar-bg">
+                    <div id="ulti-bar-fill"></div>
+                </div>
             </div>
         </div>
-        <div id="controls">W: Disparar | S: Ulti | A/D: Rotar</div>
+        <div id="controls">
+            <img id="tutorial-icon" src="assets/tutorial.png" alt="Tutorial">
+            <div id="tutorial-text">
+                <div>W: Disparar | S: Ulti | A/D: Rotar</div>
+            </div>
+        </div>
     </div>
     <script type="module" src="src/main.js"></script>
 </body>
 </html>
-                     

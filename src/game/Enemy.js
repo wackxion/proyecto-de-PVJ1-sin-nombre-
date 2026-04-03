@@ -93,10 +93,6 @@ export class Enemigo extends GameObject {
         // Temporizador de desaceleración (slowdown) cuando recibe daño
         this.slowdownTimer = 0;
         
-        // Flags para trayectoria heredada
-        this.tieneTrayectoriaHeredada = tieneHerencia;
-        this.temporizadorTrayectoria = tieneHerencia ? 60 : 0;
-        
         // Crear el sprite del asteroide
         this._crearSprite();
         
@@ -123,8 +119,8 @@ export class Enemigo extends GameObject {
     _configurarPorTamanio(forzarOrbita = false) {
         switch (this.tamanio) {
             case 'small':
-                // Pequeño: radio 36px, escala 1x
-                this.radio = 36;
+                // Pequeño: imagen 32x32, radio = 16 (la mitad de 32)
+                this.radio = 16;
                 this.escala = 1.0;
                 this.velocidad = 150;
                 this.salud = 25;
@@ -136,8 +132,8 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'medium':
-                // Mediano: radio 72px, escala 2x
-                this.radio = 72;
+                // Mediano: imagen 32x32 escalada a 64x64, radio = 32
+                this.radio = 32;
                 this.escala = 2.0;
                 this.velocidad = 100;
                 this.salud = 50;
@@ -149,8 +145,8 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'large':
-                // Grande: radio 120px, escala 4x
-                this.radio = 120;
+                // Grande: imagen 32x32 escalada a 128x128, radio = 64
+                this.radio = 64;
                 this.escala = 4.0;
                 this.velocidad = 50;
                 this.salud = 75;
@@ -162,8 +158,8 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'special':
-                // Especial: apariencia grande como LARGE
-                this.radio = 120;
+                // Especial: apariencia grande como LARGE (128x128), radio = 64
+                this.radio = 64;
                 this.escala = 4.0;
                 this.velocidad = 120;
                 this.salud = 200;
@@ -176,8 +172,8 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'large_rezagado':
-                // Grande rezagado: pasa de largo, no sigue a la nave
-                this.radio = 120;
+                // Grande rezagado: pasa de largo, radio = 64 (128x128)
+                this.radio = 64;
                 this.escala = 4.0;
                 this.velocidad = 60;
                 this.salud = 75;
@@ -192,8 +188,8 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'medium_rezagado':
-                // Mediano rezagado
-                this.radio = 72;
+                // Mediano rezagado: radio = 32 (64x64)
+                this.radio = 32;
                 this.escala = 2.0;
                 this.velocidad = 80;
                 this.salud = 50;
@@ -208,8 +204,8 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'small_rezagado':
-                // Pequeño rezagado
-                this.radio = 36;
+                // Pequeño rezagado: radio = 16 (32x32)
+                this.radio = 16;
                 this.escala = 1.0;
                 this.velocidad = 120;
                 this.salud = 25;
@@ -648,8 +644,8 @@ export class Enemigo extends GameObject {
             
             // También acercarse un poco a la nave (30% de la velocidad)
             // Esto hace que se acerque gradualmente de manera elíptica
-            this.x += (dx / dist) * (velocidad * 0.5) * delta;
-            this.y += (dy / dist) * (velocidad * 0.5) * delta;
+            this.x += (dx / dist) * (velocidad * 0.3) * delta;
+            this.y += (dy / dist) * (velocidad * 0.3) * delta;
         }
     }
     

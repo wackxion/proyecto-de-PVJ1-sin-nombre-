@@ -10,7 +10,7 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    font-family: 'Courier New', monospace;
+    font-family: 'Segoe Script', 'Lucida Handwriting', 'Bradley Hand', cursive;
 }
 
 #game-container {
@@ -33,66 +33,56 @@ body {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    padding: 20px;
+    padding: 0px;
+}
+
+/* Panel izquierdo con Score, Oleada y Ulti */
+#left-panel {
+    position: absolute;
+    top: 0px;
+    left: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
 }
 
 #score {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    color: #0044CC;
-    font-size: 24px;
-    font-weight: bold;
-    text-shadow: 0 0 10px #0044CC;
-}
-
-/* Estilo para la oleada - mismo color azul que score */
-#wave {
-    position: absolute;
-    top: 60px;
-    left: 20px;
     color: #0044CC;
     font-size: 16px;
-    font-family: 'Courier New', monospace;
-    text-shadow: 0 0 10px #0044CC;
+    font-weight: bold;
+    text-shadow: 0 0 10px #ffffff;
 }
 
-#controls {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+#wave {
     color: #0044CC;
-    font-size: 14px;
-    text-shadow: 0 0 5px #0044CC;
-    opacity: 0.7;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 10px #ffffff;
 }
 
-/* Barra de carga del Ulti */
-#ulti-bar-container {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+/* Contenedor de Ulti en el panel izquierdo */
+#ulti-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
 }
 
 #ulti-bar-label {
     color: #0044CC;
     font-size: 16px;
     font-weight: bold;
-    text-shadow: 0 0 10px #0044CC;
+    text-shadow: 0 0 10px #ffffff;
 }
 
 #ulti-bar-bg {
     width: 150px;
     height: 20px;
-    background-color: #1a1a2e;
+    background-color: #1a1a2e00;
     border: 2px solid #0044CC;
-    border-radius: 10px;
+    border-radius: px;
     overflow: hidden;
-    box-shadow: 0 0 10px rgba(0, 68, 204, 0.3);
+    box-shadow: 0 0 10px #0055ff;
 }
 
 #ulti-bar-fill {
@@ -104,11 +94,62 @@ body {
 }
 
 /* Cuando el ulti está listo, la barra parpadea */
-#ulti-bar-container.ready #ulti-bar-fill {
+#ulti-container.ready #ulti-bar-fill {
     animation: ulti-pulse 0.5s infinite;
 }
 
 @keyframes ulti-pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
+}
+
+/* Controles en la parte inferior */
+#controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #0044CC;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 5px #0044CC;
+    opacity: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Imagen del tutorial */
+#tutorial-icon {
+    position: absolute;
+    top: -80px;
+    left: -230px;
+    width: 500px;
+    height: 150px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+#tutorial-text {
+    position: absolute;
+    top: -25px;
+    left: -145px;
+    width: 500px;
+    color: #0044CC;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 0 0 10px #0044CC;
+}
+
+/* Imagen decorativa */
+#ship-icon {
+    position: absolute;
+    top: -200px;
+    left: -45px;
+    width: 600px;
+    height: 600px;
+    margin-top: 0px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }
