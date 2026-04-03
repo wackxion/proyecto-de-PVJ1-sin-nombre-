@@ -191,8 +191,8 @@ export class Game {
             // Cargar las imágenes desde la carpeta assets/
             // Usar el API de PixiJS v8
             const [naveTexture, asteroideTexture, fondoTexture] = await Promise.all([
-                PIXI.Assets.load('assets/nave.png'),
-                PIXI.Assets.load('assets/asteroide.png'),
+                PIXI.Assets.load('assets/nave322.png'),
+                PIXI.Assets.load('assets/asteroide250.png'),
                 PIXI.Assets.load('assets/fondoEspacio.png')
             ]);
             
@@ -458,8 +458,8 @@ export class Game {
                 // Sumar puntos
                 game.puntuacion += enemy.puntos;
                 
-                // Agregar carga al ataque especial
-                game.jugador.agregarCargaUlti(enemy.cargaUlti);
+                // NO agregar carga al ataque especial cuando se usa ULTi
+                // (para equilibrar el juego)
                 
                 // CONTAR para la oleada (igual que los proyectiles)
                 game.asteroidesDestruidos++;
@@ -705,6 +705,13 @@ export class Game {
                     // El proyectil hace daño al enemigo
                     // recibirDano() devuelve un array con nuevos asteroides si se rompió
                     const newAsteroids = enemy.recibirDano(projectile.dano);
+                    
+                    // Si hay fragmentos (el asteroide se rompió), crear efecto visual de fragmentación
+                    if (newAsteroids && newAsteroids.length > 0) {
+                        const hit = new HitEffect(enemy.x, enemy.y, 'fragment', 4, 0xCC0000);
+                        hit.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(hit);
+                    }
                     
                     // Agregar los nuevos fragmentos a la lista
                     for (const nuevoEnemigo of newAsteroids) {
@@ -1150,32 +1157,21 @@ export class Game {
                 
                 // Verificar colisión entre los dos asteroides
                 if (this._verificarColision(enemy1, enemy2)) {
-                    // Crear efecto visual de impacto cuando asteroides chocan (doble tamaño)
+                    // Crear efecto visual de impacto cuando asteroides chocan (doble tamaño, color ROJO)
                     const puntoMedioX = (enemy1.x + enemy2.x) / 2;
                     const puntoMedioY = (enemy1.y + enemy2.y) / 2;
-                    const hit = new HitEffect(puntoMedioX, puntoMedioY, 'hit', 2);
+                    const hit = new HitEffect(puntoMedioX, puntoMedioY, 'hit', 2, 0xCC0000);
                     hit.render(this.aplicacion.stage);
                     this.efectosImpacto.push(hit);
                     
-                    // Alterar dirección de los rezagados
-                    if (enemy1.esRezagado) {
-                        enemy1.alterDirection();
-                        enemy1.enfriamientoColision = 0.5;
-                    }
-                    if (enemy2.esRezagado) {
-                        enemy2.alterDirection();
-                        enemy2.enfriamientoColision = 0.5;
-                    }
+                    // ALTERAR DIRECCIÓN de TODOS los asteroides que chocan
+                    // Esto afecta tanto rezagados como normales
+                    enemy1.alterDirection();
+                    enemy2.alterDirection();
                     
-                    // Si el otro no es rezagado, también alterar su dirección
-                    if (!enemy1.esRezagado && enemy2.esRezagado) {
-                        enemy1.alterDirection();
-                        enemy1.enfriamientoColision = 0.5;
-                    }
-                    if (!enemy2.esRezagado && enemy1.esRezagado) {
-                        enemy2.alterDirection();
-                        enemy2.enfriamientoColision = 0.5;
-                    }
+                    // Aplicar cooldown para evitar colisiones múltiples seguidas
+                    enemy1.enfriamientoColision = 0.5;
+                    enemy2.enfriamientoColision = 0.5;
                 }
             }
         }

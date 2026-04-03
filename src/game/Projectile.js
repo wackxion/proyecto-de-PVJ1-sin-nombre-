@@ -68,7 +68,7 @@ export class Proyectil extends GameObject {
         this.graphics.lineTo(endX, 0);
         
         // stroke() = aplicar el trazo (grosor y color)
-        this.graphics.stroke({ width: 2, color: color });
+        this.graphics.stroke({ width: 4, color: color });
         
         // Asignar los gráficos como la imagen del proyectil
         this.imagen = this.graphics;

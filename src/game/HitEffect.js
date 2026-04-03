@@ -20,8 +20,9 @@ export class HitEffect extends GameObject {
      * @param {number} y - Posición Y donde ocurre el impacto
      * @param {string} type - Tipo de efecto ('hit', 'spark', 'explosion')
      * @param {number} escala - Escala del efecto (1 = normal, 2 = doble tamaño)
+     * @param {number} color - Color del efecto (opcional, por defecto azul)
      */
-    constructor(x, y, type = 'hit', escala = 1) {
+    constructor(x, y, type = 'hit', escala = 1, color = null) {
         super(x, y);
         
         this.active = true;
@@ -38,8 +39,9 @@ export class HitEffect extends GameObject {
         // Configurar según el tipo de efecto
         this._configurarPorTipo();
         
-        // Color: Naranja Birome (#FF8800)
-        this.color = 0xFF8800;
+        // Color: si no se pasa, usa azul (#0044CC)
+        // Para colisiones entre asteroides, usar rojo (#CC0000)
+        this.color = color !== null ? color : 0x0044CC;
         
         // Crear graphics para dibujar las partículas
         this.graphics = new PIXI.Graphics();
@@ -67,6 +69,13 @@ export class HitEffect extends GameObject {
                 this.speed = 100;
                 this.decay = 0.9;
                 break;
+            
+            case 'rotation':
+                // Efecto de rotación de nave - mayor dispersión
+                this.particleCount = 15;
+                this.speed = 250;
+                this.decay = 0.85;
+                break;
                 
             case 'spark':
                 // Chispas pequeñas y rápidas
@@ -80,6 +89,13 @@ export class HitEffect extends GameObject {
                 this.particleCount = 20;
                 this.speed = 150;
                 this.decay = 0.92;
+                break;
+                
+            case 'fragment':
+                // Fragmentación de asteroide - más partículas y mayor dispersión
+                this.particleCount = 30;
+                this.speed = 300;
+                this.decay = 0.85;
                 break;
                 
             default:

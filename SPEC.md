@@ -25,31 +25,47 @@
 
 ### 2.2 Tipos de Asteroides
 
-| Tipo | Tamaño | Salud | Daño a Escudos | Comportamiento | Puntos |
-|------|--------|-------|----------------|----------------|--------|
-| **SMALL** | 36px | 25 HP | 10% | Va hacia la nave | 30 |
-| **MEDIUM** | 72px | 50 HP | 25% | Va hacia la nave | 20 |
-| **LARGE** | 120px | 75 HP | 50% | Orbita alrededor de la nave | 10 |
-| **SPECIAL** | 120px | 200 HP | 0% (power-up) | Va hacia la nave (rápido) | 100 |
+| Tipo | Radio Colisión | Imagen Visual | Salud | Daño a Escudos | Comportamiento | Puntos |
+|------|----------------|--------------|-------|----------------|----------------|--------|
+| **SMALL** | 16px | 32x32 | 25 HP | 10% | Va hacia la nave | 30 |
+| **MEDIUM** | 32px | 64x64 | 50 HP | 25% | Va hacia la nave | 20 |
+| **LARGE** | 64px | 128x128 | 75 HP | 50% | Orbita alrededor de la nave | 10 |
+| **SPECIAL** | 64px | 128x128 | 200 HP | 0% (power-up) | Va hacia la nave (rápido) | 100 |
+| **Rezagados** | Según tipo | Según tipo | Según tipo | Según tipo | Pasan de largo | Según tipo |
 
-### 2.3 Sistema de Ruptura
+### 2.3 Sistema de Oleadas
+
+- Las oleadas avanzan cada **10 asteroides destruidos**
+- La siguiente oleada requiere 10 asteroides más (10, 20, 30, 40...)
+- El intervalo de spawn se reduce progresivamente (-0.02s por oleada)
+- Los proyectiles **sí** cuentan para las oleadas
+- La **ULTI sí** cuenta para las oleadas pero **NO** da carga de ULTi
+
+### 2.4 Sistema de Ruptura
 
 - **LARGE** → 2 **MEDIUM** (heredan órbita del padre)
 - **MEDIUM** → 2 **SMALL** (heredan órbita solo si el padre orbitaba)
 - **SPECIAL** → No suelta fragmentos, al destruirlo otorga power-up de velocidad de disparo
 
-### 2.4 Sistema de Power-up
+### 2.5 Sistema de Power-up
 
 - Al destruir el asteroide **SPECIAL**, la velocidad de disparo aumenta un 20%
 - El power-up se acumula, permitiendo varios incrementos
 - El special **no hace daño** al chocar con la nave
 
-### 2.5 Efectos de Impacto
+### 2.6 Efectos de Impacto
 
 - Al recibir daño de proyectil (sin destruir), el asteroide se mueve al 30% de velocidad por 1 segundo
 - Efecto visual de impacto (HitEffect) al recibir proyectil
 
-### 2.6 Controles
+### 2.7 ULTi (Ataque Especial)
+
+- Aro expansivo que sale de la nave
+- **Distancia reducida un 30%** (70% de la diagonal de pantalla)
+- No da carga de ULTi al destruir asteroides (equilibrio)
+- Sí cuenta para las oleadas
+
+### 2.8 Controles
 
 | Tecla | Acción |
 |-------|--------|
@@ -72,10 +88,19 @@
 | Birome Rojo | #CC0000 | Asteroides |
 | Blanco Estelar | #FFFFFF | Estrellas |
 
-### 3.2 Sprites
+### 3.2 Fuentes
+
+- **UI del juego:** Estilo manuscrito (Segoe Script, Lucida Handwriting, Bradley Hand)
+- **Game Over:** Fuente manuscrita con estilo Birome
+
+### 3.3 Sprites
 
 - **Nave:** assets/nave.png (tamaño base 64px radius)
 - **Asteroides:** assets/asteroide.png tintados de rojo (escalado según tamaño)
+- **Imágenes UI:** 
+  - puntuacion2.png (esquina superior izquierda)
+  - tutorial.png (abajo del centro)
+  - gameOver.jpg (pantalla de Game Over)
 
 ---
 
@@ -90,7 +115,7 @@ src/
 │   ├── Game.js         # Clase principal del juego
 │   ├── GameObject.js   # Clase base para entidades
 │   ├── Player.js       # Nave del jugador
-│   ├── Enemy.js        # Asteroides (4 tipos)
+│   ├── Enemy.js        # Asteroides (4 tipos + rezagados)
 │   ├── Projectile.js   # Proyectiles (líneas)
 │   ├── UltiEffect.js   # Efecto especial
 │   ├── BurstEffect.js  # Efecto de burst al destruir especial
@@ -105,15 +130,54 @@ src/
 
 - **GameObject:** Clase base con x, y, sprite, active
 - **Player:** Nave con rotación, dispara, escudos, efecto de daño
-- **Enemy:** Asteroides con 4 tamaños, ruptura, órbita, movimiento especial
+- **Enemy:** Asteroides con 4 tamaños + rezagados, ruptura, órbita, movimiento especial
 - **Projectile:** Proyectiles como líneas finas
-- **UltiEffect:** Aro expansivo que destruye asteroides
+- **UltiEffect:** Aro expansivo que destruye asteroides (70% de la diagonal)
 - **BurstEffect:** Partículas al destruir special
 - **HitEffect:** Efecto visual de impacto
 
 ---
 
-## 5. Características Implementadas
+## 5. Sistema de Colisiones
+
+### 5.1 Radios de Colisión
+
+Los radios de colisión ahora coinciden con el tamaño visual real de los asteroides:
+
+| Tipo | Radio de Colisión | Imagen Visual |
+|------|-------------------|---------------|
+| **SMALL** | 16px | 32x32 (escala 1x) |
+| **MEDIUM** | 32px | 64x64 (escala 2x) |
+| **LARGE** | 64px | 128x128 (escala 4x) |
+| **SPECIAL** | 64px | 128x128 (escala 4x) |
+
+### 5.2 Jugador y Proyectiles
+
+- **Jugador:** radio = 32px
+- **Proyectil:** radio = 3px
+
+---
+
+## 6. UI del Juego
+
+### 6.1 Elementos UI
+
+- **Panel izquierdo:** Puntuación, Oleada (contador + faltantes), Barra de ULTi
+- **Imagen decorativa:** puntuacion2.png debajo del panel
+- **Tutorial:** imagen tutorial.png debajo de los controles
+- **Controles:** W: Disparar | S: Ulti | A/D: Rotar
+
+### 6.2 Game Over
+
+- Imagen de fondo: gameOver.jpg
+- Texto "GAME OVER" en rojo (fuente manuscrita)
+- Puntuación Final en azul
+- Instrucciones en blanco
+- Botón "REINICIAR" manuscrito
+
+---
+
+## 7. Características Implementadas
 
 ### ✅ Primer Parcial
 - [x] GDD con mecánicas definidas
@@ -127,18 +191,24 @@ src/
 - [x] Proyectiles como líneas finas
 - [x] Efecto de esfera azul al recibir daño
 - [x] Sistema de escudos (porcentaje)
-- [x] Ulti como pulso/aro expansivo
-- [x] Pantalla de Game Over con botón de reinicio
+- [x] Ulti como pulso/aro expansivo (70% de distancia)
+- [x] Pantalla de Game Over con imagen y botón de reinicio
 - [x] Asteroide especial (SPECIAL) como power-up
 - [x] Asteroides tintados de rojo
 - [x] Efecto de slowdown al recibir impacto
 - [x] Efecto visual de impacto (HitEffect)
 - [x] Herencia de órbita en fragmentos
 - [x] Nave más grande (64px radius)
+- [x] Sistema de oleadas por asteroides destruidos
+- [x] ULTi cuenta para oleadas pero no da carga
+- [x] Código de colisiones corregido (radios visuales)
+- [x] UI mejorada con imágenes decorativas
+- [x] Fuente manuscrita (estilo Birome)
+- [x] Tutorial en imagen
 
 ---
 
-## 6. Tech Stack
+## 8. Tech Stack
 
 - **Motor:** PixiJS v8
 - **Lenguaje:** JavaScript ES6+
@@ -146,7 +216,7 @@ src/
 
 ---
 
-## 7. Cómo Ejecutar
+## 9. Cómo Ejecutar
 
 ### Desarrollo local:
 ```bash

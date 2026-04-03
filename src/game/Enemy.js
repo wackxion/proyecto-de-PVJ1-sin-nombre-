@@ -119,9 +119,9 @@ export class Enemigo extends GameObject {
     _configurarPorTamanio(forzarOrbita = false) {
         switch (this.tamanio) {
             case 'small':
-                // Pequeño: imagen 32x32, radio = 16 (la mitad de 32)
+                // Pequeño: imagen 200x200, reducir escala para que sea ~32px
                 this.radio = 16;
-                this.escala = 1.0;
+                this.escala = 0.16;
                 this.velocidad = 150;
                 this.salud = 25;
                 this.puntos = 30;
@@ -132,9 +132,9 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'medium':
-                // Mediano: imagen 32x32 escalada a 64x64, radio = 32
+                // Mediano: imagen 200x200, escalar a ~64px
                 this.radio = 32;
-                this.escala = 2.0;
+                this.escala = 0.32;
                 this.velocidad = 100;
                 this.salud = 50;
                 this.puntos = 20;
@@ -145,9 +145,9 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'large':
-                // Grande: imagen 32x32 escalada a 128x128, radio = 64
+                // Grande: imagen 200x200, escalar a ~128px
                 this.radio = 64;
-                this.escala = 4.0;
+                this.escala = 0.64;
                 this.velocidad = 50;
                 this.salud = 75;
                 this.puntos = 10;
@@ -158,9 +158,9 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'special':
-                // Especial: apariencia grande como LARGE (128x128), radio = 64
-                this.radio = 64;
-                this.escala = 4.0;
+                // Especial: imagen 200x200, escalar a ~128px (más grande que medium)
+                this.radio = 48;
+                this.escala = 0.48;
                 this.velocidad = 120;
                 this.salud = 200;
                 this.puntos = 100;
@@ -172,9 +172,9 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'large_rezagado':
-                // Grande rezagado: pasa de largo, radio = 64 (128x128)
+                // Grande rezagado: pasa de largo, radio = 64
                 this.radio = 64;
-                this.escala = 4.0;
+                this.escala = 0.64;
                 this.velocidad = 60;
                 this.salud = 75;
                 this.puntos = 10;
@@ -188,9 +188,9 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'medium_rezagado':
-                // Mediano rezagado: radio = 32 (64x64)
+                // Mediano rezagado: radio = 32
                 this.radio = 32;
-                this.escala = 2.0;
+                this.escala = 0.32;
                 this.velocidad = 80;
                 this.salud = 50;
                 this.puntos = 20;
@@ -204,9 +204,9 @@ export class Enemigo extends GameObject {
                 break;
                 
             case 'small_rezagado':
-                // Pequeño rezagado: radio = 16 (32x32)
+                // Pequeño rezagado: radio = 16
                 this.radio = 16;
-                this.escala = 1.0;
+                this.escala = 0.16;
                 this.velocidad = 120;
                 this.salud = 25;
                 this.puntos = 30;
@@ -237,28 +237,26 @@ export class Enemigo extends GameObject {
             // Aplicar escala según el tamaño
             this.imagen.scale.set(this.escala);
             
-            // Aplicar tinte según el tipo de asteroide
-            if (this.tamanio === 'special') {
-                // Verde para el special (power-up)
-                this.imagen.tint = 0x00CC44;
-            } else if (this.esRezagado) {
-                // Violeta para los rezagados
-                this.imagen.tint = 0x8800CC;
-            } else {
-                // Rojo para los normales
-                this.imagen.tint = 0xCC0000;
-            }
+            // NOTA: Colores de asteroides desactivados
+            // if (this.tamanio === 'special') {
+            //     this.imagen.tint = 0x00CC44;
+            // } else if (this.esRezagado) {
+            //     this.imagen.tint = 0x8800CC;
+            // } else {
+            //     this.imagen.tint = 0xCC0000;
+            // }
             
         } else {
             // Determinar color según el tipo
-            let color;
-            if (this.tamanio === 'special') {
-                color = 0x00CC44; // Verde
-            } else if (this.esRezagado) {
-                color = 0x8800CC; // Violeta
-            } else {
-                color = 0xCC0000; // Rojo
-            }
+            // NOTA: Colores de asteroides desactivados - todos usan el color original de la imagen
+            let color = 0xFFFFFF; // Color blanco (sin tinte)
+            // if (this.tamanio === 'special') {
+            //     color = 0x00CC44;
+            // } else if (this.esRezagado) {
+            //     color = 0x8800CC;
+            // } else {
+            //     color = 0xCC0000;
+            // }
             
             this.graphics = new PIXI.Graphics();
             
@@ -574,6 +572,9 @@ export class Enemigo extends GameObject {
      * Se llama desde Game.js cuando hay colisión entre asteroides
      */
     alterDirection() {
+        // Marcar que la dirección fue alterada
+        this.direccionAlterada = true;
+        
         // Nueva dirección aleatoria
         // puede ser horizontal, vertical, o diagonal
         const rand = Math.random();
@@ -596,11 +597,20 @@ export class Enemigo extends GameObject {
     /**
      * Movimiento concéntrico
      * El asteroide se mueve directamente hacia la nave (línea recta)
+     * Si su dirección fue alterada por una colisión, usa esa dirección por un tiempo
      * 
      * @param {number} delta - Tiempo transcurrido
      * @param {number} speed - Velocidad actual (puede ser reducida por slowdown)
      */
     _moverConcéntrico(delta, velocidad) {
+        // Si la dirección fue alterada por colisión, moverse en esa dirección
+        if (this.direccionAlterada) {
+            this.x += this.direccionX * velocidad * delta;
+            this.y += this.direccionY * velocidad * delta;
+            return;
+        }
+        
+        // Movimiento normal hacia la nave
         const dx = this.objetivo.x - this.x;
         const dy = this.objetivo.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);

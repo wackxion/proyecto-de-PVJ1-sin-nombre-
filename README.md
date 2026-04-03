@@ -22,12 +22,14 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 ### Mecánicas del Juego
 - La nave puede **rotar** hacia la izquierda o derecha
 - **Disparar** proyectiles (líneas azules) hacia la dirección que apunta la nave
-- **Ataque especial (Ulti)** - Un pulso expansivo que sale de la nave y destroye todo a su paso
-- Los asteroides vienen en **3 tamaños** (grande, mediano, pequeño)
+- **Ataque especial (Ulti)** - Un pulso expansivo que sale de la nave y destruye todo a su paso (70% de la pantalla)
+- Los asteroides vienen en **4 tamaños** (grande, mediano, pequeño, especial)
 - Los asteroides grandes **orbitan** alrededor de la nave
 - Al destruir asteroides grandes/medianos, se rompen en fragmentos más pequeños
 - Sistema de **escudos** (porcentaje 0-100%)
 - Al recibir daño aparece una **esfera azul** temporal alrededor de la nave
+- **Sistema de oleadas** - Cada 10 asteroides destroyed avanza la oleada
+- ULTi cuenta para las oleadas pero NO da carga de ULTi
 
 ---
 
@@ -40,6 +42,9 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 | Birome Azul | `#0044CC` | Nave, proyectiles, UI, efecto de daño |
 | Birome Rojo | `#CC0000` | Asteroides |
 | Blanco Estelar | `#FFFFFF` | Estrellas |
+
+### Fuente
+- Estilo manuscrito (Segoe Script, Lucida Handwriting, Bradley Hand)
 
 ---
 
@@ -63,14 +68,20 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 
 ---
 
-## 📋 Requisitos del Primer Parcial
+## 📋 Características del Juego
 
-- [x] GDD con mecánicas definidas
-- [x] Paleta de colores Birome
-- [x] Sprites animados y en movimiento
-- [x] Estructura de clases
-- [x] Sin errores en consola
-- [x] GitHub Pages publicado
+### Tipos de Asteroides
+| Tipo | Tamaño Visual | Comportamiento |
+|------|---------------|-----------------|
+| SMALL | 32x32 | Va directo a la nave |
+| MEDIUM | 64x64 | Va directo a la nave |
+| LARGE | 128x128 | Orbita alrededor de la nave |
+| SPECIAL | 128x128 | Power-up al destruir |
+
+### Sistema de Oleadas
+- Las oleadas avanzan cada 10 asteroides destroyed
+- La dificultad aumenta reduciendo el intervalo de spawn
+- ULTi también cuenta para las oleadas
 
 ---
 
@@ -92,23 +103,29 @@ serve .
 ## 📁 Estructura del Proyecto
 
 ```
-├── index.html          # Página principal
-├── SPEC.md             # Especificaciones del juego
-├── package.json        # Configuración npm
+├── index.html              # Página principal
+├── SPEC.md                 # Especificaciones del juego
+├── README.md               # Este archivo
+├── package.json            # Configuración npm
 ├── css/
-│   └── style.css      # Estilos
+│   └── style.css          # Estilos
 ├── assets/
-│   ├── nave.png       # Sprite de la nave
-│   └── asteroide.png  # Sprite del asteroide
+│   ├── nave.png           # Sprite de la nave
+│   ├── asteroide.png      # Sprite del asteroide
+│   ├── puntuacion2.png   # Imagen decorativa UI
+│   ├── tutorial.png       # Imagen de tutorial
+│   └── gameOver.jpg       # Imagen de Game Over
 └── src/
-    ├── main.js        # Punto de entrada
+    ├── main.js            # Punto de entrada
     ├── game/
     │   ├── Game.js        # Clase principal
     │   ├── Player.js      # Nave del jugador
     │   ├── Enemy.js       # Asteroides
     │   ├── Projectile.js # Proyectiles
     │   ├── UltiEffect.js # Efecto especial
-    │   └── GameObject.js  # Clase base
+    │   ├── BurstEffect.js# Efecto de explosión
+    │   ├── HitEffect.js  # Efecto de impacto
+    │   └── GameObject.js # Clase base
     └── systems/
         └── InputManager.js # Gestión de teclado
 ```

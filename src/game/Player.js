@@ -10,6 +10,7 @@
  * - Efectos visuales
  */
 import { GameObject } from './GameObject.js';
+import { HitEffect } from './HitEffect.js';
 
 export class Jugador extends GameObject {
     /**
@@ -96,9 +97,9 @@ export class Jugador extends GameObject {
         // 0.5 = centro de la imagen (la nave rota desde su centro)
         this.imagen.anchor.set(0.5);
         
-        // Escalar la nave al doble de su tamaño original
-        // scale.set(x, y) - 2.0 = 200% del tamaño original
-        this.imagen.scale.set(2.0);
+        // Escalar la nave para que tenga el tamaño correcto
+        // Imagen de 322x322px, reducir a ~80px = escala 0.25
+        this.imagen.scale.set(0.25);
         
         // Establecer posición inicial
         this.imagen.x = x;
@@ -114,6 +115,12 @@ export class Jugador extends GameObject {
         this.damageEffect = null;
         // Timer para controlar cuánto dura el efecto de daño
         this.damageEffectTimer = 0;
+        
+        // EFECTO DE ROTACIÓN
+        // Efecto visual azul cuando la nave gira (cada 0.1 segundos)
+        this.rotationEffects = []; // Array para guardar todos los efectos
+        this.rotationEffectTimer = 0;
+        this.rotationEffectCooldown = 0.1; // 0.1 segundo entre efectos
     }
     
     /**
@@ -179,6 +186,22 @@ export class Jugador extends GameObject {
         // Actualizar el sprite con la nueva rotación
         this.imagen.rotation = this.rotacion;
         
+        // EFECTO DE ROTACIÓN - Crear efecto azul cuando gira (cada 0.1 segundo)
+        if (direccionRotacion !== 0) {
+            // Reducir cooldown
+            this.rotationEffectTimer -= delta;
+            
+            // Crear nuevo efecto cada 0.1 segundo
+            if (this.rotationEffectTimer <= 0) {
+                this._crearEfectoRotacion(direccionRotacion);
+                this.rotationEffectTimer = this.rotationEffectCooldown;
+            }
+        } else {
+            // Si no se está girando, destruir todos los efectos y resetear timer
+            this._destruirEfectoRotacion();
+            this.rotationEffectTimer = 0;
+        }
+        
         // DISPARO
         // Verificar si se debe disparar (tecla presionada + enfriamiento cumplido)
         if (input.debeDisparar(delta)) {
@@ -193,6 +216,9 @@ export class Jugador extends GameObject {
         
         // Actualizar efecto de daño (esfera azul que se desvanece)
         this._actualizarEfectoDano(delta);
+        
+        // Actualizar efecto de rotación (círculo azul que aparece al girar)
+        this._actualizarEfectoRotacion(delta);
         
         // Actualizar temporizador de sobrecalentamiento
         this._actualizarSobrecalentamiento(delta);
@@ -407,6 +433,62 @@ export class Jugador extends GameObject {
         }
         
         this.damageEffectTimer = 0.5;
+    }
+    
+    /**
+     * Crea efecto visual de rotación
+     * Crea efecto de rotación usando HitEffect (como proyectil chocando)
+     */
+    _crearEfectoRotacion(direccionRotacion) {
+        // Crear HitEffect en el CENTRO de la nave (sin offset)
+        // Usar tipo 'rotation' para mayor dispersión
+        const hit = new HitEffect(this.x, this.y, 'rotation', 1.7);
+        
+        // Renderizar pero agregar en índice 1 (ANTES/debajo de la nave)
+        if (hit.sprite) {
+            this.juego.aplicacion.stage.addChildAt(hit.sprite, 1);
+        }
+        
+        // Guardar en el array
+        this.rotationEffects.push({ effect: hit, offsetX: 0 });
+    }
+    
+    /**
+     * Destruye todos los efectos de rotación
+     */
+    _destruirEfectoRotacion() {
+        for (const rot of this.rotationEffects) {
+            if (rot.effect) {
+                rot.effect.destroy();
+            }
+        }
+        this.rotationEffects = [];
+    }
+    
+    /**
+     * Actualiza los efectos de rotación
+     */
+    _actualizarEfectoRotacion(delta) {
+        // Actualizar cada efecto
+        for (let i = this.rotationEffects.length - 1; i >= 0; i--) {
+            const rot = this.rotationEffects[i];
+            
+            if (rot.effect) {
+                rot.effect.update(delta);
+                
+                // Actualizar posición
+                if (rot.effect.sprite) {
+                    rot.effect.sprite.x = this.x + rot.offsetX;
+                    rot.effect.sprite.y = this.y;
+                }
+                
+                // Si terminó, destruir y remover
+                if (!rot.effect.active) {
+                    rot.effect.destroy();
+                    this.rotationEffects.splice(i, 1);
+                }
+            }
+        }
     }
     
     /**
