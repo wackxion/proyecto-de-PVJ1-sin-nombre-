@@ -16,6 +16,7 @@ import { Enemigo } from './Enemy.js';
 import { UltiEffect } from './UltiEffect.js';
 import { BurstEffect } from './BurstEffect.js';
 import { HitEffect } from './HitEffect.js';
+import { Top5 } from './Top5.js';
 import { GestorEntrada } from '../systems/InputManager.js';
 
 export class Game {
@@ -71,7 +72,7 @@ export class Game {
         // Se reduce progresivamente para aumentar la dificultad
         this.intervaloSpawn = 1.5;
         this.intervaloMinimoSpawn = 0.3; // Mínimo intervalo (máxima dificultad)
-        this.tasaDisminucionSpawn = 0.05; // Cuánto se reduce el intervalo por oleada (5 centésimas)
+        this.tasaDisminucionSpawn = 0.10; // Cuánto se reduce el intervalo por oleada (5 centésimas)
         
         // ContadorOleadas = contador de oleadas para determinar dificultad
         this.contadorOleadas = 0;
@@ -105,6 +106,12 @@ export class Game {
         
         // Flag para evitar limpieza duplicada
         this.limpiezaEnProgreso = false;
+        
+        // Sistema de Top 5
+        this.top5 = new Top5();
+        
+        // Flag para saber si se pidió nombre
+        this.nombreIngresado = false;
     }
     
     /**
@@ -386,7 +393,7 @@ export class Game {
             }
             
             // Verificar si el ataque especial está listo
-            const ultiStatus = this.jugador && this.jugador.ultiListo ? ' [ULTI LISTO]' : '';
+            const ultiStatus ='';  //this.jugador && this.jugador.ultiListo ? ' [ULTI LISTO]' : 
             
             // Verificar porcentaje de mejora de velocidad de disparo
             const speedBoost = this.jugador ? this.jugador.obtenerPorcentajeMejoraVelocidad() : 0;
@@ -498,22 +505,23 @@ export class Game {
         // Elegir un tamaño aleatorio
         const rand = Math.random();
         
-        // Usar switch en lugar de if-else para evitar problemas
+        // Distribución de tipos de asteroides:
+        // special: 5%, rezagados: 39% (13% cada uno), large: 30%, medium: 20%, small: 6%
         let size;
         if (rand < 0.05) {
-            size = 'special';
-        } else if (rand < 0.15) {
-            size = 'large_rezagado';
-        } else if (rand < 0.25) {
-            size = 'medium_rezagado';
-        } else if (rand < 0.35) {
-            size = 'small_rezagado';
-        } else if (rand < 0.65) {
-            size = 'large';
-        } else if (rand < 0.85) {
-            size = 'medium';
+            size = 'special';          // 5%
+        } else if (rand < 0.18) {
+            size = 'large_rezagado';  // 13%
+        } else if (rand < 0.31) {
+            size = 'medium_rezagado'; // 13%
+        } else if (rand < 0.44) {
+            size = 'small_rezagado';  // 13%
+        } else if (rand < 0.74) {
+            size = 'large';           // 30%
+        } else if (rand < 0.94) {
+            size = 'medium';          // 20%
         } else {
-            size = 'small';
+            size = 'small';           // 6%
         }
         
         // console.log('Size asignado directamente:', size);
@@ -591,6 +599,14 @@ export class Game {
             // Crear el enemigo
             const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
             
+            // === AUMENTAR VELOCIDAD CADA 5 OLEADAS ===
+            // Cada 5 oleadas, los asteroides aumentan un 10% su velocidad
+            // Hasta un máximo del 30% (oleada 15+)
+            const oleadasAumento = Math.floor(this.contadorOleadas / 5);
+            const aumentoVelocidad = Math.min(oleadasAumento * 0.10, 0.30);
+            const multiplicadorVelocidad = 1 + aumentoVelocidad;
+            enemigo.multiplicadorVelocidad = multiplicadorVelocidad;
+            
             // Asignar la dirección correcta al rezagado
             enemigo.direccionX = dirX;
             enemigo.direccionY = dirY;
@@ -614,6 +630,14 @@ export class Game {
         
         // Crear el enemigo con todos los parámetros necesarios
         const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
+        
+        // === AUMENTAR VELOCIDAD CADA 5 OLEADAS ===
+        // Cada 5 oleadas, los asteroides aumentan un 10% su velocidad
+        // Hasta un máximo del 30% (oleada 15+)
+        const oleadasAumento = Math.floor(this.contadorOleadas / 5);
+        const aumentoVelocidad = Math.min(oleadasAumento * 0.10, 0.30);
+        const multiplicadorVelocidad = 1 + aumentoVelocidad;
+        enemigo.multiplicadorVelocidad = multiplicadorVelocidad;
         
         // console.log('Enemigo creado:', size, 'imagen:', enemigo.imagen);
         // console.log('TexturaAsteroide:', this.texturaAsteroide);
@@ -835,8 +859,8 @@ export class Game {
         const gameOverSprite = new PIXI.Sprite(gameOverTexture);
         
         // Ajustar el tamaño de la imagen (escalar para que no sea muy grande)
-        const maxWidth = this.anchoJuego * 0.7;
-        const maxHeight = this.altoJuego * 0.4;
+        const maxWidth = this.anchoJuego * 1;
+        const maxHeight = this.altoJuego * 0.5;
         const scale = Math.min(maxWidth / gameOverSprite.width, maxHeight / gameOverSprite.height);
         gameOverSprite.scale.set(scale);
         
@@ -877,7 +901,7 @@ export class Game {
             text: `Puntuación Final: ${this.puntuacion}`,
             style: {
                 ...fontStyle,
-                fontSize: 36
+                fontSize: 30
             }
         });
         scoreText.anchor.set(0.5);
@@ -886,11 +910,165 @@ export class Game {
         this.aplicacion.stage.addChild(scoreText);
         this.elementosFinJuego.push(scoreText);
         
+        // Crear texto de la oleada alcanzada
+        const waveText = new PIXI.Text({
+            text: `Oleada Alcanzada: ${this.contadorOleadas}`,
+            style: {
+                ...fontStyle,
+                fontSize: 20
+            }
+        });
+        waveText.anchor.set(0.5);
+        waveText.x = this.anchoJuego / 2;
+        waveText.y = this.altoJuego / 2 + 60;
+        this.aplicacion.stage.addChild(waveText);
+        this.elementosFinJuego.push(waveText);
+        
+        // === VERIFICAR SI CALIFICA PARA TOP 5 ===
+        // Si ya se usó el nombre o no califica, no pedir
+        // Solo muestra el input si la puntuación está en el top 5
+        if (!this.nombreIngresado && this.top5.califica(this.puntuacion)) {
+            // Deshabilitar el input del teclado para que no interfiera con el input HTML
+            // Esto evita que las teclas W/A/S/D afecten al juego mientras se escribe el nombre
+            this.gestorEntrada.deshabilitar();
+            
+            // === IMAGEN DE FONDO (GAME OVER) BAJO EL INPUT ===
+            // Mostrar la imagen de fondo detrás del formulario de nombre
+            const bgImage = document.createElement('img');
+            bgImage.src = 'assets/guardarPuuntos.png';  // Imagen de fondo
+            bgImage.style.position = 'absolute';
+            bgImage.style.top = '28%';                  // Posición vertical (28% desde arriba)
+            bgImage.style.left = '50%';                 // Centrar horizontalmente
+            bgImage.style.transform = 'translate(-50%, -50%) translateY(200px)';
+            bgImage.style.maxWidth = '900px';           // Ancho máximo
+            bgImage.style.opacity = '1';                // Opacidad completa
+            bgImage.style.pointerEvents = 'none';       // Permitir clicks a través de la imagen
+            document.body.appendChild(bgImage);
+            
+            // === CREAR EL FORMULARIO PARA INGRESAR EL NOMBRE ===
+            // Contenedor principal del formulario (div)
+            const inputContainer = document.createElement('div');
+            inputContainer.style.position = 'absolute';
+            inputContainer.style.top = '50%';                                      // 50% desde arriba
+            inputContainer.style.left = '50%';                                     // 50% desde izquierda
+            inputContainer.style.transform = 'translate(-50%, -50%)';             // Centrar exactamente
+            inputContainer.style.display = 'flex';                                // Usar flexbox
+            inputContainer.style.flexDirection = 'column';                        // Elementos en columna
+            inputContainer.style.alignItems = 'center';                           // Centrar horizontalmente
+            inputContainer.style.gap = '10px';                                    // Espacio entre elementos
+            
+            // Etiqueta (texto) que aparece arriba del campo de texto
+            const label = document.createElement('div');
+            label.textContent = '¡NUEVO RECORD! Ingresa tu nombre:';              // Texto a mostrar
+            label.style.color = '#0044CC';                                        // Color azul
+            label.style.fontSize = '18px';                                        // Tamaño de letra
+            label.style.fontFamily = 'Segoe Script, cursive';                     // Tipo de letra manuscrita
+            label.style.textShadow = '0 0 10px #0044CC';                         // Efecto brillo azul
+            
+            // Campo de texto (input) donde el usuario escribe su nombre
+            const input = document.createElement('input');
+            input.type = 'text';                                                  // Campo de texto
+            input.maxLength = 8;                                                  // Máximo 8 caracteres
+            input.style.padding = '10px';                                          // Espacio interno
+            input.style.fontSize = '20px';                                        // Tamaño de letra
+            input.style.textAlign = 'center';                                     // Centrar texto
+            input.style.border = '3px solid #0044CC';                            // Borde azul
+            input.style.background = '#0d0d1a00';                                // Fondo transparente
+            input.style.color = '#0044CC';                                        // Texto azul
+            input.style.fontFamily = 'Segoe Script, cursive';                     // Tipo de letra
+            
+            // Botón para guardar el nombre
+            const button = document.createElement('button');
+            button.textContent = 'GUARDAR';                                       // Texto del botón
+            button.style.padding = '10px 20px';                                  // Espacio interno
+            button.style.fontSize = '16px';                                       // Tamaño de letra
+            button.style.background = '#0044CC';                                 // Fondo azul
+            button.style.color = 'white';                                         // Texto blanco
+            button.style.border = 'none';                                         // Sin borde
+            button.style.cursor = 'pointer';                                      // Cursor de mano
+            button.style.fontFamily = 'Segoe Script, cursive';                    // Tipo de letra
+            
+            // Agregar los elementos al contenedor y al documento
+            inputContainer.appendChild(label);       // Agregar etiqueta
+            inputContainer.appendChild(input);       // Agregar campo de texto
+            inputContainer.appendChild(button);      // Agregar botón
+            document.body.appendChild(inputContainer); // Agregar todo al body
+            
+            // Guardar referencia para limpiar después (cuando se cierre el input)
+            this.bgImageRecord = bgImage;
+            this.inputContainerRecord = inputContainer;
+            
+            // === IMPORTANTE: Desactivar click del stage ===
+            // Mientras se ingresa el nombre, los clicks en el juego NO deben reiniciarlo
+            // Solo se reiniciará cuando el usuario haga click en el botón REINICIAR o presione ENTER
+            this.clickHandlerActivo = false;
+            
+            // Enfocar el campo de texto automáticamente
+            input.focus();
+            
+            // === BOTÓN GUARDAR ===
+            // Cuando el usuario hace click en el botón "GUARDAR"
+            button.onclick = () => {
+                // Obtener el nombre escrito por el usuario
+                const nombre = input.value;
+                
+                // Intentar guardar en el Top 5 (valida el nombre primero)
+                if (this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
+                    // Si se guardó correctamente
+                    this.nombreIngresado = true;                    // Marcar que ya se usó el nombre
+                    inputContainer.remove();                       // Cerrar el formulario
+                    if (this.bgImageRecord) {                     // Limpiar imagen de fondo
+                        this.bgImageRecord.remove();
+                        this.bgImageRecord = null;
+                    }
+                    this.clickHandlerActivo = true;                // Reactivar clicks para reiniciar
+                    this.gestorEntrada.habilitar();                // Reactivar teclado del juego
+                } else {
+                    // Si el nombre no es válido (vacío o con caracteres inválidos)
+                    alert('Nombre inválido. Solo letras y números.');
+                }
+            };
+            
+            // === PRESIONAR ENTER ===
+            // También permitir guardar con la tecla ENTER
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    const nombre = input.value;
+                    if (this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
+                        this.nombreIngresado = true;
+                        inputContainer.remove();
+                        if (this.bgImageRecord) {
+                            this.bgImageRecord.remove();
+                            this.bgImageRecord = null;
+                        }
+                        this.clickHandlerActivo = true;
+                        this.gestorEntrada.habilitar();
+                    } else {
+                        alert('Nombre inválido. Solo letras y números.');
+                    }
+                }
+            };
+            
+            // === LIMPIEZA DEL INPUT ===
+            // Función que se llama cuando se limpian los elementos de fin de juego
+            // Asegura que el input se cierre correctamente
+            this.elementosFinJuego.push({ destroy: () => {
+                inputContainer.remove();                      // Remover el formulario HTML
+                // Limpiar imagen de fondo si existe
+                if (this.bgImageRecord) {
+                    this.bgImageRecord.remove();
+                    this.bgImageRecord = null;
+                }
+                this.clickHandlerActivo = true;                // Reactivar clicks para reiniciar
+                this.gestorEntrada.habilitar();                // Reactivar teclado del juego
+            } });
+        }
+        
         
         // Crear botón de reinicio DENTRO de la imagen
         const buttonContainer = new PIXI.Container();
-        buttonContainer.x = this.anchoJuego / 2;
-        buttonContainer.y = this.altoJuego / 2 + (gameOverSprite.height * scale) / 2 - 20;
+        buttonContainer.x = this.anchoJuego / 2.3;
+        buttonContainer.y = this.altoJuego / 2.2 + (gameOverSprite.height * scale) / 2 - 20;
         
         // Habilitar eventos de puntero (click/touch)
         buttonContainer.eventMode = 'static';
@@ -931,13 +1109,65 @@ export class Game {
         });
         
         // Acción cuando se hace click en el botón
-        buttonContainer.on('pointerdown', () => {
+        buttonContainer.on('pointerdown', (event) => {
+            event.stopPropagation();
             this._limpiarFinJuego();
             this._reiniciarJuego();
         });
         
         this.aplicacion.stage.addChild(buttonContainer);
         this.elementosFinJuego.push(buttonContainer);
+        
+        // === BOTÓN TOP 5 ===
+        const top5Container = new PIXI.Container();
+        top5Container.x = this.anchoJuego / 2 + 120;
+        top5Container.y = this.altoJuego / 2.2 + (gameOverSprite.height * scale) / 2 - 20;
+        top5Container.eventMode = 'static';
+        top5Container.cursor = 'pointer';
+        
+        const top5Bg = new PIXI.Graphics();
+        top5Bg.roundRect(-60, -25, 120, 50, 10);
+        top5Bg.fill({ color: 0xCC0000 });
+        top5Container.addChild(top5Bg);
+        
+        const top5Text = new PIXI.Text({
+            text: 'TOP 5',
+            style: {
+                fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
+                fontSize: 22,
+                fill: 0xFFFFFF,
+                fontWeight: 'bold'
+            }
+        });
+        top5Text.x = -top5Text.width / 2;
+        top5Text.y = -top5Text.height / 2;
+        top5Container.addChild(top5Text);
+        
+        top5Container.on('pointerover', () => {
+            top5Bg.clear();
+            top5Bg.roundRect(-60, -25, 120, 50, 10);
+            top5Bg.fill({ color: 0xFF0000 });
+        });
+        
+        top5Container.on('pointerout', () => {
+            top5Bg.clear();
+            top5Bg.roundRect(-60, -25, 120, 50, 10);
+            top5Bg.fill({ color: 0xCC0000 });
+        });
+        
+        // Detener propagación para que no reinicie el juego
+        top5Container.on('pointerdown', async (event) => {
+            event.stopPropagation();
+            // Deshabilitar el handler de click del stage
+            this.clickHandlerActivo = false;
+            await this._mostrarTop5();
+        });
+        
+        this.aplicacion.stage.addChild(top5Container);
+        this.elementosFinJuego.push(top5Container);
+        
+        // Flag para controlar el click handler
+        this.clickHandlerActivo = true;
         
         // Esperar la tecla ENTER para reiniciar
         const restartHandler = (e) => {
@@ -949,8 +1179,9 @@ export class Game {
         };
         window.addEventListener('keydown', restartHandler);
         
-        // También permitir click en cualquier parte de la pantalla
+        // También permitir click en cualquier parte de la pantalla (solo si no se hizo click en botón)
         const clickHandler = () => {
+            if (!this.clickHandlerActivo) return;
             window.removeEventListener('keydown', restartHandler);
             this.aplicacion.stage.off('pointerdown', clickHandler);
             this._limpiarFinJuego();
@@ -1016,6 +1247,9 @@ export class Game {
         this.efectosExplosion = [];
         this.efectoUlti = null;
         
+        // Reiniciar flag de nombre
+        this.nombreIngresado = false;
+        
         // Reiniciar variables de oleadas y dificultad
         this.contadorOleadas = 0;
         this.asteroidesDestruidos = 0;
@@ -1049,6 +1283,13 @@ export class Game {
         // Calcular delta time (tiempo desde el último frame en segundos)
         // ticker.deltaTime viene en frames, convertir a segundos dividiendo por 60
         const delta = ticker.deltaTime / 60;
+        
+        // === FUNCIÓN DE DESARROLLO ===
+        // Si se presiona L, perder el juego automáticamente
+        if (this.gestorEntrada.debePerder()) {
+            this.gameOver();
+            return;
+        }
         
         // === ACTUALIZAR JUGADOR ===
         if (this.jugador && this.jugador.active) {
@@ -1225,5 +1466,129 @@ export class Game {
         if (this.aplicacion) {
             this.aplicacion.destroy(true);
         }
+    }
+    
+    /**
+     * Muestra la pantalla de Top 5
+     */
+    async _mostrarTop5() {
+        // Limpiar solo el UI del game over, mantener el fondo
+        for (const elemento of this.elementosFinJuego) {
+            if (elemento && elemento.destroy) {
+                elemento.destroy();
+            }
+        }
+        this.elementosFinJuego = [];
+        
+        // Cargar imagen de puntuación (await para asegurar que cargue)
+        const puntuacionTexture = await PIXI.Assets.load('assets/puntuacion2.png');
+        
+        // Crear sprite con la imagen
+        const puntuacionSprite = new PIXI.Sprite(puntuacionTexture);
+        
+        // Escalar la imagen
+        const maxWidth = this.anchoJuego * 0.5;
+        const maxHeight = this.altoJuego * 0.7;
+        const scale = Math.min(maxWidth / puntuacionSprite.width, maxHeight / puntuacionSprite.height);
+        puntuacionSprite.scale.set(scale);
+        puntuacionSprite.anchor.set(0.5);
+        puntuacionSprite.x = this.anchoJuego / 2;
+        puntuacionSprite.y = this.altoJuego / 1.95;
+        
+        this.aplicacion.stage.addChild(puntuacionSprite);
+        this.elementosFinJuego.push(puntuacionSprite);
+        
+        // === ENCABEZADO DE LA TABLA ===
+        // Título de las columnas: N° | NOMBRE | PUNTOS | OLEADAS
+        const headerContainer = new PIXI.Container();
+        
+        // Crear cada columna del encabezado por separado para mejor alineación
+        const headerNum = new PIXI.Text({ text: 'N°', style: { fontFamily: 'Segoe Script, cursive', fontSize: 20, fill: 0x0044CC, fontWeight: 'bold' } });
+        const headerNombre = new PIXI.Text({ text: 'NOMBRE', style: { fontFamily: 'Segoe Script, cursive', fontSize: 20, fill: 0x0044CC, fontWeight: 'bold' } });
+        const headerPuntos = new PIXI.Text({ text: 'PUNTOS', style: { fontFamily: 'Segoe Script, cursive', fontSize: 20, fill: 0x0044CC, fontWeight: 'bold' } });
+        const headerOleada = new PIXI.Text({ text: 'OLEADAS', style: { fontFamily: 'Segoe Script, cursive', fontSize: 20, fill: 0x0044CC, fontWeight: 'bold' } });
+        
+        // Posicionar cada columna (separados más entre sí)
+        headerNum.x = -200;        // N° más a la izquierda
+        headerNombre.x = -150;     // NOMBRE 
+        headerPuntos.x = 10;      // PUNTOS
+        headerOleada.x = 120;     // OLEADAS más a la derecha
+        
+        headerContainer.addChild(headerNum, headerNombre, headerPuntos, headerOleada);
+        headerContainer.x = this.anchoJuego / 2;
+        headerContainer.y = this.altoJuego / 4.1 - (puntuacionSprite.height * scale) / 2 + 45;
+        
+        this.aplicacion.stage.addChild(headerContainer);
+        this.elementosFinJuego.push(headerContainer);
+        
+        // Obtener lista del top 5
+        const lista = this.top5.obtenerLista();
+        
+        // === MOSTRAR LOS 5 PRIMEROS ===
+        // Crear cada fila con columnas separadas para mejor alineación
+        for (let i = 0; i < 5; i++) {
+            const rowContainer = new PIXI.Container();
+            
+            // Obtener datos de la lista o mostrar guiones
+            const num = i + 1;
+            const nombre = lista[i] ? lista[i].nombre : '---';
+            const puntos = lista[i] ? lista[i].puntuacion.toString() : '---';
+            const oleada = lista[i] ? lista[i].oleada.toString() : '---';
+            
+            // Crear texto para cada columna
+            const textNum = new PIXI.Text({ text: num.toString(), style: { fontFamily: 'Segoe Script, cursive', fontSize: 22, fill: 0x0044CC } });
+            const textNombre = new PIXI.Text({ text: nombre, style: { fontFamily: 'Segoe Script, cursive', fontSize: 22, fill: 0x0044CC } });
+            const textPuntos = new PIXI.Text({ text: puntos, style: { fontFamily: 'Segoe Script, cursive', fontSize: 22, fill: 0x0044CC } });
+            const textOleada = new PIXI.Text({ text: oleada, style: { fontFamily: 'Segoe Script, cursive', fontSize: 22, fill: 0x0044CC } });
+            
+            // Posicionar cada columna en la fila (mismo spacing que el encabezado)
+            textNum.x = -200;       // N° más a la izquierda
+            textNombre.x = -150;    // NOMBRE
+            textPuntos.x = 10;     // PUNTOS
+            textOleada.x = 120;    // OLEADAS más a la derecha
+            
+            rowContainer.addChild(textNum, textNombre, textPuntos, textOleada);
+            rowContainer.x = this.anchoJuego / 2;
+            // Posicionar cada fila más abajo que la anterior
+            rowContainer.y = this.altoJuego / 3.9 - (puntuacionSprite.height * scale) / 2 + 75 + (i * 40);
+            
+            this.aplicacion.stage.addChild(rowContainer);
+            this.elementosFinJuego.push(rowContainer);
+        }
+        
+        // Botón para volver
+        const backContainer = new PIXI.Container();
+        backContainer.x = this.anchoJuego / 2.36;
+        backContainer.y = this.altoJuego / 1.90 + (puntuacionSprite.height * scale) / 2 - 30;
+        backContainer.eventMode = 'static';
+        backContainer.cursor = 'pointer';
+        
+        const backBg = new PIXI.Graphics();
+        backBg.roundRect(-60, -18, 120, 30, 10);
+        backBg.fill({ color: 0x0044CC });
+        backContainer.addChild(backBg);
+        
+        const backText = new PIXI.Text({
+            text: 'VOLVER',
+            style: {
+                fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
+                fontSize: 20,
+                fill: 0xFFFFFF,
+                fontWeight: 'bold'
+            }
+        });
+        backText.x = -backText.width / 2;
+        backText.y = -backText.height / 2;
+        backContainer.addChild(backText);
+        
+        backContainer.on('pointerdown', () => {
+            // Volver al game over
+            this._limpiarFinJuego();
+            this.clickHandlerActivo = true;
+            this.gameOver();
+        });
+        
+        this.aplicacion.stage.addChild(backContainer);
+        this.elementosFinJuego.push(backContainer);
     }
 }

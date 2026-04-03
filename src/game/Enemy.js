@@ -500,7 +500,8 @@ export class Enemigo extends GameObject {
         // === MOVIMIENTO NORMAL ===
         else if (this.objetivo) {
             // Si hay slowdown activo, mover más lento (30% de velocidad)
-            let velocidadActual = this.velocidad;
+            // Multiplicar por el multiplicador de velocidad (aumenta cada 10 oleadas)
+            let velocidadActual = this.velocidad * (this.multiplicadorVelocidad || 1);
             if (this.slowdownTimer > 0) {
                 velocidadActual *= 0.3;
                 this.slowdownTimer -= delta;

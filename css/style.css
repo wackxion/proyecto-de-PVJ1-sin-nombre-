@@ -49,14 +49,14 @@ body {
 
 #score {
     color: #0044CC;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     text-shadow: 0 0 10px #ffffff;
 }
 
 #wave {
     color: #0044CC;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     text-shadow: 0 0 10px #ffffff;
 }
@@ -70,13 +70,13 @@ body {
 
 #ulti-bar-label {
     color: #0044CC;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     text-shadow: 0 0 10px #ffffff;
 }
 
 #ulti-bar-bg {
-    width: 100px;
+    width: 120px;
     height: 20px;
     background-color: #1a1a2e00;
     border: 2px solid #0044CC;

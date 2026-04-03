@@ -20,6 +20,9 @@ export class GestorEntrada {
         // true = presionada, false = no presionada
         this.teclas = new Map();
         
+        // Flag para habilitar/deshabilitar el input (usado cuando se pide el nombre)
+        this.habilitado = true;
+        
         // MapeoTeclas = mapeo entre códigos de teclas y acciones
         // Convierte el código de la tecla (ej: 'KeyW') en una acción (ej: 'disparar')
         this.mapeoTeclas = {
@@ -37,7 +40,11 @@ export class GestorEntrada {
             
             // Teclas para rotar derecha
             'KeyD': 'rotarDerecha',     // D
-            'ArrowRight': 'rotarDerecha' // Flecha derecha
+            'ArrowRight': 'rotarDerecha', // Flecha derecha
+            
+            // === FUNCIÓN DE DESARROLLO ===
+            // Tecla L para perder automáticamente (se borrará después)
+            'KeyL': 'perder'
         };
         
         // EnfriamientoDisparo = temporizador entre disparos
@@ -60,6 +67,9 @@ export class GestorEntrada {
     _vincularEventos() {
         // Evento cuando se presiona una tecla
         window.addEventListener('keydown', (e) => {
+            // Si el input está deshabilitado (ej: pidiendo nombre), ignorar teclas del juego
+            if (!this.habilitado) return;
+            
             // Obtener la acción correspondiente a esta tecla
             const accion = this.mapeoTeclas[e.code];
             
@@ -75,6 +85,9 @@ export class GestorEntrada {
         
         // Evento cuando se suelta una tecla
         window.addEventListener('keyup', (e) => {
+            // Si el input está deshabilitado, ignorar teclas del juego
+            if (!this.habilitado) return;
+            
             const accion = this.mapeoTeclas[e.code];
             
             if (accion) {
@@ -172,11 +185,38 @@ export class GestorEntrada {
         return false;
     }
     
+    // === FUNCIÓN DE DESARROLLO ===
+    /**
+     * Verifica si se debe perder el juego (tecla L)
+     * SOLO PARA DESARROLLO - Se borrará después
+     * 
+     * @returns {boolean} - true si se presionó L
+     */
+    debePerder() {
+        return this.estaPresionada('perder');
+    }
+    
     /**
      * Limpia todas las teclas
      * Se llama al reiniciar el juego para evitar teclas "atascadas"
      */
     reiniciar() {
         this.teclas.clear();
+    }
+    
+    /**
+     * Deshabilita el input del teclado
+     * Se usa cuando se muestra un input HTML (ej: pedir nombre para Top 5)
+     */
+    deshabilitar() {
+        this.habilitado = false;
+        this.teclas.clear();
+    }
+    
+    /**
+     * Habilita el input del teclado
+     */
+    habilitar() {
+        this.habilitado = true;
     }
 }
