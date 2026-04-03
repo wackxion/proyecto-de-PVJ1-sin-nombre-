@@ -73,7 +73,9 @@
 | S / Flecha ↓ | Activar ataque especial (Ulti) |
 | A / Flecha ← | Rotar nave a la izquierda |
 | D / Flecha → | Rotar nave a la derecha |
-| ENTER / Click | Reiniciar (en Game Over) |
+| ENTER | Reiniciar (en Game Over) |
+| Click en REINICIAR | Reiniciar (en Game Over) |
+| L | Perder automáticamente (solo desarrollo) |
 
 ---
 
@@ -206,9 +208,66 @@ Los radios de colisión ahora coinciden con el tamaño visual real de los astero
 - [x] Fuente manuscrita (estilo Birome)
 - [x] Tutorial en imagen
 
+### ✅ Sistema Top 5
+- [x] Sistema de puntuación Top 5 con localStorage
+- [x] Input HTML para ingresar nombre al hacer nuevo record
+- [x] Imagen de fondo en formulario de nombre (guardarPuuntos.png)
+- [x] Botón TOP 5 en pantalla de Game Over
+- [x] Tabla de puntuaciones con encabezados: N° | NOMBRE | PUNTOS | OLEADAS
+- [x] Columnas alineadas y separadas para mejor visualización
+- [x] Input del teclado se deshabilita mientras se escribe el nombre
+- [x] Click en pantalla ya no reinicia (solo botón REINICIAR o ENTER)
+
+### ✅ Funciones de Desarrollo
+- [x] Tecla L para perder automáticamente (se移除irá en producción)
+
+### ✅ Dificultad Progresiva
+- [x] Velocidad de asteroides aumenta 10% cada 5 oleadas (máximo 30%)
+
 ---
 
-## 8. Tech Stack
+## 8. Sistema Top 5
+
+### 8.1 Funcionamiento
+
+- Las **5 mejores puntuaciones** se guardan en localStorage
+- Al terminar el juego, si la puntuación califica para el Top 5, se muestra un formulario
+- El jugador ingresa un nombre (máximo 8 caracteres, solo letras y números)
+- El sistema guarda: nombre, puntuación y oleada alcanzada
+
+### 8.2 Pantalla de Top 5
+
+- Se accede desde el botón "TOP 5" en la pantalla de Game Over
+- Muestra una tabla con encabezados: **N° | NOMBRE | PUNTOS | OLEADAS**
+- Las columnas están alineadas y separadas para mejor visualización
+- Botón "VOLVER" para regresar a la pantalla de Game Over
+
+### 8.3 Validación de Nombres
+
+- Solo letras (A-Z) y números (0-9)
+- Máximo 8 caracteres
+- Se convierte a mayúsculas automáticamente
+- Se eliminan espacios al inicio y final
+
+---
+
+## 9. Dificultad Progresiva
+
+### 9.1 Velocidad de Asteroides
+
+- La velocidad de los asteroides aumenta un **10% cada 5 oleadas**
+- Máximo aumento: **30%** (en oleada 15+)
+
+| Oleada | Aumento de Velocidad |
+|--------|---------------------|
+| 0-4 | Normal (100%) |
+| 5-9 | +10% (110%) |
+| 10-14 | +20% (120%) |
+| 15+ | +30% (máximo) |
+
+---
+
+## 10. Tech Stack
 
 - **Motor:** PixiJS v8
 - **Lenguaje:** JavaScript ES6+

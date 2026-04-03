@@ -28,8 +28,10 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 - Al destruir asteroides grandes/medianos, se rompen en fragmentos más pequeños
 - Sistema de **escudos** (porcentaje 0-100%)
 - Al recibir daño aparece una **esfera azul** temporal alrededor de la nave
-- **Sistema de oleadas** - Cada 10 asteroides destroyed avanza la oleada
+- **Sistema de oleadas** - Cada 10 asteroides destruidos avanza la oleada
 - ULTi cuenta para las oleadas pero NO da carga de ULTi
+- **Sistema Top 5** - Guarda las mejores puntuaciones con nombre y oleada
+- **Dificultad progresiva** - Velocidad de asteroides aumenta cada 5 oleadas
 
 ---
 
@@ -79,9 +81,19 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 | SPECIAL | 128x128 | Power-up al destruir |
 
 ### Sistema de Oleadas
-- Las oleadas avanzan cada 10 asteroides destroyed
+- Las oleadas avanzan cada 10 asteroides destruidos
 - La dificultad aumenta reduciendo el intervalo de spawn
 - ULTi también cuenta para las oleadas
+
+### Sistema Top 5
+- Las mejores 5 puntuaciones se guardan automáticamente
+- Al hacer nuevo record, se solicita nombre (máx 8 caracteres, solo letras y números)
+- Muestra: N° | NOMBRE | PUNTOS | OLEADAS
+- Se almacena en localStorage del navegador
+
+### Dificultad Progresiva
+- La velocidad de los asteroides aumenta un 10% cada 5 oleadas
+- Hasta un máximo del 30% de aumento (en oleada 15+)
 
 ---
 
@@ -114,7 +126,8 @@ serve .
 │   ├── asteroide.png      # Sprite del asteroide
 │   ├── puntuacion2.png   # Imagen decorativa UI
 │   ├── tutorial.png       # Imagen de tutorial
-│   └── gameOver.jpg       # Imagen de Game Over
+│   ├── gameOver.jpg       # Imagen de Game Over
+│   └── guardarPuuntos.png # Imagen de formulario Top 5
 └── src/
     ├── main.js            # Punto de entrada
     ├── game/
@@ -125,6 +138,7 @@ serve .
     │   ├── UltiEffect.js # Efecto especial
     │   ├── BurstEffect.js# Efecto de explosión
     │   ├── HitEffect.js  # Efecto de impacto
+    │   ├── Top5.js       # Sistema de puntuación Top 5
     │   └── GameObject.js # Clase base
     └── systems/
         └── InputManager.js # Gestión de teclado
