@@ -198,7 +198,7 @@ export class Game {
             // Cargar las imágenes desde la carpeta assets/
             // Usar el API de PixiJS v8
             const [naveTexture, asteroideTexture, fondoTexture] = await Promise.all([
-                PIXI.Assets.load('assets/nave.png'),
+                PIXI.Assets.load('assets/nave322.png'),
                 PIXI.Assets.load('assets/asteroide250.png'),
                 PIXI.Assets.load('assets/fondoEspacio2.png')
             ]);
