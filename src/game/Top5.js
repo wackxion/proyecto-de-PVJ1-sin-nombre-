@@ -7,6 +7,7 @@
  * - Validar los nombres de los jugadores
  * - Ordenar las puntuaciones de mayor a menor
  * - Determinar si una puntuación califica para el top 5
+ * - Como respaldo usa memoria en caso de que localStorage no funcione
  */
 
 export class Top5 {
@@ -24,49 +25,70 @@ export class Top5 {
         
         // Longitud máxima del nombre del jugador (8 caracteres)
         this.maxNameLength = 8;
+        
+        // Backup en memoria cuando localStorage no funciona
+        this.listaMemoria = [];
+        
+        // Verificar si localStorage está disponible
+        this.localStorageDisponible = this._verificarLocalStorage();
     }
     
     /**
-     * Obtiene la lista de top 5 desde localStorage
-     * Lee los datos guardados en el navegador del usuario
-     * 
+     * Verifica si localStorage está disponible
+     * @returns {boolean} true si funciona
+     */
+    _verificarLocalStorage() {
+        try {
+            const test = '__storage_test__';
+            localStorage.setItem(test, test);
+            localStorage.removeItem(test);
+            return true;
+        } catch (e) {
+            console.warn('Top5 - localStorage no disponible, usando memoria');
+            return false;
+        }
+    }
+    
+    /**
+     * Obtiene la lista de top 5
+     * Intenta primero localStorage, luego memoria
      * @returns {Array} Array de objetos {nombre, puntuacion, oleada}
-     *                   Devuelve un array vacío si no hay datos guardados
      */
     obtenerLista() {
-        try {
-            // Intentar leer los datos guardados en el navegador
-            // localStorage guarda todo como texto (string)
-            const data = localStorage.getItem(this.storageKey);
-            
-            // Si existen datos guardados, convertirlos de texto a objeto JavaScript
-            if (data) {
-                return JSON.parse(data);  // JSON.parse convierte texto a objeto
+        // Si localStorage está disponible, usarlo
+        if (this.localStorageDisponible) {
+            try {
+                const data = localStorage.getItem(this.storageKey);
+                if (data) {
+                    return JSON.parse(data);
+                }
+            } catch (e) {
+                console.error('Top5 - Error al leer localStorage:', e);
             }
-        } catch (e) {
-            // Si hay un error al leer, mostrar en consola (para debugging)
-            console.error('Error al leer top5:', e);
         }
         
-        // Si no hay datos o hubo un error, devolver un array vacío
-        return [];
+        // Devolver lista en memoria si no hay localStorage
+        return this.listaMemoria;
     }
     
     /**
-     * Guarda la lista en localStorage
-     * Convierte el array de objetos a texto y lo guarda en el navegador
-     * 
+     * Guarda la lista
+     * Intenta localStorage, luego usa memoria
      * @param {Array} lista - Array de objetos {nombre, puntuacion, oleada}
      */
     guardarLista(lista) {
-        try {
-            // JSON.stringify convierte el objeto JavaScript a texto
-            // localStorage solo guarda strings, por eso usamos JSON
-            localStorage.setItem(this.storageKey, JSON.stringify(lista));
-        } catch (e) {
-            // Si hay un error al guardar, mostrar en consola
-            console.error('Error al guardar top5:', e);
+        // Si localStorage está disponible, usarlo
+        if (this.localStorageDisponible) {
+            try {
+                localStorage.setItem(this.storageKey, JSON.stringify(lista));
+                return;
+            } catch (e) {
+                console.error('Top5 - Error al guardar en localStorage:', e);
+            }
         }
+        
+        // Guardar en memoria como respaldo
+        this.listaMemoria = lista;
     }
     
     /**
