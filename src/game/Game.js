@@ -1505,10 +1505,6 @@ export class Game {
      * Muestra la pantalla de Top 5
      */
     async _mostrarTop5() {
-        console.log('Iniciando Top 5...');
-        console.log('Top5 instance:', this.top5);
-        console.log('Estilos disponibles:', this.estilos);
-        
         // Limpiar solo el UI del game over, mantener el fondo
         for (const elemento of this.elementosFinJuego) {
             if (elemento && elemento.destroy) {
@@ -1519,7 +1515,6 @@ export class Game {
         
         // Cargar imagen de puntuación (await para asegurar que cargue)
         const puntuacionTexture = await PIXI.Assets.load('assets/puntuacion2.png');
-        console.log('Imagen cargada:', puntuacionTexture);
         
         // Crear sprite con la imagen
         const puntuacionSprite = new PIXI.Sprite(puntuacionTexture);
@@ -1562,7 +1557,6 @@ export class Game {
         
         // Obtener lista del top 5
         const lista = this.top5.obtenerLista();
-        console.log('Lista del Top 5:', lista);
         
         // === MOSTRAR LOS 5 PRIMEROS ===
         // Crear cada fila con columnas separadas para mejor alineación
