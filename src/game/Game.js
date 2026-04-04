@@ -112,6 +112,43 @@ export class Game {
         
         // Flag para saber si se pidió nombre
         this.nombreIngresado = false;
+        
+        // === ESTILOS PREDEFINIDOS PARA PIXI.TEXT ===
+        // Para reutilizar y evitar repetir código
+        this.estilos = {
+            // Estilo para títulos (Game Over, etc.)
+            titulo: {
+                fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
+                fontSize: 30,
+                fill: 0x0044CC,
+                fontWeight: 'bold'
+            },
+            // Estilo para texto azul normal
+            textoAzul: {
+                fontFamily: 'Segoe Script, cursive',
+                fontSize: 20,
+                fill: 0x0044CC
+            },
+            // Estilo para texto blanco
+            textoBlanco: {
+                fontFamily: 'Segoe Script, cursive',
+                fontSize: 20,
+                fill: 0xFFFFFF
+            },
+            // Estilo para encabezado de tabla (Top 5)
+            encabezado: {
+                fontFamily: 'Segoe Script, cursive',
+                fontSize: 20,
+                fill: 0x0044CC,
+                fontWeight: 'bold'
+            },
+            // Estilo para filas de tabla (Top 5)
+            filaTabla: {
+                fontFamily: 'Segoe Script, cursive',
+                fontSize: 22,
+                fill: 0x0044CC
+            }
+        };
     }
     
     /**
@@ -884,11 +921,7 @@ export class Game {
         // Crear texto "GAME OVER"
         const titleText = new PIXI.Text({
             text: 'GAME OVER',
-            style: {
-                ...fontStyle,
-                fontSize: 40,
-                fill: 0xCC0000
-            }
+            style: this.estilos.titulo
         });
         titleText.anchor.set(0.5);
         titleText.x = this.anchoJuego / 2;
@@ -1503,10 +1536,11 @@ export class Game {
         const headerContainer = new PIXI.Container();
         
         // Crear cada columna del encabezado por separado para mejor alineación
-        const headerNum = new PIXI.Text({ text: 'N°', style: { fontFamily: 'Segoe Script, cursive', fontSize: 20, fill: 0x0044CC, fontWeight: 'bold' } });
-        const headerNombre = new PIXI.Text({ text: 'NOMBRE', style: { fontFamily: 'Segoe Script, cursive', fontSize: 20, fill: 0x0044CC, fontWeight: 'bold' } });
-        const headerPuntos = new PIXI.Text({ text: 'PUNTOS', style: { fontFamily: 'Segoe Script, cursive', fontSize: 20, fill: 0x0044CC, fontWeight: 'bold' } });
-        const headerOleada = new PIXI.Text({ text: 'OLEADAS', style: { fontFamily: 'Segoe Script, cursive', fontSize: 20, fill: 0x0044CC, fontWeight: 'bold' } });
+        // Usando estilo predefinido de encabezado
+        const headerNum = new PIXI.Text({ text: 'N°', style: this.estilos.encabezado });
+        const headerNombre = new PIXI.Text({ text: 'NOMBRE', style: this.estilos.encabezado });
+        const headerPuntos = new PIXI.Text({ text: 'PUNTOS', style: this.estilos.encabezado });
+        const headerOleada = new PIXI.Text({ text: 'OLEADAS', style: this.estilos.encabezado });
         
         // Posicionar cada columna (separados más entre sí)
         headerNum.x = -200;        // N° más a la izquierda
@@ -1535,11 +1569,11 @@ export class Game {
             const puntos = lista[i] ? lista[i].puntuacion.toString() : '---';
             const oleada = lista[i] ? lista[i].oleada.toString() : '---';
             
-            // Crear texto para cada columna
-            const textNum = new PIXI.Text({ text: num.toString(), style: { fontFamily: 'Segoe Script, cursive', fontSize: 22, fill: 0x0044CC } });
-            const textNombre = new PIXI.Text({ text: nombre, style: { fontFamily: 'Segoe Script, cursive', fontSize: 22, fill: 0x0044CC } });
-            const textPuntos = new PIXI.Text({ text: puntos, style: { fontFamily: 'Segoe Script, cursive', fontSize: 22, fill: 0x0044CC } });
-            const textOleada = new PIXI.Text({ text: oleada, style: { fontFamily: 'Segoe Script, cursive', fontSize: 22, fill: 0x0044CC } });
+            // Crear texto para cada columna usando estilo predefinido
+            const textNum = new PIXI.Text({ text: num.toString(), style: this.estilos.filaTabla });
+            const textNombre = new PIXI.Text({ text: nombre, style: this.estilos.filaTabla });
+            const textPuntos = new PIXI.Text({ text: puntos, style: this.estilos.filaTabla });
+            const textOleada = new PIXI.Text({ text: oleada, style: this.estilos.filaTabla });
             
             // Posicionar cada columna en la fila (mismo spacing que el encabezado)
             textNum.x = -200;       // N° más a la izquierda
