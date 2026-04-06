@@ -1582,6 +1582,7 @@ export class Game {
         
         // Obtener lista del top 5
         const lista = await this.top5.obtenerLista();
+        console.log('Game - Lista recibida:', lista);
         
         // === MOSTRAR LOS 5 PRIMEROS ===
         // Crear cada fila con columnas separadas para mejor alineación
@@ -1618,7 +1619,7 @@ export class Game {
         // Botón para volver
         const backContainer = new PIXI.Container();
         backContainer.x = this.anchoJuego / 2.36;
-        backContainer.y = this.altoJuego / 1.80 + (puntuacionSprite.height * scale) / 2 - 30;
+        backContainer.y = this.altoJuego / 1.90 + (puntuacionSprite.height * scale) / 2 - 30;
         backContainer.eventMode = 'static';
         backContainer.cursor = 'pointer';
         
