@@ -1315,7 +1315,7 @@ export class Game {
      * 
      * @param {object} ticker - Objeto de PixiJS que proporciona información del frame
      */
-    _gameLoop(ticker) {
+    async _gameLoop(ticker) {
         // Si el juego no está corriendo, salir
         if (!this.ejecutando) return;
         
