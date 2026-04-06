@@ -1617,8 +1617,9 @@ export class Game {
         
         // Botón para volver
         const backContainer = new PIXI.Container();
-        backContainer.x = this.anchoJuego / 2.36;
-        backContainer.y = this.altoJuego / 1.90 + (puntuacionSprite.height * scale) / 2 - 30;
+        // Botón VOLVER - posición fija debajo de la lista
+        backContainer.x = this.anchoJuego / 2;  // Centro exacto
+        backContainer.y = this.altoJuego - 80;  // 80px desde el fondo de la pantalla
         backContainer.eventMode = 'static';
         backContainer.cursor = 'pointer';
         
