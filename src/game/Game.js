@@ -549,22 +549,22 @@ export class Game {
         const rand = Math.random();
         
         // Distribución de tipos de asteroides:
-        // special: 5%, rezagados: 39% (13% cada uno), large: 15%, medium: 20%, small: 26%
+        // special: 5%, rezagados: 39% (13% cada uno), large: 22%, medium: 17%, small: 17%
         let size;
         if (rand < 0.05) {
             size = 'special';          // 5%
-        } else if (rand < 0.44) {
+        } else if (rand < 0.18) {
             size = 'large_rezagado';  // 13%
-        } else if (rand < 0.59) {
+        } else if (rand < 0.31) {
             size = 'medium_rezagado'; // 13%
-        } else if (rand < 0.74) {
+        } else if (rand < 0.44) {
             size = 'small_rezagado';  // 13%
-        } else if (rand < 0.94) {
-            size = 'large';           // 20% (bajó de 30%)
-        } else if (rand < 1.00) {
-            size = 'medium';          // 6% (bajó de 20%)
+        } else if (rand < 0.66) {
+            size = 'large';           // 22%
+        } else if (rand < 0.83) {
+            size = 'medium';          // 17%
         } else {
-            size = 'small';           // 26% (subió de 6%)
+            size = 'small';           // 17%
         }
         
         // console.log('Size asignado directamente:', size);
