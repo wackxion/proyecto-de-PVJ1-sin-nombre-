@@ -3,6 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
+- **Versión:** v1.2
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -31,9 +32,20 @@
 | **MEDIUM** | 32px | 64x64 | 50 HP | 25% | Va hacia la nave | 20 |
 | **LARGE** | 64px | 128x128 | 75 HP | 50% | Orbita alrededor de la nave | 10 |
 | **SPECIAL** | 64px | 128x128 | 200 HP | 0% (power-up) | Va hacia la nave (rápido) | 100 |
-| **Rezagados** | Según tipo | Según tipo | Según tipo | Según tipo | Pasan de largo | Según tipo |
 
-### 2.3 Sistema de Oleadas
+### 2.3 Distribución de Asteroides
+
+| Tipo | Probabilidad |
+|------|-------------|
+| SPECIAL | 5% |
+| Rezagado 1 | 13% |
+| Rezagado 2 | 13% |
+| Rezagado 3 | 13% |
+| LARGE | 22% |
+| MEDIUM | 17% |
+| SMALL | 17% |
+
+### 2.4 Sistema de Oleadas
 
 - Las oleadas avanzan cada **10 asteroides destruidos**
 - La siguiente oleada requiere 10 asteroides más (10, 20, 30, 40...)
@@ -41,31 +53,31 @@
 - Los proyectiles **sí** cuentan para las oleadas
 - La **ULTI sí** cuenta para las oleadas pero **NO** da carga de ULTi
 
-### 2.4 Sistema de Ruptura
+### 2.5 Sistema de Ruptura
 
 - **LARGE** → 2 **MEDIUM** (heredan órbita del padre)
 - **MEDIUM** → 2 **SMALL** (heredan órbita solo si el padre orbitaba)
 - **SPECIAL** → No suelta fragmentos, al destruirlo otorga power-up de velocidad de disparo
 
-### 2.5 Sistema de Power-up
+### 2.6 Sistema de Power-up
 
 - Al destruir el asteroide **SPECIAL**, la velocidad de disparo aumenta un 20%
 - El power-up se acumula, permitiendo varios incrementos
 - El special **no hace daño** al chocar con la nave
 
-### 2.6 Efectos de Impacto
+### 2.7 Efectos de Impacto
 
 - Al recibir daño de proyectil (sin destruir), el asteroide se mueve al 30% de velocidad por 1 segundo
 - Efecto visual de impacto (HitEffect) al recibir proyectil
 
-### 2.7 ULTi (Ataque Especial)
+### 2.8 ULTi (Ataque Especial)
 
 - Aro expansivo que sale de la nave
 - **Distancia reducida un 30%** (70% de la diagonal de pantalla)
 - No da carga de ULTi al destruir asteroides (equilibrio)
 - Sí cuenta para las oleadas
 
-### 2.8 Controles
+### 2.9 Controles
 
 | Tecla | Acción |
 |-------|--------|
@@ -75,7 +87,8 @@
 | D / Flecha → | Rotar nave a la derecha |
 | ENTER | Reiniciar (en Game Over) |
 | Click en REINICIAR | Reiniciar (en Game Over) |
-| L | Perder automáticamente (solo desarrollo) |
+| P | Pausar/Reanudar juego |
+| T | Ver Top 5 durante el juego |
 
 ---
 
@@ -121,7 +134,8 @@ src/
 │   ├── Projectile.js   # Proyectiles (líneas)
 │   ├── UltiEffect.js   # Efecto especial
 │   ├── BurstEffect.js  # Efecto de burst al destruir especial
-│   └── HitEffect.js    # Efecto de impacto al recibir daño
+│   ├── HitEffect.js    # Efecto de impacto al recibir daño
+│   └── Top5.js         # Sistema Top 5 con Firebase
 ├── systems/
 │   └── InputManager.js # Gestión de teclado
 └── css/
@@ -137,6 +151,7 @@ src/
 - **UltiEffect:** Aro expansivo que destruye asteroides (70% de la diagonal)
 - **BurstEffect:** Partículas al destruir special
 - **HitEffect:** Efecto visual de impacto
+- **Top5:** Sistema de puntuación con Firebase Firestore
 
 ---
 
@@ -177,6 +192,14 @@ Los radios de colisión ahora coinciden con el tamaño visual real de los astero
 - Instrucciones en blanco
 - Botón "REINICIAR" manuscrito
 
+### 6.3 Pantalla de Top 5
+
+- Imagen de fondo: puntuacion2.png (escala 65% ancho, 75% alto)
+- Imagen centrada y fija en pantalla
+- Tabla con encabezados: **N° | NOMBRE | PUNTOS | OLEADAS**
+- Datos centrados dentro de la imagen
+- Botón "VOLVER" en esquina inferior izquierda
+
 ---
 
 ## 7. Características Implementadas
@@ -208,8 +231,8 @@ Los radios de colisión ahora coinciden con el tamaño visual real de los astero
 - [x] Fuente manuscrita (estilo Birome)
 - [x] Tutorial en imagen
 
-### ✅ Sistema Top 5
-- [x] Sistema de puntuación Top 5 con localStorage
+### ✅ Sistema Top 5 (v1.1+)
+- [x] Sistema de puntuación Top 5 con Firebase Firestore
 - [x] Input HTML para ingresar nombre al hacer nuevo record
 - [x] Imagen de fondo en formulario de nombre (guardarPuuntos.png)
 - [x] Botón TOP 5 en pantalla de Game Over
@@ -217,12 +240,26 @@ Los radios de colisión ahora coinciden con el tamaño visual real de los astero
 - [x] Columnas alineadas y separadas para mejor visualización
 - [x] Input del teclado se deshabilita mientras se escribe el nombre
 - [x] Click en pantalla ya no reinicia (solo botón REINICIAR o ENTER)
+- [x] Filtrar elementos corruptos/vacíos de Firebase
+- [x] Acceso al Top 5 durante el juego con tecla T
 
 ### ✅ Funciones de Desarrollo
-- [x] Tecla L para perder automáticamente (se移除irá en producción)
+- [x] Tecla P para pausar/Reanudar juego
+- [x] Tecla T para ver Top 5 durante el juego
 
-### ✅ Dificultad Progresiva
-- [x] Velocidad de asteroides aumenta 10% cada 5 oleadas (máximo 30%)
+### ✅ Dificultad Progresiva (v1.2)
+- [x] Velocidad de asteroides aumenta 10% cada 5 oleadas
+- [x] Máximo aumento: **60%** (en oleada 30+)
+
+| Oleada | Aumento de Velocidad |
+|--------|---------------------|
+| 0-4 | Normal (100%) |
+| 5-9 | +10% (110%) |
+| 10-14 | +20% (120%) |
+| 15-19 | +30% (130%) |
+| 20-24 | +40% (140%) |
+| 25-29 | +50% (150%) |
+| 30+ | +60% (máximo) |
 
 ---
 
@@ -230,19 +267,27 @@ Los radios de colisión ahora coinciden con el tamaño visual real de los astero
 
 ### 8.1 Funcionamiento
 
-- Las **5 mejores puntuaciones** se guardan en localStorage
+- Las **5 mejores puntuaciones** se guardan en **Firebase Firestore** (colección: top5)
+- Persistente entre sesiones y dispositivos
 - Al terminar el juego, si la puntuación califica para el Top 5, se muestra un formulario
 - El jugador ingresa un nombre (máximo 8 caracteres, solo letras y números)
 - El sistema guarda: nombre, puntuación y oleada alcanzada
 
-### 8.2 Pantalla de Top 5
+### 8.2 Acceso Durante el Juego
 
-- Se accede desde el botón "TOP 5" en la pantalla de Game Over
-- Muestra una tabla con encabezados: **N° | NOMBRE | PUNTOS | OLEADAS**
-- Las columnas están alineadas y separadas para mejor visualización
-- Botón "VOLVER" para regresar a la pantalla de Game Over
+- Durante el juego, se puede presionar **T** para ver el Top 5
+- El juego se mantiene pausado mientras se visualiza el Top 5
+- Botón "VOLVER" para regresar al juego pausado
 
-### 8.3 Validación de Nombres
+### 8.3 Pantalla de Top 5
+
+- Imagen de fondo (puntuacion2.png) escalada al 65% ancho y 75% alto
+- Imagen centrada y fija en pantalla
+- Tabla con encabezados: **N° | NOMBRE | PUNTOS | OLEADAS**
+- Datos centrados dentro de la imagen
+- Botón "VOLVER" en esquina inferior izquierda separado de los bordes
+
+### 8.4 Validación de Nombres
 
 - Solo letras (A-Z) y números (0-9)
 - Máximo 8 caracteres
@@ -256,14 +301,7 @@ Los radios de colisión ahora coinciden con el tamaño visual real de los astero
 ### 9.1 Velocidad de Asteroides
 
 - La velocidad de los asteroides aumenta un **10% cada 5 oleadas**
-- Máximo aumento: **30%** (en oleada 15+)
-
-| Oleada | Aumento de Velocidad |
-|--------|---------------------|
-| 0-4 | Normal (100%) |
-| 5-9 | +10% (110%) |
-| 10-14 | +20% (120%) |
-| 15+ | +30% (máximo) |
+- Máximo aumento: **60%** (en oleada 30+)
 
 ---
 
@@ -271,11 +309,12 @@ Los radios de colisión ahora coinciden con el tamaño visual real de los astero
 
 - **Motor:** PixiJS v8
 - **Lenguaje:** JavaScript ES6+
+- **Backend:** Firebase Firestore
 - **Hosting:** GitHub Pages
 
 ---
 
-## 9. Cómo Ejecutar
+## 11. Cómo Ejecutar
 
 ### Desarrollo local:
 ```bash
@@ -285,3 +324,23 @@ serve .
 
 ### Producción:
 El juego está publicado en: **https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/**
+
+---
+
+## 12. Changelog
+
+### v1.2
+- Sistema Top 5 con Firebase Firestore (persistente en la nube)
+- Tecla P para pausar/Reanudar juego
+- Tecla T para ver Top 5 durante el juego
+- Dificultad progresiva aumentada (60% máximo)
+- Pantalla de Top 5 mejorada (imagen más grande, centrada, datos dentro de la imagen)
+- Botón VOLVER en esquina inferior izquierda
+
+### v1.1
+- Sistema Top 5 con localStorage
+- Imagen decorativa para formulario de nombre
+
+### v1.0
+- Lanzamiento inicial
+- Todas las mecánicas del juego

@@ -1,6 +1,7 @@
 # 🎮 Jugando en el Espacio
 
 [![GitHub Pages](https://img.shields.io/badge/Jugar-Aquí-0044CC?style=for-the-badge)](https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/)
+[![Versión](https://img.shields.io/badge/Versión-v1.2-0044CC?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-sin-nombre-//releases/tag/v1.2)
 
 ---
 
@@ -30,7 +31,7 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 - Al recibir daño aparece una **esfera azul** temporal alrededor de la nave
 - **Sistema de oleadas** - Cada 10 asteroides destruidos avanza la oleada
 - ULTi cuenta para las oleadas pero NO da carga de ULTi
-- **Sistema Top 5** - Guarda las mejores puntuaciones con nombre y oleada
+- **Sistema Top 5** - Guarda las mejores puntuaciones con nombre y oleada en la nube (Firebase)
 - **Dificultad progresiva** - Velocidad de asteroides aumenta cada 5 oleadas
 
 ---
@@ -59,6 +60,8 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 | A / Flecha ← | Rotar nave a la izquierda |
 | D / Flecha → | Rotar nave a la derecha |
 | ENTER / Click | Reiniciar (en Game Over) |
+| P | Pausar/Reanudar juego |
+| T | Ver Top 5 durante el juego |
 
 ---
 
@@ -66,6 +69,7 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 
 - **Lenguaje:** JavaScript (ES6+)
 - **Motor:** [PixiJS v8](https://pixijs.com/) para renderizado 2D
+- **Backend:** Firebase Firestore para Top 5 persistente
 - **Servidor:** Node.js con `serve`
 
 ---
@@ -86,14 +90,15 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 - ULTi también cuenta para las oleadas
 
 ### Sistema Top 5
-- Las mejores 5 puntuaciones se guardan automáticamente
+- Las mejores 5 puntuaciones se guardan automáticamente en la nube (Firebase Firestore)
 - Al hacer nuevo record, se solicita nombre (máx 8 caracteres, solo letras y números)
 - Muestra: N° | NOMBRE | PUNTOS | OLEADAS
-- Se almacena en localStorage del navegador
+- Se puede acceder durante el juego con la tecla **T**
+- Persistente entre sesiones y dispositivos
 
 ### Dificultad Progresiva
 - La velocidad de los asteroides aumenta un 10% cada 5 oleadas
-- Hasta un máximo del 30% de aumento (en oleada 15+)
+- Hasta un máximo del 60% de aumento (en oleada 30+)
 
 ---
 
@@ -138,7 +143,7 @@ serve .
     │   ├── UltiEffect.js # Efecto especial
     │   ├── BurstEffect.js# Efecto de explosión
     │   ├── HitEffect.js  # Efecto de impacto
-    │   ├── Top5.js       # Sistema de puntuación Top 5
+    │   ├── Top5.js       # Sistema de puntuación Top 5 (Firebase)
     │   └── GameObject.js # Clase base
     └── systems/
         └── InputManager.js # Gestión de teclado
