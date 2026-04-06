@@ -195,12 +195,19 @@ export class Top5 {
     async califica(puntuacion) {
         const lista = await this.obtenerLista();
         
+        console.log('Top5 - Verificando calificación:', puntuacion, 'lista:', lista);
+        
         if (lista.length < this.maxEntries) {
+            console.log('Top5 - Califica: menos de 5 entradas');
             return true;
         }
         
         const minima = Math.min(...lista.map(e => e.puntuacion));
-        return puntuacion > minima;
+        console.log('Top5 - Puntuación mínima actual:', minima);
+        
+        const califica = puntuacion > minima;
+        console.log('Top5 - Resultado:', califica);
+        return califica;
     }
     
     /**

@@ -549,22 +549,22 @@ export class Game {
         const rand = Math.random();
         
         // Distribución de tipos de asteroides:
-        // special: 5%, rezagados: 39% (13% cada uno), large: 30%, medium: 20%, small: 6%
+        // special: 5%, rezagados: 39% (13% cada uno), large: 15%, medium: 20%, small: 26%
         let size;
         if (rand < 0.05) {
             size = 'special';          // 5%
-        } else if (rand < 0.18) {
-            size = 'large_rezagado';  // 13%
-        } else if (rand < 0.31) {
-            size = 'medium_rezagado'; // 13%
         } else if (rand < 0.44) {
-            size = 'small_rezagado';  // 13%
+            size = 'large_rezagado';  // 13%
+        } else if (rand < 0.59) {
+            size = 'medium_rezagado'; // 13%
         } else if (rand < 0.74) {
-            size = 'large';           // 30%
+            size = 'small_rezagado';  // 13%
         } else if (rand < 0.94) {
-            size = 'medium';          // 20%
+            size = 'large';           // 20% (bajó de 30%)
+        } else if (rand < 1.00) {
+            size = 'medium';          // 6% (bajó de 20%)
         } else {
-            size = 'small';           // 6%
+            size = 'small';           // 26% (subió de 6%)
         }
         
         // console.log('Size asignado directamente:', size);
@@ -966,7 +966,11 @@ export class Game {
         // === VERIFICAR SI CALIFICA PARA TOP 5 ===
         // Si ya se usó el nombre o no califica, no pedir
         // Solo muestra el input si la puntuación está en el top 5
-        if (!this.nombreIngresado && await this.top5.califica(this.puntuacion)) {
+        console.log('Game - Verificando Top 5, puntuación:', this.puntuacion);
+        const calificaTop5 = await this.top5.califica(this.puntuacion);
+        console.log('Game - ¿Califica para Top 5?:', calificaTop5);
+        
+        if (!this.nombreIngresado && calificaTop5) {
             // Deshabilitar el input del teclado para que no interfiera con el input HTML
             // Esto evita que las teclas W/A/S/D afecten al juego mientras se escribe el nombre
             this.gestorEntrada.deshabilitar();
