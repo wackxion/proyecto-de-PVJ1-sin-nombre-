@@ -196,13 +196,18 @@ export class Top5 {
         const lista = await this.obtenerLista();
         
         console.log('Top5 - Verificando calificación:', puntuacion, 'lista:', lista);
+        console.log('Top5 - Primer elemento:', lista[0]);
         
         if (lista.length < this.maxEntries) {
             console.log('Top5 - Califica: menos de 5 entradas');
             return true;
         }
         
-        const minima = Math.min(...lista.map(e => e.puntuacion));
+        // Verificar que los datos tengan el campo puntuacion
+        const puntuaciones = lista.map(e => e.puntuacion);
+        console.log('Top5 - Puntuaciones:', puntuaciones);
+        
+        const minima = Math.min(...puntuaciones);
         console.log('Top5 - Puntuación mínima actual:', minima);
         
         const califica = puntuacion > minima;
