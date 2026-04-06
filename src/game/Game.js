@@ -1323,13 +1323,6 @@ export class Game {
         // ticker.deltaTime viene en frames, convertir a segundos dividiendo por 60
         const delta = ticker.deltaTime / 60;
         
-        // === FUNCIÓN DE DESARROLLO ===
-        // Si se presiona L, perder el juego automáticamente
-        if (this.gestorEntrada.debePerder()) {
-            this.gameOver();
-            return;
-        }
-        
         // === CONTROL DE PAUSA (Tecla P) ===
         // Si se presiona P, alternar pausa
         if (this.gestorEntrada.debePausar()) {

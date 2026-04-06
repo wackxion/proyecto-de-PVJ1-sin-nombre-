@@ -42,10 +42,6 @@ export class GestorEntrada {
             'KeyD': 'rotarDerecha',     // D
             'ArrowRight': 'rotarDerecha', // Flecha derecha
             
-            // === FUNCIÓN DE DESARROLLO ===
-            // Tecla L para perder automáticamente (se borrará después)
-            'KeyL': 'perder',
-            
             // Teclas de control del juego
             'KeyP': 'pausa',               // P - Pausar el juego
             'KeyT': 'mostrarTop5'          // T - Mostrar Top 5 (solo cuando está pausado)
@@ -191,15 +187,6 @@ export class GestorEntrada {
     
     // === FUNCIÓN DE DESARROLLO ===
     /**
-     * Verifica si se debe perder el juego (tecla L)
-     * SOLO PARA DESARROLLO - Se borrará después
-     * 
-     * @returns {boolean} - true si se presionó L
-     */
-    debePerder() {
-        return this.estaPresionada('perder');
-    }
-    
     /**
      * Limpia todas las teclas
      * Se llama al reiniciar el juego para evitar teclas "atascadas"
