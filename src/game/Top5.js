@@ -1,36 +1,165 @@
 /**
  * Top5 - Sistema de puntuación del Top 5
- * Maneja la lista de los 5 mejores puntuaciones usando localStorage
+ * Maneja la lista de los 5 mejores puntuaciones usando Firebase Firestore
  * 
  * Esta clase se encarga de:
- * - Guardar y recuperar las mejores puntuaciones del navegador
+ * - Guardar y recuperar las mejores puntuaciones desde Firebase
  * - Validar los nombres de los jugadores
  * - Ordenar las puntuaciones de mayor a menor
  * - Determinar si una puntuación califica para el top 5
- * - Como respaldo usa memoria en caso de que localStorage no funcione
+ * - Como respaldo usa memoria en caso de que Firebase no funcione
  */
+
+// Configuración de Firebase (del proyecto del usuario)
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBr2-RXfrr0-J12aS9ZFV388N4Qaw1fRAA",
+    authDomain: "jugando-en-el-espacio.firebaseapp.com",
+    projectId: "jugando-en-el-espacio",
+    storageBucket: "jugando-en-el-espacio.firebasestorage.app",
+    messagingSenderId: "760971957982",
+    appId: "1:760971957982:web:69a4b9b9db7af54558144f"
+};
 
 export class Top5 {
     /**
      * Constructor del Top 5
-     * Inicializa las configuraciones básicas
+     * Inicializa Firebase y carga los datos
      */
     constructor() {
-        // Key = nombre de la clave en localStorage donde se guarda el top 5
-        // Se usa para identificar los datos guardados específicamente de este juego
-        this.storageKey = 'jugandoEnElEspacio_top5';
-        
         // Cantidad máxima de entradas en el top 5 (los 5 mejores)
         this.maxEntries = 5;
         
         // Longitud máxima del nombre del jugador (8 caracteres)
         this.maxNameLength = 8;
         
-        // Backup en memoria cuando localStorage no funciona
+        // Backup en memoria
         this.listaMemoria = [];
         
-        // Verificar si localStorage está disponible
-        this.localStorageDisponible = this._verificarLocalStorage();
+        // Referencia a Firestore
+        this.db = null;
+        this.top5Ref = null;
+        
+        // Verificar si Firebase está disponible y inicializar
+        this.firebaseListo = false;
+        this._inicializarFirebase();
+    }
+    
+    /**
+     * Inicializa Firebase
+     */
+    async _inicializarFirebase() {
+        try {
+            // Verificar si firebase está disponible globalmente
+            if (typeof firebase !== 'undefined' && firebase.apps) {
+                // Inicializar Firebase si no está ya inicializado
+                if (firebase.apps.length === 0) {
+                    firebase.initializeApp(FIREBASE_CONFIG);
+                }
+                
+                // Obtener referencia a Firestore
+                this.db = firebase.firestore();
+                this.top5Ref = this.db.collection('top5').doc('puntuaciones');
+                
+                // Cargar datos desde Firebase
+                await this._cargarDesdeFirebase();
+                
+                this.firebaseListo = true;
+                console.log('Top5 - Firebase inicializado correctamente');
+            } else {
+                console.warn('Top5 - Firebase no disponible, usando memoria');
+            }
+        } catch (e) {
+            console.error('Top5 - Error al inicializar Firebase:', e);
+        }
+    }
+    
+    /**
+     * Carga los datos desde Firebase Firestore
+     */
+    async _cargarDesdeFirebase() {
+        if (!this.top5Ref) return;
+        
+        try {
+            const doc = await this.top5Ref.get();
+            if (doc.exists) {
+                this.listaMemoria = doc.data().lista || [];
+                console.log('Top5 - Datos cargados desde Firebase:', this.listaMemoria);
+            }
+        } catch (e) {
+            console.error('Top5 - Error al cargar desde Firebase:', e);
+        }
+    }
+    
+    /**
+     * Guarda la lista en Firebase Firestore
+     */
+    async _guardarEnFirebase(lista) {
+        if (!this.top5Ref) return;
+        
+        try {
+            await this.top5Ref.set({ lista: lista });
+            console.log('Top5 - Guardado en Firebase');
+        } catch (e) {
+            console.error('Top5 - Error al guardar en Firebase:', e);
+        }
+    }
+    
+    /**
+     * Obtiene la lista de top 5
+     * Intenta primero Firebase, luego localStorage, luego memoria
+     * @returns {Promise<Array>} Array de objetos {nombre, puntuacion, oleada}
+     */
+    async obtenerLista() {
+        // Si Firebase está listo, devolver datos de Firebase
+        if (this.firebaseListo && this.db) {
+            await this._cargarDesdeFirebase();
+            return this.listaMemoria;
+        }
+        
+        // Si no, intentar localStorage
+        if (this.localStorageDisponible) {
+            try {
+                const data = localStorage.getItem(this.storageKey);
+                if (data) {
+                    return JSON.parse(data);
+                }
+            } catch (e) {
+                console.error('Top5 - Error al leer localStorage:', e);
+            }
+        }
+        
+        // Devolver lista en memoria
+        return this.listaMemoria;
+    }
+    
+    /**
+     * Obtiene la lista de forma síncrona (para uso inmediato sin await)
+     * @returns {Array} Array de objetos {nombre, puntuacion, oleada}
+     */
+    obtenerListaSync() {
+        return this.listaMemoria;
+    }
+    
+    /**
+     * Guarda la lista
+     * @param {Array} lista - Array de objetos {nombre, puntuacion, oleada}
+     */
+    async guardarLista(lista) {
+        this.listaMemoria = lista;
+        
+        // Guardar en Firebase
+        if (this.firebaseListo) {
+            await this._guardarEnFirebase(lista);
+        }
+        
+        // También guardar en localStorage como respaldo
+        if (this._verificarLocalStorage()) {
+            try {
+                localStorage.setItem(this.storageKey, JSON.stringify(lista));
+            } catch (e) {
+                console.error('Top5 - Error al guardar en localStorage:', e);
+            }
+        }
     }
     
     /**
@@ -44,169 +173,80 @@ export class Top5 {
             localStorage.removeItem(test);
             return true;
         } catch (e) {
-            console.warn('Top5 - localStorage no disponible, usando memoria');
             return false;
         }
     }
     
     /**
-     * Obtiene la lista de top 5
-     * Intenta primero localStorage, luego memoria
-     * @returns {Array} Array de objetos {nombre, puntuacion, oleada}
-     */
-    obtenerLista() {
-        // Si localStorage está disponible, usarlo
-        if (this.localStorageDisponible) {
-            try {
-                const data = localStorage.getItem(this.storageKey);
-                if (data) {
-                    return JSON.parse(data);
-                }
-            } catch (e) {
-                console.error('Top5 - Error al leer localStorage:', e);
-            }
-        }
-        
-        // Devolver lista en memoria si no hay localStorage
-        return this.listaMemoria;
-    }
-    
-    /**
-     * Guarda la lista
-     * Intenta localStorage, luego usa memoria
-     * @param {Array} lista - Array de objetos {nombre, puntuacion, oleada}
-     */
-    guardarLista(lista) {
-        // Si localStorage está disponible, usarlo
-        if (this.localStorageDisponible) {
-            try {
-                localStorage.setItem(this.storageKey, JSON.stringify(lista));
-                return;
-            } catch (e) {
-                console.error('Top5 - Error al guardar en localStorage:', e);
-            }
-        }
-        
-        // Guardar en memoria como respaldo
-        this.listaMemoria = lista;
-    }
-    
-    /**
      * Verifica si una puntuación califica para el top 5
-     * Una puntuación califica si:
-     * - Hay menos de 5 entradas en el top 5 (siempre califica)
-     * - O si la puntuación es mayor que la puntuación más baja del top 5 actual
-     * 
      * @param {number} puntuacion - Puntuación a verificar
-     * @returns {boolean} true si califica para estar en el top 5
+     * @returns {Promise<boolean>} true si califica para estar en el top 5
      */
-    califica(puntuacion) {
-        // Obtener la lista actual del top 5
-        const lista = this.obtenerLista();
+    async califica(puntuacion) {
+        const lista = await this.obtenerLista();
         
-        // Si hay menos de 5 entradas, siempre califica
-        // Ejemplo: si solo hay 3 entradas, la 4ta y 5ta puntuación califican
         if (lista.length < this.maxEntries) {
             return true;
         }
         
-        // Encontrar la puntuación más baja del top 5 actual
-        // Math.min con map obtiene el valor mínimo de puntuacion en la lista
         const minima = Math.min(...lista.map(e => e.puntuacion));
-        
-        // Califica si la puntuación actual es mayor que la más baja
         return puntuacion > minima;
     }
     
     /**
      * Valida un nombre para el top 5
-     * El nombre debe:
-     * - Tener solo letras (A-Z) y números (0-9)
-     * - Máximo 8 caracteres
-     * - Se eliminan espacios al inicio y final
-     * - Se convierte a mayúsculas
-     * 
      * @param {string} nombre - Nombre a validar
      * @returns {string} Nombre validado en mayúsculas, o null si es inválido
      */
     validarNombre(nombre) {
-        // trim() elimina espacios al inicio y final del texto
-        // Ejemplo: "  JUAN  " -> "JUAN"
         let limpio = nombre.trim();
-        
-        // Convertir a mayúsculas para mantener consistencia
-        // Ejemplo: "juan" -> "JUAN"
         limpio = limpio.toUpperCase();
         
-        // Si el nombre tiene más de 8 caracteres, cortar el exceso
-        // Ejemplo: "JUANPABLO" (9) -> "JUANPABL" (8)
         if (limpio.length > this.maxNameLength) {
             limpio = limpio.substring(0, this.maxNameLength);
         }
         
-        // Expresión regular para validar: solo letras y números
-        // ^ = inicio, $ = fin, + = uno o más caracteres
         const regex = /^[A-Za-z0-9]+$/;
-        
-        // Si el nombre no tiene solo letras/números o está vacío, es inválido
         if (!regex.test(limpio) || limpio.length === 0) {
-            return null;  // Devolver null indica que el nombre no es válido
+            return null;
         }
         
-        // Devolver el nombre limpio y válido
         return limpio;
     }
     
     /**
      * Agrega una nueva entrada al top 5
-     * Valida el nombre, lo agrega a la lista, la ordena y guarda
-     * 
      * @param {string} nombre - Nombre del jugador
-     * @param {number} puntuacion - Puntuación obtenida en la partida
-     * @param {number} oleada - Oleada alcanzada cuando terminó el juego
-     * @returns {boolean} true si se agregó correctamente, false si el nombre es inválido
+     * @param {number} puntuacion - Puntuación obtenida
+     * @param {number} oleada - Oleada alcanzada
+     * @returns {Promise<boolean>} true si se agregó correctamente
      */
-    agregarEntrada(nombre, puntuacion, oleada) {
-        // Primero validar el nombre
+    async agregarEntrada(nombre, puntuacion, oleada) {
         const nombreValido = this.validarNombre(nombre);
-        
-        // Si el nombre no es válido, no agregar y devolver false
         if (!nombreValido) {
             return false;
         }
         
-        // Obtener la lista actual del top 5
-        let lista = this.obtenerLista();
+        let lista = await this.obtenerLista();
         
-        // Agregar la nueva entrada a la lista
-        // Cada entrada es un objeto con: nombre, puntuacion, oleada
         lista.push({
-            nombre: nombreValido,       // Nombre validado (en mayúsculas)
-            puntuacion: puntuacion,    // Puntuación obtenida
-            oleada: oleada              // Oleada alcanzada
+            nombre: nombreValido,
+            puntuacion: puntuacion,
+            oleada: oleada
         });
         
-        // Ordenar la lista por puntuación de mayor a menor
-        // sort() organiza el array, (a, b) => b - a significa orden descendente
         lista.sort((a, b) => b.puntuacion - a.puntuacion);
-        
-        // Mantener solo los primeros 5 (los mejores)
-        // slice(0, 5) devuelve solo los elementos del índice 0 al 4
         lista = lista.slice(0, this.maxEntries);
         
-        // Guardar la lista actualizada en localStorage
-        this.guardarLista(lista);
+        await this.guardarLista(lista);
         
-        // Devolver true indicando que se agregó correctamente
         return true;
     }
     
     /**
      * Limpia todas las entradas del top 5
-     * Borra todos los datos guardados (para testing o reset)
      */
-    limpiar() {
-        // Guardar un array vacío, lo cual borra todos los datos
-        this.guardarLista([]);
+    async limpiar() {
+        await this.guardarLista([]);
     }
 }

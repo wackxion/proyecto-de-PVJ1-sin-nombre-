@@ -960,7 +960,7 @@ export class Game {
         // === VERIFICAR SI CALIFICA PARA TOP 5 ===
         // Si ya se usó el nombre o no califica, no pedir
         // Solo muestra el input si la puntuación está en el top 5
-        if (!this.nombreIngresado && this.top5.califica(this.puntuacion)) {
+        if (!this.nombreIngresado && await this.top5.califica(this.puntuacion)) {
             // Deshabilitar el input del teclado para que no interfiera con el input HTML
             // Esto evita que las teclas W/A/S/D afecten al juego mientras se escribe el nombre
             this.gestorEntrada.deshabilitar();
@@ -1046,7 +1046,7 @@ export class Game {
                 const nombre = input.value;
                 
                 // Intentar guardar en el Top 5 (valida el nombre primero)
-                if (this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
+                if (await this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
                     // Si se guardó correctamente
                     this.nombreIngresado = true;                    // Marcar que ya se usó el nombre
                     inputContainer.remove();                       // Cerrar el formulario
@@ -1067,7 +1067,7 @@ export class Game {
             input.onkeydown = (e) => {
                 if (e.key === 'Enter') {
                     const nombre = input.value;
-                    if (this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
+                    if (await this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
                         this.nombreIngresado = true;
                         inputContainer.remove();
                         if (this.bgImageRecord) {
@@ -1556,7 +1556,7 @@ export class Game {
         this.elementosFinJuego.push(headerContainer);
         
         // Obtener lista del top 5
-        const lista = this.top5.obtenerLista();
+        const lista = await this.top5.obtenerLista();
         
         // === MOSTRAR LOS 5 PRIMEROS ===
         // Crear cada fila con columnas separadas para mejor alineación
