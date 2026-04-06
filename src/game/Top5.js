@@ -110,9 +110,17 @@ export class Top5 {
      * @returns {Promise<Array>} Array de objetos {nombre, puntuacion, oleada}
      */
     async obtenerLista() {
+        // Si Firebase no está listo, esperar a que se inicialice
+        if (!this.firebaseListo && typeof firebase !== 'undefined') {
+            console.log('Top5 - Esperando inicialización de Firebase...');
+            // Esperar un poco e intentar de nuevo
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
         // Si Firebase está listo, cargar datos desde Firebase
         if (this.firebaseListo && this.db) {
             await this._cargarDesdeFirebase();
+            console.log('Top5 - Lista devuelta (Firebase):', this.listaMemoria);
             return this.listaMemoria;
         }
         
@@ -121,6 +129,7 @@ export class Top5 {
             try {
                 const data = localStorage.getItem(this.storageKey);
                 if (data) {
+                    console.log('Top5 - Lista devuelta (localStorage):', JSON.parse(data));
                     return JSON.parse(data);
                 }
             } catch (e) {
@@ -129,6 +138,7 @@ export class Top5 {
         }
         
         // Devolver lista en memoria
+        console.log('Top5 - Lista devuelta (memoria):', this.listaMemoria);
         return this.listaMemoria;
     }
     
