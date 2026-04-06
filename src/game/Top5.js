@@ -12,12 +12,12 @@
 
 // Configuración de Firebase (del proyecto del usuario)
 const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyBr2-RXfrr0-J12aS9ZFV388N4Qaw1fRAA",
-    authDomain: "jugando-en-el-espacio.firebaseapp.com",
-    projectId: "jugando-en-el-espacio",
-    storageBucket: "jugando-en-el-espacio.firebasestorage.app",
-    messagingSenderId: "760971957982",
-    appId: "1:760971957982:web:69a4b9b9db7af54558144f"
+    apiKey: "AIzaSyDB3WpvSWI6zZ27SoUisjQg2KrpZ6FkmUo",
+    authDomain: "jugando-en-el-espacio-fd6e7.firebaseapp.com",
+    projectId: "jugando-en-el-espacio-fd6e7",
+    storageBucket: "jugando-en-el-espacio-fd6e7.firebasestorage.app",
+    messagingSenderId: "526259305969",
+    appId: "1:526259305969:web:603d5c490d5ba1c9a09850"
 };
 
 export class Top5 {
