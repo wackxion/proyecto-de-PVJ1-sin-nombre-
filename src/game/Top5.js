@@ -110,14 +110,14 @@ export class Top5 {
      * @returns {Promise<Array>} Array de objetos {nombre, puntuacion, oleada}
      */
     async obtenerLista() {
-        // Si Firebase está listo, devolver datos de Firebase
+        // Si Firebase está listo, cargar datos desde Firebase
         if (this.firebaseListo && this.db) {
             await this._cargarDesdeFirebase();
             return this.listaMemoria;
         }
         
         // Si no, intentar localStorage
-        if (this.localStorageDisponible) {
+        if (this._verificarLocalStorage()) {
             try {
                 const data = localStorage.getItem(this.storageKey);
                 if (data) {
