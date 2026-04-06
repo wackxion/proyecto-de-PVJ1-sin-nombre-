@@ -196,20 +196,18 @@ export class Top5 {
         const lista = await this.obtenerLista();
         
         console.log('Top5 - Verificando calificación:', puntuacion, 'lista:', lista);
-        console.log('Top5 - Primer elemento:', lista[0]);
-        console.log('Top5 - Tipo del primer elemento:', typeof lista[0]);
-        console.log('Top5 - Keys del primer elemento:', lista[0] ? Object.keys(lista[0]) : 'N/A');
         
-        if (lista.length < this.maxEntries) {
+        // Filtrar elementos vacíos o inválidos
+        const listaValida = lista.filter(e => e && typeof e === 'object' && e.puntuacion);
+        console.log('Top5 - Lista válida:', listaValida);
+        
+        if (listaValida.length < this.maxEntries) {
             console.log('Top5 - Califica: menos de 5 entradas');
             return true;
         }
         
         // Verificar que los datos tengan el campo puntuacion
-        const puntuaciones = lista.map(e => {
-            console.log('Top5 - Elemento:', e, 'tipo:', typeof e);
-            return e ? Number(e.puntuacion) : NaN;
-        });
+        const puntuaciones = listaValida.map(e => Number(e.puntuacion));
         console.log('Top5 - Puntuaciones:', puntuaciones);
         
         const minima = Math.min(...puntuaciones);
