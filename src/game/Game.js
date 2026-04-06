@@ -1064,7 +1064,7 @@ export class Game {
             
             // === PRESIONAR ENTER ===
             // También permitir guardar con la tecla ENTER
-            input.onkeydown = (e) => {
+            input.onkeydown = async (e) => {
                 if (e.key === 'Enter') {
                     const nombre = input.value;
                     if (await this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
