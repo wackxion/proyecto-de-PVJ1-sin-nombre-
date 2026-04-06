@@ -1337,7 +1337,8 @@ export class Game {
             if (this.gestorEntrada.debeMostrarTop5()) {
                 this.mostrandoTop5EnPausa = true;
                 await this._mostrarTop5();
-                this.mostrandoTop5EnPausa = false;
+                // IMPORTANTE: No resetear mostrandoTop5EnPausa aquí
+                // Se resetea cuando el usuario hace click en VOLVER
             }
             return;
         }
@@ -1642,6 +1643,7 @@ export class Game {
             if (this.mostrandoTop5EnPausa) {
                 // Si estábamos en pausa, volver al juego pausado
                 // No hacer nada especial, solo salir y el juego seguirá pausado
+                // IMPORTANTE: No reactivas el pause, queda en pausa
             } else {
                 // Si era desde Game Over, volver al Game Over
                 this.gameOver();
