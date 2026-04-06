@@ -1041,7 +1041,7 @@ export class Game {
             
             // === BOTÓN GUARDAR ===
             // Cuando el usuario hace click en el botón "GUARDAR"
-            button.onclick = () => {
+            button.onclick = async () => {
                 // Obtener el nombre escrito por el usuario
                 const nombre = input.value;
                 
