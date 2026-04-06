@@ -44,7 +44,11 @@ export class GestorEntrada {
             
             // === FUNCIÓN DE DESARROLLO ===
             // Tecla L para perder automáticamente (se borrará después)
-            'KeyL': 'perder'
+            'KeyL': 'perder',
+            
+            // Teclas de control del juego
+            'KeyP': 'pausa',               // P - Pausar el juego
+            'KeyT': 'mostrarTop5'          // T - Mostrar Top 5 (solo cuando está pausado)
         };
         
         // EnfriamientoDisparo = temporizador entre disparos
@@ -218,5 +222,22 @@ export class GestorEntrada {
      */
     habilitar() {
         this.habilitado = true;
+    }
+    
+    /**
+     * Verifica si se debe pausar el juego (tecla P)
+     * @returns {boolean} true si se presionó P
+     */
+    debePausar() {
+        return this.estaPresionada('pausa');
+    }
+    
+    /**
+     * Verifica si se debe mostrar el Top 5 (tecla T)
+     * Solo funciona cuando el juego está pausado
+     * @returns {boolean} true si se presionó T
+     */
+    debeMostrarTop5() {
+        return this.estaPresionada('mostrarTop5');
     }
 }

@@ -113,6 +113,12 @@ export class Game {
         // Flag para saber si se pidió nombre
         this.nombreIngresado = false;
         
+        // === BANDERAS DE PAUSA Y TOP 5 ===
+        // this.pausado = indica si el juego está en pausa
+        // this.mostrandoTop5EnPausa = indica si se está mostrando el Top 5 durante la pausa
+        this.pausado = false;
+        this.mostrandoTop5EnPausa = false;
+        
         // === ESTILOS PREDEFINIDOS PARA PIXI.TEXT ===
         // Para reutilizar y evitar repetir código
         this.estilos = {
@@ -1324,6 +1330,25 @@ export class Game {
             return;
         }
         
+        // === CONTROL DE PAUSA (Tecla P) ===
+        // Si se presiona P, alternar pausa
+        if (this.gestorEntrada.debePausar()) {
+            this.pausado = !this.pausado;
+            // Limpiar la tecla para que no se togglee constantemente
+            this.gestorEntrada.reiniciar();
+        }
+        
+        // Si el juego está pausado, salir del loop
+        if (this.pausado) {
+            // Verificar si se quiere mostrar el Top 5 con la tecla T
+            if (this.gestorEntrada.debeMostrarTop5()) {
+                this.mostrandoTop5EnPausa = true;
+                await this._mostrarTop5();
+                this.mostrandoTop5EnPausa = false;
+            }
+            return;
+        }
+        
         // === ACTUALIZAR JUGADOR ===
         if (this.jugador && this.jugador.active) {
             this.jugador.update(delta, this.gestorEntrada);
@@ -1593,7 +1618,7 @@ export class Game {
         // Botón para volver
         const backContainer = new PIXI.Container();
         backContainer.x = this.anchoJuego / 2.36;
-        backContainer.y = this.altoJuego / 1.90 + (puntuacionSprite.height * scale) / 2 - 30;
+        backContainer.y = this.altoJuego / 1.80 + (puntuacionSprite.height * scale) / 2 - 30;
         backContainer.eventMode = 'static';
         backContainer.cursor = 'pointer';
         
@@ -1616,10 +1641,17 @@ export class Game {
         backContainer.addChild(backText);
         
         backContainer.on('pointerdown', () => {
-            // Volver al game over
+            // Volver según el estado
             this._limpiarFinJuego();
             this.clickHandlerActivo = true;
-            this.gameOver();
+            
+            if (this.mostrandoTop5EnPausa) {
+                // Si estábamos en pausa, volver al juego pausado
+                // No hacer nada especial, solo salir y el juego seguirá pausado
+            } else {
+                // Si era desde Game Over, volver al Game Over
+                this.gameOver();
+            }
         });
         
         this.aplicacion.stage.addChild(backContainer);
