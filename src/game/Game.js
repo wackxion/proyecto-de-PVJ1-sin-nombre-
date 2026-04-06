@@ -1543,19 +1543,26 @@ export class Game {
         // Crear sprite con la imagen
         const puntuacionSprite = new PIXI.Sprite(puntuacionTexture);
         
-        // Escalar la imagen
-        const maxWidth = this.anchoJuego * 0.5;
-        const maxHeight = this.altoJuego * 0.7;
+        // === IMAGEN MÁS GRANDE, FIJA Y CENTRADA ===
+        // Usar ~65% del ancho y ~75% del alto (más grande que antes)
+        const maxWidth = this.anchoJuego * 0.65;
+        const maxHeight = this.altoJuego * 0.75;
         const scale = Math.min(maxWidth / puntuacionSprite.width, maxHeight / puntuacionSprite.height);
         puntuacionSprite.scale.set(scale);
         puntuacionSprite.anchor.set(0.5);
+        
+        // Centro exacto de la pantalla
         puntuacionSprite.x = this.anchoJuego / 2;
-        puntuacionSprite.y = this.altoJuego / 1.95;
+        puntuacionSprite.y = this.altoJuego / 2;
         
         this.aplicacion.stage.addChild(puntuacionSprite);
         this.elementosFinJuego.push(puntuacionSprite);
         
-        // === ENCABEZADO DE LA TABLA ===
+        // Dimensiones reales de la imagen escalada (ya está escalada, no multiplicar por scale de nuevo)
+        const imagenAncho = puntuacionSprite.width;
+        const imagenAlto = puntuacionSprite.height;
+        
+        // === ENCABEZADO DE LA TABLA (centrado dentro de la imagen) ===
         // Título de las columnas: N° | NOMBRE | PUNTOS | OLEADAS
         const headerContainer = new PIXI.Container();
         
@@ -1567,14 +1574,18 @@ export class Game {
         const headerOleada = new PIXI.Text({ text: 'OLEADAS', style: this.estilos.encabezado });
         
         // Posicionar cada columna (separados más entre sí)
-        headerNum.x = -200;        // N° más a la izquierda
-        headerNombre.x = -150;     // NOMBRE 
-        headerPuntos.x = 10;      // PUNTOS
-        headerOleada.x = 120;     // OLEADAS más a la derecha
+        headerNum.x = -180;       // N° más a la izquierda
+        headerNombre.x = -100;   // NOMBRE 
+        headerPuntos.x = 50;     // PUNTOS
+        headerOleada.x = 160;    // OLEADAS más a la derecha
         
         headerContainer.addChild(headerNum, headerNombre, headerPuntos, headerOleada);
-        headerContainer.x = this.anchoJuego / 2;
-        headerContainer.y = this.altoJuego / 4.1 - (puntuacionSprite.height * scale) / 2 + 45;
+        
+        // Centrar el encabezado dentro de la imagen
+        headerContainer.x = this.anchoJuego / 2 - 50;
+        // El encabezado va en la parte superior de la zona de contenido de la imagen
+        const zonaContenidoInicioY = (this.altoJuego / 2) - (imagenAlto / 2) + 80 - 50;
+        headerContainer.y = zonaContenidoInicioY;
         
         this.aplicacion.stage.addChild(headerContainer);
         this.elementosFinJuego.push(headerContainer);
@@ -1583,7 +1594,7 @@ export class Game {
         const lista = await this.top5.obtenerLista();
         console.log('Game - Lista recibida:', lista);
         
-        // === MOSTRAR LOS 5 PRIMEROS ===
+        // === MOSTRAR LOS 5 PRIMEROS (centrado dentro de la imagen) ===
         // Crear cada fila con columnas separadas para mejor alineación
         for (let i = 0; i < 5; i++) {
             const rowContainer = new PIXI.Container();
@@ -1601,25 +1612,33 @@ export class Game {
             const textOleada = new PIXI.Text({ text: oleada, style: this.estilos.filaTabla });
             
             // Posicionar cada columna en la fila (mismo spacing que el encabezado)
-            textNum.x = -200;       // N° más a la izquierda
-            textNombre.x = -150;    // NOMBRE
-            textPuntos.x = 10;     // PUNTOS
-            textOleada.x = 120;    // OLEADAS más a la derecha
+            textNum.x = -180;      // N° más a la izquierda
+            textNombre.x = -100;   // NOMBRE
+            textPuntos.x = 50;     // PUNTOS
+            textOleada.x = 160;    // OLEADAS más a la derecha
             
             rowContainer.addChild(textNum, textNombre, textPuntos, textOleada);
-            rowContainer.x = this.anchoJuego / 2;
-            // Posicionar cada fila más abajo que la anterior
-            rowContainer.y = this.altoJuego / 3.9 - (puntuacionSprite.height * scale) / 2 + 75 + (i * 40);
+            rowContainer.x = this.anchoJuego / 2 - 30;
+            // Las filas van una debajo de la otra, centradas en la imagen
+            // Empiezan debajo del encabezado y dejan espacio para el botón
+            const filaInicioY = zonaContenidoInicioY + 45 + 20;
+            rowContainer.y = filaInicioY + (i * 38);
             
             this.aplicacion.stage.addChild(rowContainer);
             this.elementosFinJuego.push(rowContainer);
         }
         
-        // Botón para volver
+        // === BOTÓN VOLVER (esquina inferior izquierda, separado de los bordes) ===
         const backContainer = new PIXI.Container();
-        // Botón VOLVER - posición fija debajo de la lista
-        backContainer.x = this.anchoJuego / 2;  // Centro exacto
-        backContainer.y = this.altoJuego - 80;  // 80px desde el fondo de la pantalla
+        
+        // Posicionar en la esquina inferior izquierda de la imagen, separado de los bordes
+        const margenSeparacion = 40;  // px separado de los bordes
+        const bordeIzquierdo = (this.anchoJuego / 2) - (imagenAncho / 2) + margenSeparacion;
+        const bordeInferior = (this.altoJuego / 2) + (imagenAlto / 2) - margenSeparacion;
+        
+        // Botón en esquina inferior izquierda (a la derecha del borde izquierdo)
+        backContainer.x = bordeIzquierdo + 115;
+        backContainer.y = bordeInferior -228;
         backContainer.eventMode = 'static';
         backContainer.cursor = 'pointer';
         
