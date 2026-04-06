@@ -197,6 +197,8 @@ export class Top5 {
         
         console.log('Top5 - Verificando calificación:', puntuacion, 'lista:', lista);
         console.log('Top5 - Primer elemento:', lista[0]);
+        console.log('Top5 - Tipo del primer elemento:', typeof lista[0]);
+        console.log('Top5 - Keys del primer elemento:', lista[0] ? Object.keys(lista[0]) : 'N/A');
         
         if (lista.length < this.maxEntries) {
             console.log('Top5 - Califica: menos de 5 entradas');
@@ -204,7 +206,10 @@ export class Top5 {
         }
         
         // Verificar que los datos tengan el campo puntuacion
-        const puntuaciones = lista.map(e => e.puntuacion);
+        const puntuaciones = lista.map(e => {
+            console.log('Top5 - Elemento:', e, 'tipo:', typeof e);
+            return e ? Number(e.puntuacion) : NaN;
+        });
         console.log('Top5 - Puntuaciones:', puntuaciones);
         
         const minima = Math.min(...puntuaciones);
