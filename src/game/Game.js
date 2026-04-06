@@ -644,9 +644,9 @@ export class Game {
             
             // === AUMENTAR VELOCIDAD CADA 5 OLEADAS ===
             // Cada 5 oleadas, los asteroides aumentan un 10% su velocidad
-            // Hasta un máximo del 30% (oleada 15+)
+            // Hasta un máximo del 60% (oleada 30+)
             const oleadasAumento = Math.floor(this.contadorOleadas / 5);
-            const aumentoVelocidad = Math.min(oleadasAumento * 0.10, 0.30);
+            const aumentoVelocidad = Math.min(oleadasAumento * 0.10, 0.60);
             const multiplicadorVelocidad = 1 + aumentoVelocidad;
             enemigo.multiplicadorVelocidad = multiplicadorVelocidad;
             
@@ -675,10 +675,11 @@ export class Game {
         const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
         
         // === AUMENTAR VELOCIDAD CADA 5 OLEADAS ===
+        // === AUMENTAR VELOCIDAD CADA 5 OLEADAS ===
         // Cada 5 oleadas, los asteroides aumentan un 10% su velocidad
-        // Hasta un máximo del 30% (oleada 15+)
+        // Hasta un máximo del 60% (oleada 30+)
         const oleadasAumento = Math.floor(this.contadorOleadas / 5);
-        const aumentoVelocidad = Math.min(oleadasAumento * 0.10, 0.30);
+        const aumentoVelocidad = Math.min(oleadasAumento * 0.10, 0.60);
         const multiplicadorVelocidad = 1 + aumentoVelocidad;
         enemigo.multiplicadorVelocidad = multiplicadorVelocidad;
         
