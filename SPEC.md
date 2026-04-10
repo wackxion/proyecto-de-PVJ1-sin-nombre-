@@ -77,11 +77,12 @@
 - No da carga de ULTi al destruir asteroides (equilibrio)
 - Sí cuenta para las oleadas
 
-### 2.9 Controles
+### 2.9 Controles (v1.3 - Movimiento Tipo Tanque)
 
 | Tecla | Acción |
 |-------|--------|
-| W / Flecha ↑ | Disparar proyectil |
+| Barra espaciadora | Disparar proyectil |
+| W | Moverse hacia adelante (con inercia) |
 | S / Flecha ↓ | Activar ataque especial (Ulti) |
 | A / Flecha ← | Rotar nave a la izquierda |
 | D / Flecha → | Rotar nave a la derecha |
@@ -89,6 +90,16 @@
 | Click en REINICIAR | Reiniciar (en Game Over) |
 | P | Pausar/Reanudar juego |
 | T | Ver Top 5 durante el juego |
+
+### 2.10 Movimiento Tipo Tanque
+
+- **Movimiento con inercia:**
+  - La nave acelera cuando se presiona W
+  - Al soltar W, la nave sigue moviéndose un poco (inercia)
+  - La velocidad disminuye gradualmente (fricción)
+
+- **Disparo direccional:**
+  - Los proyectiles se disparan hacia donde apunta la nave (la punta)
 
 ---
 
@@ -332,7 +343,24 @@ El juego está publicado en: **https://wackxion.github.io/proyecto-de-PVJ1-sin-n
 ### v1.3 (En desarrollo)
 > Lista de tareas planificadas: [[Tareas-Planificadas-v1.3]]
 
-- [ ] **EN DESARROLLO** - Nuevas características por definir
+#### Movimiento Tipo Tanque
+- [x] **Cambio de controles:**
+  - ~~W = Disparar~~ → **Barra espaciadora = Disparar**
+  - **W = Moverse hacia adelante** (con inercia)
+- [x] **Movimiento con inercia:**
+  - La nave acelera cuando se presiona W
+  - Al soltar W, la nave sigue moviéndose (inercia)
+  - Fricción reduce la velocidad gradualmente
+- [x] **Disparo direccional:**
+  - Proyectiles hacia donde apunta la nave
+
+#### Naves Enemigas
+- [x] **Nuevo tipo de enemigo:** Naves enemigas
+  - Se configurarán después (posiciones, velocidades, ataques)
+
+#### Efectos Visuales
+- [x] **Explosión mejorada:** (se configurará después)
+- [x] **Efecto de impulso:** (se configurará después)
 
 ### v1.2
 - Sistema Top 5 con Firebase Firestore (persistente en la nube)
