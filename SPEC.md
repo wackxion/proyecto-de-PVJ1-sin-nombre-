@@ -329,6 +329,11 @@ El juego está publicado en: **https://wackxion.github.io/proyecto-de-PVJ1-sin-n
 
 ## 12. Changelog
 
+### v1.3 (En desarrollo)
+> Lista de tareas planificadas: [[Tareas-Planificadas-v1.3]]
+
+- [ ] **EN DESARROLLO** - Nuevas características por definir
+
 ### v1.2
 - Sistema Top 5 con Firebase Firestore (persistente en la nube)
 - Tecla P para pausar/Reanudar juego
@@ -336,6 +341,7 @@ El juego está publicado en: **https://wackxion.github.io/proyecto-de-PVJ1-sin-n
 - Dificultad progresiva aumentada (60% máximo)
 - Pantalla de Top 5 mejorada (imagen más grande, centrada, datos dentro de la imagen)
 - Botón VOLVER en esquina inferior izquierda
+- Fondo infinito con mosaicos (fondoEspacio3.png)
 
 ### v1.1
 - Sistema Top 5 con localStorage

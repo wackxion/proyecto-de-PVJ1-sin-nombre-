@@ -1,7 +1,7 @@
 # 🎮 Jugando en el Espacio
 
 [![GitHub Pages](https://img.shields.io/badge/Jugar-Aquí-0044CC?style=for-the-badge)](https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/)
-[![Versión](https://img.shields.io/badge/Versión-v1.2-0044CC?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-sin-nombre-//releases/tag/v1.2)
+[![Versión](https://img.shields.io/badge/Versión-v1.3--dev-FFA500?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-sin-nombre-//releases/tag/v1.2)
 
 ---
 
@@ -156,6 +156,14 @@ serve .
 - [PixiJS Documentación](https://pixijs.com/8.x/guides/components)
 - [Universal LPC Spritesheet Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/)
 - [Free Texture Packer](https://free-tex-packer.com/app/)
+
+---
+
+## 🚧 Próxima Versión (v1.3)
+
+> **En desarrollo** - Nuevas características planificadas
+
+Más detalles en: [obsidian-desarrollo/Proyectos/Tareas-Planificadas-v1.3.md](obsidian-desarrollo/Proyectos/Tareas-Planificadas-v1.3.md)
 
 ---
 
