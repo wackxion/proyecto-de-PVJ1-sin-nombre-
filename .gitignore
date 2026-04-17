@@ -11,3 +11,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Obsidian (Notas de desarrollo - no versionar)
+obsidian-desarrollo/
