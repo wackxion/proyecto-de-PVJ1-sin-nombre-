@@ -1,6 +1,61 @@
-# Tareas Completadas - v1.2
+# Tareas Completadas - v1.2 y v1.3
 
-## Lista de Implementaciones
+## v1.3 - Completado ✅
+
+### Fase 1 - Movimiento Tipo Tanque
+- [x] Cambio de controles: Espacio = Disparar, W = Avanzar, A/D = Rotar
+- [x] Movimiento con inercia (aceleración y fricción)
+- [x] Sistema de aceleración con sobrecalentamiento (1s cargar, 3s enfriar)
+- [x] Barra de aceleración visual alineada con la de ULTi
+
+### Fase 2 - Naves Enemigas
+- [x] Nueva clase EnemyShip.js
+- [x] HP: 25, Velocidad: 225 px/s (aumentado de 150)
+- [x] IA: Orbita al jugador con inercia
+- [x] Esquiva asteroides
+- [x] Dispara cada 3 segundos (proyectiles teledirigidos)
+- [x] Aparece cada 10 segundos
+- [x] Proyectiles evitan asteroides
+- [x] Explosión verde al destruir
+
+### Fase 3 - Asteroides Especiales Mejorados
+- [x] SpecialEnemy.js con transformación en mini asteroide
+- [x] Power-up mejorado: +20% velocidad de disparo + 20% escudos
+- [x] Explosión AZUL al destruir
+- [x] Transformación: al colisionar con jugador → animación + mini + órbita
+- [x] Mini asteroide orbita con radio 100px
+- [x] Mini asteroide mantiene 200 HP
+
+### Fase 4 - Sistema de Colisiones
+- [x] Colisión proyectil-proyectil (aliados y enemigos se destruyen)
+- [x] Animación de proyectil al colisionar
+- [x] Hitbox de proyectiles aumentada (radio 8px)
+- [x] Proyectiles aliados traspasan mini asteroide en órbita
+- [x] Proyectiles enemigos dañan mini asteroide (-25 HP)
+- [x] Colisión mini asteroide con jugador (-25 HP)
+- [x] Colisión mini asteroide con asteroides (-25 HP + destrucción)
+
+### Fase 5 - Animaciones de Destrucción
+- [x] Asteroide al colisionar con nave (según tamaño)
+- [x] Asteroide al colisionar con mini asteroide en órbita
+- [x] Mini asteroide al destruirse (AZUL)
+- [x] Ulti activa animación de destrucción en todos los objetos
+
+### Fase 6 - Novedades Recientes (v1.3.1)
+- [x] ULTi destruye Special Enemies (con power-up)
+- [x] Mini asteroide colisiona con naves enemigas (-25 HP + destrucción)
+- [x] Límite de asteroides eliminado - siempre spawnean nuevos
+
+### Fase 7 - Mejoras Técnicas
+- [x] Velocidad de rotación aumentada (4 → 6 rad/s)
+- [x] Imagen del tutorial agrandada
+- [x] Controles actualizados en todos los archivos
+- [x] Debug console.log del Top 5 eliminados
+- [x] Nave enemiga más rápida (225 px/s)
+
+---
+
+## v1.2 - Completado ✅
 
 ### Fase 1 - Base del Juego
 - [x] GDD con mecánicas definidas
@@ -68,25 +123,16 @@
 
 ---
 
-## Historial de Commits
+## Historial de Commits (v1.3)
 
 | Commit | Descripción |
 |--------|-------------|
-| `2734458` | Docs: Actualizado README.md y SPEC.md para v1.2 |
-| `8c5eeed` | Fix: Top 5 posicionado correctamente dentro de la imagen |
-| `87dd7e6` | Fix: Botón VOLVER ahora en posición fija |
-| `a121bd9` | Fix: Filtrar elementos vacíos/inválidos del Top 5 |
-| `c61d30e` | Debug: Más logs para ver estructura de datos |
-| `b0a86b0` | Debug: Agregado más logs para ver estructura de datos |
-| `1535478` | Fix: Velocidad máxima de asteroides ahora es 60% |
-| `a82d8ae` | Fix: Medium y Small ahora son 17% cada uno |
-| `940e780` | Feat: Small comunes 26% + Debug Top5 para verificar |
-| `d57ecd7` | Fix: Botón VOLVER ahora mantiene el juego en pausa |
-| `f3f084b` | Clean: Removida función de desarrollo (tecla L) |
-| `7f12526` | Debug: Agregado log de lista en Game.js |
+| `57ff91c` | Debug: Agregados console.log en _mostrarTop5 para troubleshooting |
+| (más commits...) | Implementación completa de v1.3 |
 
 ## Etiquetas (Tags)
 
 - **v1.0** - Lanzamiento inicial
 - **v1.1** - Sistema Top 5 con Firebase
 - **v1.2** - Fondo infinito, pausa con P, Top 5 con T
+- **v1.3** - Movimiento tipo tanque, naves enemigas, sistema de colisiones

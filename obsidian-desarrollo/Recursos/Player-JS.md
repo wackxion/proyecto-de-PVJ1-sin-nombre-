@@ -27,7 +27,8 @@ Clase que representa la nave espacial del jugador. Maneja rotación, disparar, U
 
 ## Controles
 
-- **W / ↑**: Disparar proyectil
+- **W / ↑**: Avanzar (con inercia)
+- **Espacio**: Disparar proyectil
 - **S / ↓**: Activar ULTi
 - **A / ←**: Rotar a la izquierda
 - **D / →**: Rotar a la derecha

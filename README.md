@@ -1,7 +1,7 @@
 # 🎮 Jugando en el Espacio
 
 [![GitHub Pages](https://img.shields.io/badge/Jugar-Aquí-0044CC?style=for-the-badge)](https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/)
-[![Versión](https://img.shields.io/badge/Versión-v1.3--dev-FFA500?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-sin-nombre-//releases/tag/v1.2)
+[![Versión](https://img.shields.io/badge/Versión-v1.3.4-FFA500?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-sin-nombre-//releases/tag/v1.3.4)
 
 ---
 
@@ -18,21 +18,23 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 
 ## 🎮 Descripción del Juego
 
-**Jugando en el Espacio** es un juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides que aparecen desde los bordes de la pantalla.
+**Jugando en el Espacio** es un juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides y naves enemigas.
 
-### Mecánicas del Juego
-- La nave puede **rotar** hacia la izquierda o derecha
-- **Disparar** proyectiles (líneas azules) hacia la dirección que apunta la nave
-- **Ataque especial (Ulti)** - Un pulso expansivo que sale de la nave y destruye todo a su paso (70% de la pantalla)
+### Mecánicas del Juego (v1.3.4)
+- **Movimiento tipo tanque** - La nave rota (A/D) y avanza (W) con inercia
+- **Sistema de aceleración** - Mantén W para acelerar (1s), luego sobrecalentamiento (3s)
+- **Disparar** proyectiles (Espacio) hacia la dirección que apunta la nave
+- **Ataque especial (Ulti)** - Pulso expansivo que destruye todo a su paso
 - Los asteroides vienen en **4 tamaños** (grande, mediano, pequeño, especial)
 - Los asteroides grandes **orbitan** alrededor de la nave
 - Al destruir asteroides grandes/medianos, se rompen en fragmentos más pequeños
 - Sistema de **escudos** (porcentaje 0-100%)
-- Al recibir daño aparece una **esfera azul** temporal alrededor de la nave
+- Al recibir daño aparece una **esfera azul** temporal
 - **Sistema de oleadas** - Cada 10 asteroides destruidos avanza la oleada
-- ULTi cuenta para las oleadas pero NO da carga de ULTi
-- **Sistema Top 5** - Guarda las mejores puntuaciones con nombre y oleada en la nube (Firebase)
-- **Dificultad progresiva** - Velocidad de asteroides aumenta cada 5 oleadas
+- **Naves enemigas** - Aparecen desde el inicio, cada 5 oleadas aparece un grupo extra
+- **Asteroides especiales** - Aparece 2%, tiene comportamiento propio
+- **Sistema Top 5** - Guarda puntuaciones en la nube (Firebase)
+- **Dificultad progresiva** - Aumenta cada oleada
 
 ---
 
@@ -43,7 +45,8 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 |-------|-----|-----|
 | Negro Espacial | `#0D0D1A` | Fondo del juego |
 | Birome Azul | `#0044CC` | Nave, proyectiles, UI, efecto de daño |
-| Birome Rojo | `#CC0000` | Asteroides |
+| Birome Rojo | `#CC0000` | Asteroides, sobrecalentamiento |
+| Verde Explosión | `#00FF00` | Naves enemigas destruidas |
 | Blanco Estelar | `#FFFFFF` | Estrellas |
 
 ### Fuente
@@ -55,7 +58,8 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 
 | Tecla | Acción |
 |-------|--------|
-| W / Flecha ↑ | Disparar proyectil |
+| W / Flecha ↑ | Avanzar (con inercia) |
+| Barra espaciadora | Disparar proyectil |
 | S / Flecha ↓ | Activar ataque especial (Ulti) |
 | A / Flecha ← | Rotar nave a la izquierda |
 | D / Flecha → | Rotar nave a la derecha |
@@ -77,28 +81,52 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 ## 📋 Características del Juego
 
 ### Tipos de Asteroides
-| Tipo | Tamaño Visual | Comportamiento |
-|------|---------------|-----------------|
-| SMALL | 32x32 | Va directo a la nave |
-| MEDIUM | 64x64 | Va directo a la nave |
-| LARGE | 128x128 | Orbita alrededor de la nave |
-| SPECIAL | 128x128 | Power-up al destruir |
+| Tipo | Tamaño Visual | Radio Colisión | HP | Daño | Comportamiento | Puntos |
+|------|---------------|----------------|-----|------|----------------|--------|
+| SMALL | 32x32 | 16px | 25 HP | 10% | Va directo a la nave | 30 |
+| MEDIUM | 64x64 | 32px | 50 HP | 25% | Va directo a la nave | 20 |
+| LARGE | 128x128 | 64px | 75 HP | 50% | Orbita alrededor de la nave | 10 |
+| SPECIAL | 128x128 | 48px | 200 HP | 0% | Power-up al destruir | 100 |
+
+### Sistema de Naves Enemigas (v1.3.2)
+- Appeecen desde el **inicio del juego** (oleada 0)
+- Intervalo: 20s → 5s (reduce 3s por oleada)
+- **Cada 5 oleadas**: aparecen **4 naves** (1 normal + 3 extra)
+- HP: 25, Velocidad: 225 px/s
+- Disparan cada 3 segundos
+- Esquivan asteroides
+- Dan +10 carga de ULTi al destruirse
+- Explosión **VERDE** al destruirse
+
+### Sistema de Escudos (v1.3.2)
+- Los escudos van de 0% a 100%
+- Al llegar a 0%, entra en **sobrecalentamiento** (barra roja)
+- **NO se apaga automáticamente después de 10 segundos**
+- **Solo se apaga cuando el jugador recibe escudos** (al destruir Special Enemy)
+- Los Special Enemies dan +20% escudos
 
 ### Sistema de Oleadas
-- Las oleadas avanzan cada 10 asteroides destruidos
-- La dificultad aumenta reduciendo el intervalo de spawn
-- ULTi también cuenta para las oleadas
+| Oleada | Intervalo Naves | Naves por oleada |
+|--------|----------------|-----------------|
+| 0-4 | 20s → 8s | 1 nave |
+| **5** | 5s | **4 naves** |
+| 6-9 | 5s | 1 nave |
+| **10** | 5s | **4 naves** |
+
+### Campo Gravitatorio de la Nave
+- **Radio de atracción:** 100px
+- **Asteroides afectados:** SMALL, MEDIUM, LARGE, Rezagados
+- **NO afectados:** SPECIAL, Mini asteroides en órbita
+- Los asteroides son atraídos hacia la nave cuando entran en este radio
 
 ### Sistema Top 5
 - Las mejores 5 puntuaciones se guardan automáticamente en la nube (Firebase Firestore)
+- Puntuación 0 **NO** califica para el Top 5
+- No permite entradas duplicadas
 - Al hacer nuevo record, se solicita nombre (máx 8 caracteres, solo letras y números)
 - Muestra: N° | NOMBRE | PUNTOS | OLEADAS
 - Se puede acceder durante el juego con la tecla **T**
 - Persistente entre sesiones y dispositivos
-
-### Dificultad Progresiva
-- La velocidad de los asteroides aumenta un 10% cada 5 oleadas
-- Hasta un máximo del 60% de aumento (en oleada 30+)
 
 ---
 
@@ -125,11 +153,11 @@ serve .
 ├── README.md               # Este archivo
 ├── package.json            # Configuración npm
 ├── css/
-│   └── style.css          # Estilos
+│   └── style.css          # Estilos (comentados)
 ├── assets/
 │   ├── nave.png           # Sprite de la nave
 │   ├── asteroide.png      # Sprite del asteroide
-│   ├── puntuacion2.png   # Imagen decorativa UI
+│   ├── puntuacion2.png    # Imagen decorativa UI
 │   ├── tutorial.png       # Imagen de tutorial
 │   ├── gameOver.jpg       # Imagen de Game Over
 │   └── guardarPuuntos.png # Imagen de formulario Top 5
@@ -137,16 +165,21 @@ serve .
     ├── main.js            # Punto de entrada
     ├── game/
     │   ├── Game.js        # Clase principal
-    │   ├── Player.js      # Nave del jugador
-    │   ├── Enemy.js       # Asteroides
-    │   ├── Projectile.js # Proyectiles
+    │   ├── Player.js      # Nave del jugador (clase: Jugador)
+    │   ├── Enemy.js       # Asteroides (clase: Enemigo)
+    │   ├── EnemyShip.js   # Naves enemigas
+    │   ├── SpecialEnemy.js# Asteroide especial
+    │   ├── Projectile.js # Proyectiles aliados (clase: Proyectil)
+    │   ├── EnemyProjectile.js # Proyectiles enemigos
     │   ├── UltiEffect.js # Efecto especial
     │   ├── BurstEffect.js# Efecto de explosión
     │   ├── HitEffect.js  # Efecto de impacto
+    │   ├── ProyectilExplosion.js # Animación de proyectil
+    │   ├── AsteroidExplosion.js # Animación de asteroide
     │   ├── Top5.js       # Sistema de puntuación Top 5 (Firebase)
     │   └── GameObject.js # Clase base
     └── systems/
-        └── InputManager.js # Gestión de teclado
+        └── InputManager.js # Gestión de teclado (clase: GestorEntrada)
 ```
 
 ---
@@ -159,11 +192,44 @@ serve .
 
 ---
 
-## 🚧 Próxima Versión (v1.3)
+## 📜 Historial de Versiones
 
-> **En desarrollo** - Nuevas características planificadas
+### v1.3.2 (Actual)
+> **Naves enemigas desde el inicio + Mejor sistema de escudos**
 
-Más detalles en: [obsidian-desarrollo/Proyectos/Tareas-Planificadas-v1.3.md](obsidian-desarrollo/Proyectos/Tareas-Planificadas-v1.3.md)
+#### Nuevas Características
+- **Naves enemigas desde el inicio:**
+  - Appeecen desde oleada 0 (antes era desde oleada 5)
+  - Intervalo progresivo: 20s → 5s
+  - Cada 5 oleadas: 4 naves (1 normal + 3 extra)
+  - Explosión VERDE al destruir
+
+- **Sistema de escudos mejorado:**
+  - El sobrecalentamiento NO se apaga automáticamente después de 10 segundos
+  - Solo se apaga cuando el jugador recibe escudos (Special Enemy)
+
+- **Top 5 mejorado:**
+  - Puntuación 0 no califica
+  - Sin duplicados
+
+#### Correcciones
+- Botón VOLVER del Top 5 funciona desde pausa
+- Botones REINICIAR/TOP5 no funcionan mientras se escribe nombre
+- Sobrecalentamiento cuenta mientras está pausado
+
+---
+
+### v1.3.1
+- Límites en pantalla
+- Colisiones entre asteroides grandes
+- Verificación de posición libre antes de spawnear
+- Radio de órbita aumentado 30%
+- UI con emojis
+
+### v1.3
+- Sistema de oleadas
+- Naves enemigas con IA
+- Special Enemies con transformación en órbita
 
 ---
 

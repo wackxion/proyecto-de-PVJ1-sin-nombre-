@@ -12,6 +12,8 @@
  * 5. Desaparece cuando llega a los bordes de la pantalla
  */
 import { GameObject } from './GameObject.js';
+import { AsteroidExplosion } from './AsteroidExplosion.js';
+import { ProyectilExplosion } from './ProyectilExplosion.js';
 
 export class UltiEffect extends GameObject {
     /**
@@ -23,19 +25,31 @@ export class UltiEffect extends GameObject {
      * @param {number} gameHeight - Alto del área de juego
      * @param {Array} enemies - Array con todos los enemigos (asteroides)
      * @param {Function} onDestroyEnemy - Función a llamar cuando se destruye un enemigo
+     * @param {Array} enemyShips - Array con las naves enemigas (opcional)
+     * @param {Function} onDestroyShip - Función a llamar cuando se destruye una nave (opcional)
+     * @param {Object} gameRef - Referencia al juego para crear animaciones (opcional)
      */
-    constructor(x, y, gameWidth, gameHeight, enemies, onDestroyEnemy = null) {
+    constructor(x, y, gameWidth, gameHeight, enemies, onDestroyEnemy = null, enemyShips = null, onDestroyShip = null, gameRef = null) {
         super(x, y);
         
         // Dimensiones del área de juego
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         
-        // Referencia a los enemigos
+        // Referencia a los enemigos (asteroides)
         this.enemigos = enemies;
+        
+        // Referencia a las naves enemigas
+        this.enemyShips = enemyShips;
         
         // Callback = función que se llama cuando se destruye un enemigo
         this.onDestroyEnemy = onDestroyEnemy;
+        
+        // Callback = función que se llama cuando se destruye una nave
+        this.onDestroyShip = onDestroyShip;
+        
+        // Referencia al juego para crear animaciones
+        this.gameRef = gameRef;
         
         // El efecto está activo
         this.active = true;
@@ -66,6 +80,85 @@ export class UltiEffect extends GameObject {
         this.sprite = this.graphics;
         this.sprite.x = x;
         this.sprite.y = y;
+    }
+    
+    /**
+     * Crea la animación de destrucción según el tipo de enemigo
+     */
+    _crearAnimacionDestruccion(enemy) {
+        if (!this.gameRef) return;
+        
+        const game = this.gameRef;
+        const x = enemy.x;
+        const y = enemy.y;
+        
+        // Determinar el tipo de animación según el enemigo
+        if (enemy.tamanio === 'special') {
+            // Special Enemy: animación de asteroide AZUL
+            const explosion = new AsteroidExplosion(
+                x, y,
+                game.texturaAsteroidExplosion,
+                0.84,
+                0x0000FF
+            );
+            explosion.render(game.aplicacion.stage);
+            game.efectosImpacto.push(explosion);
+        } else if (enemy.tamanio === 'large' || enemy.tamanio === 'large_rezagado') {
+            // Asteroides grandes: animación de asteroide
+            const explosion = new AsteroidExplosion(
+                x, y,
+                game.texturaAsteroidExplosion,
+                0.84
+            );
+            explosion.render(game.aplicacion.stage);
+            game.efectosImpacto.push(explosion);
+        } else if (enemy.tamanio === 'medium' || enemy.tamanio === 'medium_rezagado') {
+            // Asteroides medianos
+            const explosion = new AsteroidExplosion(
+                x, y,
+                game.texturaAsteroidExplosion,
+                0.42
+            );
+            explosion.render(game.aplicacion.stage);
+            game.efectosImpacto.push(explosion);
+        } else if (enemy.tamanio === 'small' || enemy.tamanio === 'small_rezagado') {
+            // Asteroides pequeños
+            const explosion = new AsteroidExplosion(
+                x, y,
+                game.texturaAsteroidExplosion,
+                0.24
+            );
+            explosion.render(game.aplicacion.stage);
+            game.efectosImpacto.push(explosion);
+        } else {
+            // Por defecto (cualquier tipo no reconocido), usar animación mediana
+            const explosion = new AsteroidExplosion(
+                x, y,
+                game.texturaAsteroidExplosion,
+                0.42
+            );
+            explosion.render(game.aplicacion.stage);
+            game.efectosImpacto.push(explosion);
+        }
+    }
+    
+    /**
+     * Crea la animación de destrucción para naves enemigas
+     */
+    _crearAnimacionNave(ship) {
+        if (!this.gameRef) return;
+        
+        const game = this.gameRef;
+        
+        // Naves enemigas: animación de asteroide VERDE
+        const explosion = new AsteroidExplosion(
+            ship.x, ship.y,
+            game.texturaAsteroidExplosion,
+            0.5,
+            0x00FF00
+        );
+        explosion.render(game.aplicacion.stage);
+        game.efectosImpacto.push(explosion);
     }
     
     /**
@@ -150,6 +243,9 @@ export class UltiEffect extends GameObject {
             
             // Si el enemigo está dentro del aro, destruirlo
             if (dist >= innerRadius && dist <= outerRadius) {
+                // Crear animación de destrucción
+                this._crearAnimacionDestruccion(enemy);
+                
                 // Llamar al callback si existe
                 if (this.onDestroyEnemy) {
                     this.onDestroyEnemy(enemy);
@@ -160,6 +256,82 @@ export class UltiEffect extends GameObject {
                 
                 // Remover de la lista
                 this.enemigos.splice(i, 1);
+            }
+        }
+        
+        // Verificar colisión con naves enemigas
+        if (this.enemyShips) {
+            for (let i = this.enemyShips.length - 1; i >= 0; i--) {
+                const ship = this.enemyShips[i];
+                
+                if (!ship || !ship.active) continue;
+                
+                const dx = ship.x - this.x;
+                const dy = ship.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                const innerRadius = this.radius - this.thickness;
+                const outerRadius = this.radius + this.thickness;
+                
+                if (dist >= innerRadius && dist <= outerRadius) {
+                    // Crear animación de destrucción de nave
+                    this._crearAnimacionNave(ship);
+                    
+                    if (this.onDestroyShip) {
+                        this.onDestroyShip(ship);
+                    }
+                    
+                    ship.destroy();
+                    this.enemyShips.splice(i, 1);
+                }
+            }
+        }
+        
+        // Verificar colisión con enemigos especiales (SpecialEnemy - solo los normales, NO los mini en órbita)
+        if (this.gameRef && this.gameRef.enemigosSpeciales) {
+            for (let i = this.gameRef.enemigosSpeciales.length - 1; i >= 0; i--) {
+                const especial = this.gameRef.enemigosSpeciales[i];
+                
+                // Skip mini asteroides en órbita - el ULTi no los destruye
+                if (!especial || !especial.active || especial.enOrbita) continue;
+                
+                const dx = especial.x - this.x;
+                const dy = especial.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                const innerRadius = this.radius - this.thickness;
+                const outerRadius = this.radius + this.thickness;
+                
+                if (dist >= innerRadius && dist <= outerRadius) {
+                    // Crear animación de destrucción (AZUL)
+                    if (this.gameRef.texturaAsteroidExplosion) {
+                        const explosion = new AsteroidExplosion(
+                            especial.x, especial.y,
+                            this.gameRef.texturaAsteroidExplosion,
+                            0.84,
+                            0x0000FF
+                        );
+                        explosion.render(this.gameRef.aplicacion.stage);
+                        this.gameRef.efectosImpacto.push(explosion);
+                    }
+                    
+                    // Dar power-up al jugador (si destroy con ULTi también lo da)
+                    if (this.gameRef.jugador) {
+                        this.gameRef.jugador.aumentarVelocidadDisparo();
+                        if (this.gameRef.jugador.escudos < 100) {
+                            this.gameRef.jugador.escudos = Math.min(100, this.gameRef.jugador.escudos + 20);
+                        }
+                    }
+                    
+                    // Sumar puntos
+                    if (this.gameRef) {
+                        this.gameRef.puntuacion += especial.puntos;
+                        this.gameRef.asteroidesDestruidos++;
+                    }
+                    
+                    especial.destroy();
+                    this.gameRef.enemigosSpeciales.splice(i, 1);
+                }
             }
         }
     }

@@ -31,10 +31,9 @@ export class Jugador extends GameObject {
         
         // Rotación: Ángulo actual de la nave en radianes
         // 0 radianes = apuntando hacia la derecha
-        this.rotacion = 0;
+this.rotacion = 0;
         
-        // VelocidadRotación: Cuánto gira la nave por segundo
-        // Valor positivo = gira en sentido horario
+        // Velocidad de rotación (rad/s)
         this.velocidadRotacion = 4;
         
         // Radio: radio de colisión para detectar choques con asteroides
@@ -47,12 +46,12 @@ export class Jugador extends GameObject {
         this.altoJuego = altoJuego;
         
         // SISTEMA DE ATAQUE ESPECIAL (ULTI)
-        // cargaUlti: carga actual acumulada (0-300)
+        // cargaUlti: carga actual acumulada
         // Se necesita destruir varios asteroides para llenarla
         this.cargaUlti = 0;
         // cargaMaxUlti: carga necesaria para poder usar el ataque especial
-        // 300 = más difícil de cargar (antes era 100)
-        this.cargaMaxUlti = 300;
+        // 500 = más difícil de cargar (antes era 300)
+        this.cargaMaxUlti = 500;
         // ultiListo: flag que indica si el ataque está listo
         this.ultiListo = false;
         
@@ -121,6 +120,29 @@ export class Jugador extends GameObject {
         this.rotationEffects = []; // Array para guardar todos los efectos
         this.rotationEffectTimer = 0;
         this.rotationEffectCooldown = 0.1; // 0.1 segundo entre efectos
+        
+        // SISTEMA DE INERCIA (Movimiento tipo tanque)
+        // velocidad: Velocidad actual de la nave
+        this.velocidad = 0;
+        // velocidadMax: Velocidad máxima hacia adelante
+        this.velocidadMax = 300;
+        // aceleracion: Cuánto aumenta la velocidad cuando presionas W
+        this.aceleracion = 400;
+        // friccion: Cuánto disminuye la velocidad cuando sueltas W (0.95 = pierde 5% por frame)
+        this.friccion = 0.95;
+        // direccionMovimiento: Dirección en la que se mueve
+        this.direccionMovimiento = this.rotacion;
+        
+        // SISTEMA DE ACELERACIÓN (W)
+        // cargaAceleracion: Carga que se llena mientras presionas W (0-100)
+        this.cargaAceleracion = 0;
+        this.cargaMax = 100;
+        this.velocidadCarga = 100; // 100% por segundo (llena en 1 segundo)
+        // estaSobrecalentado: Flag que indica si está sobrecalentado
+        this.sobrecalentadoAceleracion = false;
+        // temporizadorEnfriamientoAcel: Temporizador de enfriamiento (3 segundos)
+        this.temporizadorEnfriamientoAcel = 0;
+        this.duracionEnfriamientoAcel = 3;
     }
     
     /**
@@ -175,16 +197,65 @@ export class Jugador extends GameObject {
         // Si el jugador no está activo, salir inmediatamente
         if (!this.active) return;
         
-        // ROTACIÓN
-        // Obtener dirección de rotación desde el GestorEntrada
-        // -1 = izquierda, 1 = derecha, 0 = no girar
+// INERCIA - Movimiento tipo tanque con inercia
+        const estaPresionandoW = input.debeAvanzar(delta);
+        const estabaAvanzando = this.velocidad > 0;
+        
+        // Si está sobrecalentado
+        if (this.sobrecalentadoAceleracion) {
+            // Enfriar siempre (aunque siga apretando W)
+            this.temporizadorEnfriamientoAcel -= delta;
+            this.cargaAceleracion = Math.max(this.cargaAceleracion - this.velocidadCarga * delta, 0);
+            
+            if (this.temporizadorEnfriamientoAcel <= 0) {
+                this.sobrecalentadoAceleracion = false;
+                this.cargaAceleracion = 0;
+                this.temporizadorEnfriamientoAcel = this.duracionEnfriamientoAcel;
+            }
+            
+            // Frenar
+            this.velocidad *= this.friccion;
+            if (this.velocidad < 1) this.velocidad = 0;
+        } 
+        // Si presiona W y no está sobrecalentado
+        else if (estaPresionandoW) {
+            if (!estabaAvanzando) {
+                this.direccionMovimiento = this.rotacion;
+            }
+            
+            // Llenar barra
+            this.cargaAceleracion = Math.min(this.cargaAceleracion + this.velocidadCarga * delta, this.cargaMax);
+            this.velocidad = Math.min(this.velocidad + this.aceleracion * delta, this.velocidadMax);
+            
+            if (this.cargaAceleracion >= this.cargaMax) {
+                this.sobrecalentadoAceleracion = true;
+                this.temporizadorEnfriamientoAcel = this.duracionEnfriamientoAcel;
+            }
+        } 
+        // Normal - no presiona W
+        else {
+            this.velocidad *= this.friccion;
+            if (this.velocidad < 1) this.velocidad = 0;
+            this.cargaAceleracion = Math.max(this.cargaAceleracion - this.velocidadCarga * delta, 0);
+        }
+        
+        // Movimiento
+        
+        // Movimiento con inercia - siempre se mueve si tiene velocidad
+        if (this.velocidad !== 0) {
+            this.x += Math.cos(this.direccionMovimiento) * this.velocidad * delta;
+            this.y += Math.sin(this.direccionMovimiento) * this.velocidad * delta;
+            this.imagen.x = this.x;
+            this.imagen.y = this.y;
+        }
+        
+        // ROTACIÓN - Puedo girar en cualquier momento
         const direccionRotacion = input.obtenerRotacion();
         
-        // Aplicar rotación: dirección * velocidad * tiempo
-        this.rotacion += direccionRotacion * this.velocidadRotacion * delta;
-        
-        // Actualizar el sprite con la nueva rotación
-        this.imagen.rotation = this.rotacion;
+        if (direccionRotacion !== 0) {
+            this.rotacion += direccionRotacion * this.velocidadRotacion * delta;
+            this.imagen.rotation = this.rotacion;
+        }
         
         // EFECTO DE ROTACIÓN - Crear efecto azul cuando gira (cada 0.1 segundo)
         if (direccionRotacion !== 0) {
@@ -229,23 +300,24 @@ export class Jugador extends GameObject {
     
     /**
      * Actualiza el temporizador de sobrecalentamiento
-     * Cuando el timer llega a 0, los escudos vuelven al 100%
+     * Cuando el timer llega a 0, el estado de sobrecalentamiento termina
+     * pero los escudos NO se recuperan automáticamente
      * 
      * @param {number} delta - Tiempo transcurrido
      */
     _actualizarSobrecalentamiento(delta) {
-        // Si está en sobrecalentamiento
+        // El temporizador de 10 segundos ya no apaga automáticamente el sobrecalentamiento
+        // El sobrecalentamiento SOLO se desactiva cuando el jugador recibe escudos (via agregarEscudos)
+        
+        // Reducir el timer si es mayor a 0
         if (this.sobrecalentado && this.temporizadorEnfriamiento > 0) {
-            // Reducir el timer
             this.temporizadorEnfriamiento -= delta;
             
-            // Cuando el timer llega a 0, terminar el sobrecalentamiento
+            // El timer llegó a 0, pero el sobrecalentamiento sigue activo
+            // No se apaga automáticamente - solo se apaga al recibir escudos
             if (this.temporizadorEnfriamiento <= 0) {
-                // Restaurar escudos al 100%
-                this.escudos = 100;
-                this.escudosPreEnfriamiento = 0;
-                this.sobrecalentado = false;
                 this.temporizadorEnfriamiento = 0;
+                // NO se apaga el sobrecalentado - stays true hasta recibir escudos
             }
         }
     }
@@ -346,6 +418,23 @@ export class Jugador extends GameObject {
         // Esto asegura que el juego respete el nuevo enfriamiento
         if (this.juego && this.juego.gestorEntrada) {
             this.juego.gestorEntrada.configurarEnfriamientoDisparo(this.enfriamientoDisparoMax);
+        }
+    }
+    
+    /**
+     * Agrega escudos al jugador
+     * También desactiva el sobrecalentamiento si recibe escudos
+     * 
+     * @param {number} cantidad - Cantidad de escudos a agregar
+     */
+    agregarEscudos(cantidad) {
+        // Agregar escudos (máximo 100%)
+        this.escudos = Math.min(100, this.escudos + cantidad);
+        
+        // Si estaba en sobrecalentamiento y ahora tiene escudos, salir del sobrecalentamiento
+        if (this.sobrecalentado && this.escudos > 0) {
+            this.sobrecalentado = false;
+            this.temporizadorEnfriamiento = 0;
         }
     }
     

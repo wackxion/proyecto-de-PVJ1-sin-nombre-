@@ -25,7 +25,8 @@ Clase que gestiona la entrada del teclado, detectando qué teclas están presion
 
 | Tecla | Función |
 |-------|---------|
-| W / ↑ | Disparar proyectil |
+| W / ↑ | Avanzar (con inercia) |
+| Espacio | Disparar proyectil |
 | S / ↓ | Activar ULTi |
 | A / ← | Rotar nave a la izquierda |
 | D / → | Rotar nave a la derecha |

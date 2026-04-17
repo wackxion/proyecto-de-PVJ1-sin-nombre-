@@ -49,6 +49,10 @@ export class Enemigo extends GameObject {
         // Referencia al jugador (objetivo) - para saber hacia dónde moverse
         this.objetivo = objetivo;
         
+        // Guardar la última posición conocida del jugador
+        this.ultimaPosicionX = objetivo ? objetivo.x : 0;
+        this.ultimaPosicionY = objetivo ? objetivo.y : 0;
+        
         // Textura del asteroide
         this.textura = textura;
         
@@ -125,7 +129,7 @@ export class Enemigo extends GameObject {
                 this.velocidad = 150;
                 this.salud = 25;
                 this.puntos = 30;
-                this.cargaUlti = 10;
+                this.cargaUlti = 5;  // Todos dan 5 de carga
                 this.dano = 10;
                 this.debeOrbitar = forzarOrbita;
                 this.esRomptible = true;
@@ -138,7 +142,7 @@ export class Enemigo extends GameObject {
                 this.velocidad = 100;
                 this.salud = 50;
                 this.puntos = 20;
-                this.cargaUlti = 15;
+                this.cargaUlti = 5;  // Todos dan 5 de carga
                 this.dano = 25;
                 this.debeOrbitar = forzarOrbita;
                 this.esRomptible = true;
@@ -151,7 +155,7 @@ export class Enemigo extends GameObject {
                 this.velocidad = 50;
                 this.salud = 75;
                 this.puntos = 10;
-                this.cargaUlti = 25;
+                this.cargaUlti = 5;  // Todos dan 5 de carga
                 this.dano = 50;
                 this.debeOrbitar = true;
                 this.esRomptible = true;
@@ -164,7 +168,7 @@ export class Enemigo extends GameObject {
                 this.velocidad = 120;
                 this.salud = 200;
                 this.puntos = 100;
-                this.cargaUlti = 50;
+                this.cargaUlti = 0;  // NO da carga de ULTi
                 this.dano = 0;
                 this.debeOrbitar = false;
                 this.esRomptible = true;
@@ -178,7 +182,7 @@ export class Enemigo extends GameObject {
                 this.velocidad = 60;
                 this.salud = 75;
                 this.puntos = 10;
-                this.cargaUlti = 25;
+                this.cargaUlti = 5;  // Todos dan 5 de carga
                 this.dano = 50;
                 this.debeOrbitar = false;
                 this.esRomptible = true;
@@ -194,7 +198,7 @@ export class Enemigo extends GameObject {
                 this.velocidad = 80;
                 this.salud = 50;
                 this.puntos = 20;
-                this.cargaUlti = 15;
+                this.cargaUlti = 5;  // Todos dan 5 de carga
                 this.dano = 25;
                 this.debeOrbitar = false;
                 this.esRomptible = true;
@@ -210,7 +214,7 @@ export class Enemigo extends GameObject {
                 this.velocidad = 120;
                 this.salud = 25;
                 this.puntos = 30;
-                this.cargaUlti = 10;
+                this.cargaUlti = 5;  // Todos dan 5 de carga
                 this.dano = 10;
                 this.debeOrbitar = false;
                 this.esRomptible = true;
@@ -454,9 +458,8 @@ export class Enemigo extends GameObject {
             const orbitX = -dy / dist;
             const orbitY = dx / dist;
             
-            // Factor de aproximación (30%)
-            // Un poco de movimiento hacia la nave además de la órbita
-            const approachFactor = 0.3;
+            // Factor de aproximación (10% - orbitan más, se acercan menos)
+            const approachFactor = 0.1;
             
             // Retornar velocidad combinada
             return {
@@ -518,6 +521,25 @@ export class Enemigo extends GameObject {
             // asteroids normales (medium, small) van directo a la nave
             else {
                 this._moverConcéntrico(delta, velocidadActual);
+            }
+            
+            // === CAMPO GRAVITATORIO DE LA NAVE ===
+            // Si está dentro de 100px del jugador, atraer hacia él
+            // NO aplica para especiales ni mini asteroides en órbita
+            if (this.objetivo && this.tamanio !== 'special') {
+                const dx = this.objetivo.x - this.x;
+                const dy = this.objetivo.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // Radio de atracción: 100px
+                if (dist < 100 && dist > 0) {
+                    // Fuerza proporcional a la distancia (más fuerte cuanto más cerca)
+                    const fuerza = (100 - dist) / 100 * 0.5; // 0 a 0.5
+                    
+                    // Aplicar fuerza de atracción
+                    this.x += (dx / dist) * fuerza * velocidadActual * delta;
+                    this.y += (dy / dist) * fuerza * velocidadActual * delta;
+                }
             }
         }
         

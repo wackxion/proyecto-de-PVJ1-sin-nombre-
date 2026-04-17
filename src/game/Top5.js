@@ -35,6 +35,9 @@ export class Top5 {
         // Backup en memoria
         this.listaMemoria = [];
         
+        // Clave para localStorage
+        this.storageKey = 'top5_puntuaciones';
+        
         // Referencia a Firestore
         this.db = null;
         this.top5Ref = null;
@@ -64,9 +67,6 @@ export class Top5 {
                 await this._cargarDesdeFirebase();
                 
                 this.firebaseListo = true;
-                console.log('Top5 - Firebase inicializado correctamente');
-            } else {
-                console.warn('Top5 - Firebase no disponible, usando memoria');
             }
         } catch (e) {
             console.error('Top5 - Error al inicializar Firebase:', e);
@@ -83,7 +83,6 @@ export class Top5 {
             const doc = await this.top5Ref.get();
             if (doc.exists) {
                 this.listaMemoria = doc.data().lista || [];
-                console.log('Top5 - Datos cargados desde Firebase:', this.listaMemoria);
             }
         } catch (e) {
             console.error('Top5 - Error al cargar desde Firebase:', e);
@@ -98,7 +97,6 @@ export class Top5 {
         
         try {
             await this.top5Ref.set({ lista: lista });
-            console.log('Top5 - Guardado en Firebase');
         } catch (e) {
             console.error('Top5 - Error al guardar en Firebase:', e);
         }
@@ -112,7 +110,6 @@ export class Top5 {
     async obtenerLista() {
         // Si Firebase no está listo, esperar a que se inicialice
         if (!this.firebaseListo && typeof firebase !== 'undefined') {
-            console.log('Top5 - Esperando inicialización de Firebase...');
             // Esperar un poco e intentar de nuevo
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
@@ -120,7 +117,6 @@ export class Top5 {
         // Si Firebase está listo, cargar datos desde Firebase
         if (this.firebaseListo && this.db) {
             await this._cargarDesdeFirebase();
-            console.log('Top5 - Lista devuelta (Firebase):', this.listaMemoria);
             return this.listaMemoria;
         }
         
@@ -129,7 +125,6 @@ export class Top5 {
             try {
                 const data = localStorage.getItem(this.storageKey);
                 if (data) {
-                    console.log('Top5 - Lista devuelta (localStorage):', JSON.parse(data));
                     return JSON.parse(data);
                 }
             } catch (e) {
@@ -138,7 +133,6 @@ export class Top5 {
         }
         
         // Devolver lista en memoria
-        console.log('Top5 - Lista devuelta (memoria):', this.listaMemoria);
         return this.listaMemoria;
     }
     
@@ -193,28 +187,26 @@ export class Top5 {
      * @returns {Promise<boolean>} true si califica para estar en el top 5
      */
     async califica(puntuacion) {
-        const lista = await this.obtenerLista();
+        // Si la puntuación es 0 o menor, no califica
+        if (puntuacion <= 0) {
+            return false;
+        }
         
-        console.log('Top5 - Verificando calificación:', puntuacion, 'lista:', lista);
+        const lista = await this.obtenerLista();
         
         // Filtrar elementos vacíos o inválidos
         const listaValida = lista.filter(e => e && typeof e === 'object' && e.puntuacion);
-        console.log('Top5 - Lista válida:', listaValida);
         
         if (listaValida.length < this.maxEntries) {
-            console.log('Top5 - Califica: menos de 5 entradas');
             return true;
         }
         
         // Verificar que los datos tengan el campo puntuacion
         const puntuaciones = listaValida.map(e => Number(e.puntuacion));
-        console.log('Top5 - Puntuaciones:', puntuaciones);
         
         const minima = Math.min(...puntuaciones);
-        console.log('Top5 - Puntuación mínima actual:', minima);
         
         const califica = puntuacion > minima;
-        console.log('Top5 - Resultado:', califica);
         return califica;
     }
     
@@ -253,6 +245,19 @@ export class Top5 {
         }
         
         let lista = await this.obtenerLista();
+        
+        // Verificar si ya existe una entrada con exactamente los mismos datos
+        // (para evitar duplicados al guardar por primera vez)
+        const yaExiste = lista.some(entry => 
+            entry.nombre === nombreValido && 
+            entry.puntuacion === puntuacion && 
+            entry.oleada === oleada
+        );
+        
+        if (yaExiste) {
+            console.log('Top5 - Entrada duplicada, no se guarda');
+            return false;
+        }
         
         lista.push({
             nombre: nombreValido,

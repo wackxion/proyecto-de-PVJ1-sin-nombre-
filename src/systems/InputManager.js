@@ -4,8 +4,9 @@
  * Esta clase maneja toda la entrada del usuario mediante el teclado.
  * Controla qué teclas están presionadas y determina las acciones del jugador.
  * 
- * Controles del juego (según SPEC.md):
- * - W / Flecha Arriba: Disparar proyectil
+ * Controles del juego:
+ * - W / Flecha Arriba: Avanzar (con inercia)
+ * - Espacio: Disparar proyectil
  * - S / Flecha Abajo: Ataque especial (Ulti)
  * - A / Flecha Izquierda: Rotar nave hacia la izquierda
  * - D / Flecha Derecha: Rotar nave hacia la derecha
@@ -23,12 +24,15 @@ export class GestorEntrada {
         // Flag para habilitar/deshabilitar el input (usado cuando se pide el nombre)
         this.habilitado = true;
         
-        // MapeoTeclas = mapeo entre códigos de teclas y acciones
-        // Convierte el código de la tecla (ej: 'KeyW') en una acción (ej: 'disparar')
+// MapeoTeclas = mapeo entre códigos de teclas y acciones
+        // Convierte el código de la tecla (ej: 'KeyW') en una acción (ej: 'avanzar')
         this.mapeoTeclas = {
-            // Teclas para disparar
-            'KeyW': 'disparar',           // W
-            'ArrowUp': 'disparar',        // Flecha arriba
+            // Teclas para avanzar (W con inercia)
+            'KeyW': 'avanzar',           // W
+            'ArrowUp': 'avanzar',        // Flecha arriba
+            
+            // Teclas para disparar (Barra espaciadora)
+            'Space': 'disparar',          // Barra espaciadora
             
             // Teclas para ataque especial
             'KeyS': 'ulti',            // S
@@ -150,6 +154,16 @@ export class GestorEntrada {
         
         // No disparar
         return false;
+    }
+    
+    /**
+     * Verifica si se debe avanzar (tecla W)
+     * 
+     * @param {number} delta - Tiempo transcurrido (segundos)
+     * @returns {boolean} - true si debe avanzar
+     */
+    debeAvanzar(delta) {
+        return this.estaPresionada('avanzar');
     }
     
     /**

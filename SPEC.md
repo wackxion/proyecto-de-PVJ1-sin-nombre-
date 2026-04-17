@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.2
+- **Versión:** v1.3.4
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -15,366 +15,170 @@
 
 ### 2.1 Idea y Mecánicas
 
-**Concepto:** Juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides de diferentes tamaños.
+**Concepto:** Juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides de diferentes tamaños y naves enemigas.
 
-**Mecánicas Principales:**
+**Mecánicas Principales (v1.3.4):**
 - Nave puede **rotar** hacia la izquierda (A) o derecha (D)
-- **Disparar** proyectiles (W) hacia la dirección que apunta la nave
+- **Avanzar** con inercia (W) - sistema de aceleración con sobrecalentamiento
+- **Disparar** proyectiles (Espacio) hacia la dirección que apunta la nave
 - **Ataque especial (Ulti)** - Pulso expansivo que sale de la nave y destruye todo a su paso
 - Sistema de **escudos** (porcentaje 0-100%) en lugar de vidas
 - Efecto visual de **esfera azul** al recibir daño
+- Sistema de **naves enemigas** con IA - aparecen desde el inicio
+- Sistema de **asteroides especiales** con comportamiento propio
+- Sistema de **Top 5** con Firebase Firestore
+- **Campo gravitatorio** de la nave atrae asteroides
+- **Iconos visuales** para escudos, ULTi y aceleración (imágenes png)
 
-### 2.2 Tipos de Asteroides
+---
 
-| Tipo | Radio Colisión | Imagen Visual | Salud | Daño a Escudos | Comportamiento | Puntos |
-|------|----------------|--------------|-------|----------------|----------------|--------|
-| **SMALL** | 16px | 32x32 | 25 HP | 10% | Va hacia la nave | 30 |
-| **MEDIUM** | 32px | 64x64 | 50 HP | 25% | Va hacia la nave | 20 |
-| **LARGE** | 64px | 128x128 | 75 HP | 50% | Orbita alrededor de la nave | 10 |
-| **SPECIAL** | 64px | 128x128 | 200 HP | 0% (power-up) | Va hacia la nave (rápido) | 100 |
+### 2.2 Naves Enemigas (v1.3.3)
 
-### 2.3 Distribución de Asteroides
+| Característica | Valor |
+|--------------|-------|
+| HP | 25 |
+| Daño al jugador | 25% escudos |
+| Velocidad | 225 px/s |
+| Aparición | Desde oleada 0, intervalo 25s → 5s |
+| Disparo | Cada 3 segundos |
+| Movimiento | Orbita al jugador con inercia |
+| Proyectiles | Teledirigidos, evitan asteroides |
+| Explosión | Verde (0x00FF00) al destruirse |
+| Límite en pantalla | 10 máximo |
+| Da carga ULTi | 10 al destruirse |
 
-| Tipo | Probabilidad |
-|------|-------------|
-| SPECIAL | 5% |
-| Rezagado 1 | 13% |
-| Rezagado 2 | 13% |
-| Rezagado 3 | 13% |
-| LARGE | 22% |
-| MEDIUM | 17% |
-| SMALL | 17% |
+**Sistema de aparición progresiva:**
+- Oleadas 0-9: 1 nave cada 25s → 13s
+- Oleadas 10-29: 2 naves cada 11.7s → 5s
+- Oleadas 30+: 3 naves cada 5s
+- Cada 5 oleadas: +3 naves adicionales (oleadas 5, 10, 15, 20, 25, 30...)
+
+---
+
+### 2.3 Asteroides
+
+#### 2.3.1 Tipos de Asteroides
+
+| Tipo | Radio | Salud | Daño | Puntos | Carga ULTi |
+|------|-------|--------|------|--------|-------------|
+| SMALL | 16px | 25 HP | 10% | 30 | 5 |
+| MEDIUM | 32px | 50 HP | 25% | 20 | 5 |
+| LARGE | 64px | 75 HP | 50% | 10 | 5 |
+| Rezagados | varies | varies | varies | varies | 5 |
+| SPECIAL | 48px | 200 HP | 0% | 100 | 0 |
+
+**Todos los asteroides dan 5 de carga ULTi (excepto SPECIAL que da 0)**
+
+#### 2.3.2 Probabilidad de Special Enemy
+
+| Oleada | Probabilidad |
+|--------|--------------|
+| 0-9 | 2% |
+| 10+ | 4% (el doble) |
+
+#### 2.3.3 Campo Gravitatorio
+
+| Característica | Valor |
+|----------------|-------|
+| Radio de atracción | 100 px |
+| Asteroides afectados | Todos excepto SPECIAL |
+| Fuerza | Proporcional a la distancia |
+
+---
 
 ### 2.4 Sistema de Oleadas
 
-- Las oleadas avanzan cada **10 asteroides destruidos**
-- La siguiente oleada requiere 10 asteroides más (10, 20, 30, 40...)
-- El intervalo de spawn se reduce progresivamente (-0.02s por oleada)
-- Los proyectiles **sí** cuentan para las oleadas
-- La **ULTI sí** cuenta para las oleadas pero **NO** da carga de ULTi
-
-### 2.5 Sistema de Ruptura
-
-- **LARGE** → 2 **MEDIUM** (heredan órbita del padre)
-- **MEDIUM** → 2 **SMALL** (heredan órbita solo si el padre orbitaba)
-- **SPECIAL** → No suelta fragmentos, al destruirlo otorga power-up de velocidad de disparo
-
-### 2.6 Sistema de Power-up
-
-- Al destruir el asteroide **SPECIAL**, la velocidad de disparo aumenta un 20%
-- El power-up se acumula, permitiendo varios incrementos
-- El special **no hace daño** al chocar con la nave
-
-### 2.7 Efectos de Impacto
-
-- Al recibir daño de proyectil (sin destruir), el asteroide se mueve al 30% de velocidad por 1 segundo
-- Efecto visual de impacto (HitEffect) al recibir proyectil
-
-### 2.8 ULTi (Ataque Especial)
-
-- Aro expansivo que sale de la nave
-- **Distancia reducida un 30%** (70% de la diagonal de pantalla)
-- No da carga de ULTi al destruir asteroides (equilibrio)
-- Sí cuenta para las oleadas
-
-### 2.9 Controles (v1.3 - Movimiento Tipo Tanque)
-
-| Tecla | Acción |
-|-------|--------|
-| Barra espaciadora | Disparar proyectil |
-| W | Moverse hacia adelante (con inercia) |
-| S / Flecha ↓ | Activar ataque especial (Ulti) |
-| A / Flecha ← | Rotar nave a la izquierda |
-| D / Flecha → | Rotar nave a la derecha |
-| ENTER | Reiniciar (en Game Over) |
-| Click en REINICIAR | Reiniciar (en Game Over) |
-| P | Pausar/Reanudar juego |
-| T | Ver Top 5 durante el juego |
-
-### 2.10 Movimiento Tipo Tanque
-
-- **Movimiento con inercia:**
-  - La nave acelera cuando se presiona W
-  - Al soltar W, la nave sigue moviéndose un poco (inercia)
-  - La velocidad disminuye gradualmente (fricción)
-
-- **Disparo direccional:**
-  - Los proyectiles se disparan hacia donde apunta la nave (la punta)
+| Oleada | Intervalo Asteroides | Intervalo Naves | Naves por generación |
+|--------|---------------------|-----------------|---------------------|
+| 0 | 1.5s | 25s | 1 |
+| 1 | 1.5s | 23.7s | 1 |
+| 2 | 1.5s | 22.3s | 1 |
+| 3 | 1.5s | 21s | 1 |
+| 4 | 1.5s | 19.7s | 1 |
+| **5** | 1.5s | 18.3s | **4** (1 + 3 extra) |
+| 6-9 | 1.5s | 17s → 13s | 1-2 |
+| **10** | 1.5s | 11.7s | **5** (2 + 3 extra) |
+| 11-14 | 1.5s | 10.3s → 6.3s | 2 |
+| **15** | 1.5s | **5s** | **5** (2 + 3 extra) |
+| 16-29 | 1.5s | 5s | 2 |
+| **30+** | 1.5s | 5s | **6** (3 + 3 extra) |
 
 ---
 
-## 3. Estética
+### 2.5 Sistema de Escudos (v1.3.3)
 
-### 3.1 Paleta de Colores (Estilo Birome)
-
-| Color | Hex | Uso |
-|-------|-----|-----|
-| Negro Espacial | #0D0D1A | Fondo del juego |
-| Birome Azul | #0044CC | Nave, proyectiles, UI, efecto de daño, ulti |
-| Birome Rojo | #CC0000 | Asteroides |
-| Blanco Estelar | #FFFFFF | Estrellas |
-
-### 3.2 Fuentes
-
-- **UI del juego:** Estilo manuscrito (Segoe Script, Lucida Handwriting, Bradley Hand)
-- **Game Over:** Fuente manuscrita con estilo Birome
-
-### 3.3 Sprites
-
-- **Nave:** assets/nave.png (tamaño base 64px radius)
-- **Asteroides:** assets/asteroide.png tintados de rojo (escalado según tamaño)
-- **Imágenes UI:** 
-  - puntuacion2.png (esquina superior izquierda)
-  - tutorial.png (abajo del centro)
-  - gameOver.jpg (pantalla de Game Over)
+- Rango: 0% a 100%
+- **Sobrecalentamiento:** al llegar a 0%, la barra se pone roja
+- **El sobrecalentamiento NO se apaga automáticamente** - solo al recibir escudos
+- Special Enemies destruidos dan +20% escudos
 
 ---
 
-## 4. Arquitectura de Código
+### 2.6 Sistema ULTi
 
-### 4.1 Estructura de Clases
-
-```
-src/
-├── main.js              # Punto de entrada
-├── game/
-│   ├── Game.js         # Clase principal del juego
-│   ├── GameObject.js   # Clase base para entidades
-│   ├── Player.js       # Nave del jugador
-│   ├── Enemy.js        # Asteroides (4 tipos + rezagados)
-│   ├── Projectile.js   # Proyectiles (líneas)
-│   ├── UltiEffect.js   # Efecto especial
-│   ├── BurstEffect.js  # Efecto de burst al destruir especial
-│   ├── HitEffect.js    # Efecto de impacto al recibir daño
-│   └── Top5.js         # Sistema Top 5 con Firebase
-├── systems/
-│   └── InputManager.js # Gestión de teclado
-└── css/
-    └── style.css       # Estilos
-```
-
-### 4.2 Clases Principales
-
-- **GameObject:** Clase base con x, y, sprite, active
-- **Player:** Nave con rotación, dispara, escudos, efecto de daño
-- **Enemy:** Asteroides con 4 tamaños + rezagados, ruptura, órbita, movimiento especial
-- **Projectile:** Proyectiles como líneas finas
-- **UltiEffect:** Aro expansivo que destruye asteroides (70% de la diagonal)
-- **BurstEffect:** Partículas al destruir special
-- **HitEffect:** Efecto visual de impacto
-- **Top5:** Sistema de puntuación con Firebase Firestore
+| Característica | Valor |
+|--------------|-------|
+| Carga máxima | 500 |
+| Asteroide destruido | +5 carga |
+| Nave enemiga destruida | +10 carga |
+| SPECIAL destruido | +0 carga |
 
 ---
 
-## 5. Sistema de Colisiones
+### 2.7 Colisiones con Mini Asteroide Especial en Órbita
 
-### 5.1 Radios de Colisión
+Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
-Los radios de colisión ahora coinciden con el tamaño visual real de los asteroides:
-
-| Tipo | Radio de Colisión | Imagen Visual |
-|------|-------------------|---------------|
-| **SMALL** | 16px | 32x32 (escala 1x) |
-| **MEDIUM** | 32px | 64x64 (escala 2x) |
-| **LARGE** | 64px | 128x128 (escala 4x) |
-| **SPECIAL** | 64px | 128x128 (escala 4x) |
-
-### 5.2 Jugador y Proyectiles
-
-- **Jugador:** radio = 32px
-- **Proyectil:** radio = 3px
+| Objeto colisionado | Efecto |
+|-------------------|--------|
+| Asteroide (cualquiera) | Se destruye, da puntos y carga ULTi |
+| Nave enemiga | Se destruye, da 500 puntos y +10 carga ULTi |
+| Proyectil aliado | No recibe daño (traspasa) |
+| Proyectil enemigo | -25 HP |
 
 ---
 
-## 6. UI del Juego
+### 2.8 UI del Juego
 
-### 6.1 Elementos UI
-
-- **Panel izquierdo:** Puntuación, Oleada (contador + faltantes), Barra de ULTi
-- **Imagen decorativa:** puntuacion2.png debajo del panel
-- **Tutorial:** imagen tutorial.png debajo de los controles
-- **Controles:** W: Disparar | S: Ulti | A/D: Rotar
-
-### 6.2 Game Over
-
-- Imagen de fondo: gameOver.jpg
-- Texto "GAME OVER" en rojo (fuente manuscrita)
-- Puntuación Final en azul
-- Instrucciones en blanco
-- Botón "REINICIAR" manuscrito
-
-### 6.3 Pantalla de Top 5
-
-- Imagen de fondo: puntuacion2.png (escala 65% ancho, 75% alto)
-- Imagen centrada y fija en pantalla
-- Tabla con encabezados: **N° | NOMBRE | PUNTOS | OLEADAS**
-- Datos centrados dentro de la imagen
-- Botón "VOLVER" en esquina inferior izquierda
+- **🛡️** - Barra de escudos (azul, roja en sobrecalentamiento)
+- **⚡** - Barra de carga ULTi
+- **🚀** - Barra de aceleración (W)
+- Indicador: `Oleada: X | Faltan: Y | Ast: Zs | Naves: Ws`
 
 ---
 
-## 7. Características Implementadas
+## 3. Changelog v1.3.4
 
-### ✅ Primer Parcial
-- [x] GDD con mecánicas definidas
-- [x] Paleta de colores Birome
-- [x] Sprites animados y en movimiento
-- [x] Estructura de clases
-- [x] Sin errores en consola
-- [x] GitHub Pages publicado
+### Agregado
+- Iconos visuales para UI: `escudo1.png`, `ultiicon1.png`, `aceleracion1.png`
+- Botón Top 5 con imagen (`top5Boton.png`)
+- Botón Guardar con imagen (`guardadoBoton.png`)
+- Imagen de fondo para Top 5 (`guardarPuuntos.png`)
+- Versión del juego en pantalla (v1.3.4)
 
-### ✅ Mejoras Adicionales
-- [x] Proyectiles como líneas finas
-- [x] Efecto de esfera azul al recibir daño
-- [x] Sistema de escudos (porcentaje)
-- [x] Ulti como pulso/aro expansivo (70% de distancia)
-- [x] Pantalla de Game Over con imagen y botón de reinicio
-- [x] Asteroide especial (SPECIAL) como power-up
-- [x] Asteroides tintados de rojo
-- [x] Efecto de slowdown al recibir impacto
-- [x] Efecto visual de impacto (HitEffect)
-- [x] Herencia de órbita en fragmentos
-- [x] Nave más grande (64px radius)
-- [x] Sistema de oleadas por asteroides destruidos
-- [x] ULTi cuenta para oleadas pero no da carga
-- [x] Código de colisiones corregido (radios visuales)
-- [x] UI mejorada con imágenes decorativas
-- [x] Fuente manuscrita (estilo Birome)
-- [x] Tutorial en imagen
+### Modificado
+- Código CSS limpiado (eliminados duplicados)
+- Posiciones de botones de Game Over ajustadas
+- Imagen de Game Over más grande (90% altura)
+- HTML limpiado y organizado
 
-### ✅ Sistema Top 5 (v1.1+)
-- [x] Sistema de puntuación Top 5 con Firebase Firestore
-- [x] Input HTML para ingresar nombre al hacer nuevo record
-- [x] Imagen de fondo en formulario de nombre (guardarPuuntos.png)
-- [x] Botón TOP 5 en pantalla de Game Over
-- [x] Tabla de puntuaciones con encabezados: N° | NOMBRE | PUNTOS | OLEADAS
-- [x] Columnas alineadas y separadas para mejor visualización
-- [x] Input del teclado se deshabilita mientras se escribe el nombre
-- [x] Click en pantalla ya no reinicia (solo botón REINICIAR o ENTER)
-- [x] Filtrar elementos corruptos/vacíos de Firebase
-- [x] Acceso al Top 5 durante el juego con tecla T
-
-### ✅ Funciones de Desarrollo
-- [x] Tecla P para pausar/Reanudar juego
-- [x] Tecla T para ver Top 5 durante el juego
-
-### ✅ Dificultad Progresiva (v1.2)
-- [x] Velocidad de asteroides aumenta 10% cada 5 oleadas
-- [x] Máximo aumento: **60%** (en oleada 30+)
-
-| Oleada | Aumento de Velocidad |
-|--------|---------------------|
-| 0-4 | Normal (100%) |
-| 5-9 | +10% (110%) |
-| 10-14 | +20% (120%) |
-| 15-19 | +30% (130%) |
-| 20-24 | +40% (140%) |
-| 25-29 | +50% (150%) |
-| 30+ | +60% (máximo) |
+### Temporalmente comentado (para pruebas)
+- UX Experimental (imagen inferior)
 
 ---
 
-## 8. Sistema Top 5
+## 4. Changelog v1.3.3
 
-### 8.1 Funcionamiento
+### Agregado
+- Campo gravitatorio de la nave (100px)
+- Puntos y carga ULTi al destruir asteroides con mini asteroide en órbita
+- Especial Enemy doble (4%) desde oleada 10
+- Naves enemigas: 2 desde oleada 10, 3 desde oleada 30
 
-- Las **5 mejores puntuaciones** se guardan en **Firebase Firestore** (colección: top5)
-- Persistente entre sesiones y dispositivos
-- Al terminar el juego, si la puntuación califica para el Top 5, se muestra un formulario
-- El jugador ingresa un nombre (máximo 8 caracteres, solo letras y números)
-- El sistema guarda: nombre, puntuación y oleada alcanzada
-
-### 8.2 Acceso Durante el Juego
-
-- Durante el juego, se puede presionar **T** para ver el Top 5
-- El juego se mantiene pausado mientras se visualiza el Top 5
-- Botón "VOLVER" para regresar al juego pausado
-
-### 8.3 Pantalla de Top 5
-
-- Imagen de fondo (puntuacion2.png) escalada al 65% ancho y 75% alto
-- Imagen centrada y fija en pantalla
-- Tabla con encabezados: **N° | NOMBRE | PUNTOS | OLEADAS**
-- Datos centrados dentro de la imagen
-- Botón "VOLVER" en esquina inferior izquierda separado de los bordes
-
-### 8.4 Validación de Nombres
-
-- Solo letras (A-Z) y números (0-9)
-- Máximo 8 caracteres
-- Se convierte a mayúsculas automáticamente
-- Se eliminan espacios al inicio y final
+### Modificado
+- Todos los asteroides dan 5 de carga ULTi (antes variaba)
+- Intervalo de naves: 25s → 5s (antes 20s → 5s)
 
 ---
 
-## 9. Dificultad Progresiva
-
-### 9.1 Velocidad de Asteroides
-
-- La velocidad de los asteroides aumenta un **10% cada 5 oleadas**
-- Máximo aumento: **60%** (en oleada 30+)
-
----
-
-## 10. Tech Stack
-
-- **Motor:** PixiJS v8
-- **Lenguaje:** JavaScript ES6+
-- **Backend:** Firebase Firestore
-- **Hosting:** GitHub Pages
-
----
-
-## 11. Cómo Ejecutar
-
-### Desarrollo local:
-```bash
-npm install -g serve
-serve .
-```
-
-### Producción:
-El juego está publicado en: **https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/**
-
----
-
-## 12. Changelog
-
-### v1.3 (En desarrollo)
-> Lista de tareas planificadas: [[Tareas-Planificadas-v1.3]]
-
-#### Movimiento Tipo Tanque
-- [x] **Cambio de controles:**
-  - ~~W = Disparar~~ → **Barra espaciadora = Disparar**
-  - **W = Moverse hacia adelante** (con inercia)
-- [x] **Movimiento con inercia:**
-  - La nave acelera cuando se presiona W
-  - Al soltar W, la nave sigue moviéndose (inercia)
-  - Fricción reduce la velocidad gradualmente
-- [x] **Disparo direccional:**
-  - Proyectiles hacia donde apunta la nave
-
-#### Naves Enemigas
-- [x] **Nuevo tipo de enemigo:** Naves enemigas
-  - Se configurarán después (posiciones, velocidades, ataques)
-
-#### Efectos Visuales
-- [x] **Explosión mejorada:** (se configurará después)
-- [x] **Efecto de impulso:** (se configurará después)
-
-### v1.2
-- Sistema Top 5 con Firebase Firestore (persistente en la nube)
-- Tecla P para pausar/Reanudar juego
-- Tecla T para ver Top 5 durante el juego
-- Dificultad progresiva aumentada (60% máximo)
-- Pantalla de Top 5 mejorada (imagen más grande, centrada, datos dentro de la imagen)
-- Botón VOLVER en esquina inferior izquierda
-- Fondo infinito con mosaicos (fondoEspacio3.png)
-
-### v1.1
-- Sistema Top 5 con localStorage
-- Imagen decorativa para formulario de nombre
-
-### v1.0
-- Lanzamiento inicial
-- Todas las mecánicas del juego
+*Documento actualizado para v1.3.4*

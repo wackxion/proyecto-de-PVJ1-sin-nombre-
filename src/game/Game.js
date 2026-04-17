@@ -12,10 +12,15 @@
  */
 import { Jugador } from './Player.js';
 import { Proyectil } from './Projectile.js';
+import { EnemyProjectile } from './EnemyProjectile.js';
 import { Enemigo } from './Enemy.js';
+import { EnemyShip } from './EnemyShip.js';
+import { SpecialEnemy } from './SpecialEnemy.js';
 import { UltiEffect } from './UltiEffect.js';
 import { BurstEffect } from './BurstEffect.js';
 import { HitEffect } from './HitEffect.js';
+import { ProyectilExplosion } from './ProyectilExplosion.js';
+import { AsteroidExplosion } from './AsteroidExplosion.js';
 import { Top5 } from './Top5.js';
 import { GestorEntrada } from '../systems/InputManager.js';
 
@@ -45,8 +50,17 @@ export class Game {
         // Proyectiles = proyectiles disparados por la nave
         this.proyectiles = [];
         
+        // Proyectiles enemigos
+        this.proyectilesEnemigos = [];
+        
         // Enemies = asteroides
         this.enemigos = [];
+        
+        // EnemyShips = naves enemigas
+        this.enemigosNaves = [];
+        
+        // SpecialEnemies = asteroides especiales con comportamiento propio
+        this.enemigosSpeciales = [];
         
         // EfectosExplosion = efectos visuales de partículas al destruir especial
         this.efectosExplosion = [];
@@ -74,6 +88,10 @@ export class Game {
         this.intervaloMinimoSpawn = 0.3; // Mínimo intervalo (máxima dificultad)
         this.tasaDisminucionSpawn = 0.10; // Cuánto se reduce el intervalo por oleada (5 centésimas)
         
+        // Temporizador para naves enemigas (cada 10 segundos)
+        this.temporizadorNaveEnemiga = 0;
+        this.intervaloNaveEnemiga = 10; // Nueva nave cada 10 segundos
+        
         // ContadorOleadas = contador de oleadas para determinar dificultad
         this.contadorOleadas = 0;
         
@@ -100,6 +118,8 @@ export class Game {
         this.elementoOleada = null;
         this.elementoBarraUlti = null;
         this.contenedorBarraUlti = null;
+        this.elementoBarraEscudos = null;  // Nueva barra de escudos
+        this.contenedorBarraEscudos = null;  // Contenedor para efecto de enfriamiento
         
         // Elementos de fin de juego
         this.elementosFinJuego = [];
@@ -112,6 +132,13 @@ export class Game {
         
         // Flag para saber si se pidió nombre
         this.nombreIngresado = false;
+        
+        // Flag para saber si estamos esperando nombre para el Top 5
+        // Evita que clicks reinicien el juego mientras se escribe el nombre
+        this.esperandoNombreTop5 = false;
+        
+        // Flag para saber si estamos en Game Over
+        this.enGameOver = false;
         
         // === BANDERAS DE PAUSA Y TOP 5 ===
         // this.pausado = indica si el juego está en pausa
@@ -240,16 +267,39 @@ export class Game {
             
             // Cargar las imágenes desde la carpeta assets/
             // Usar el API de PixiJS v8
-            const [naveTexture, asteroideTexture, fondoTexture] = await Promise.all([
+const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1, explocion2, explocion3, explocion4, explocion5, astroExplosion1, astroExplosion2, astroExplosion3, astroExplosion4, astroExplosion5, enimigoTexture, asteroideSpecialTexture] = await Promise.all([
                 PIXI.Assets.load('assets/Nave322.png'),
                 PIXI.Assets.load('assets/asteroide250.png'),
-                PIXI.Assets.load('assets/fondoEspacio2.png')
+                PIXI.Assets.load('assets/fondoEspacio3.png'),
+                PIXI.Assets.load('assets/proyectil1.png'),
+                PIXI.Assets.load('assets/proyectil2Explocion.png'),
+                PIXI.Assets.load('assets/proyectil3Explocion.png'),
+                PIXI.Assets.load('assets/proyectil4Explocion.png'),
+                PIXI.Assets.load('assets/proyectil5Explocion.png'),
+                PIXI.Assets.load('assets/proyectil6Explocion.png'),
+                PIXI.Assets.load('assets/explocionAsteroides1.png'),
+                PIXI.Assets.load('assets/explocionAsteroides2.png'),
+                PIXI.Assets.load('assets/explocionAsteroides3.png'),
+                PIXI.Assets.load('assets/explocionAsteroides4.png'),
+                PIXI.Assets.load('assets/explocionAsteroides5.png'),
+                PIXI.Assets.load('assets/enimigo1.png'),
+                PIXI.Assets.load('assets/asteroideESP.png')
             ]);
             
             // Asignar las texturas cargadas
             this.texturaJugador = naveTexture;
             this.texturaAsteroide = asteroideTexture;
+            this.texturaAsteroideSpecial = asteroideSpecialTexture;
             this.texturaFondo = fondoTexture;
+            this.texturaProyectil = proyectilTexture;
+            this.texturaExplosion = [explocion1, explocion2, explocion3, explocion4, explocion5];
+            this.texturaAsteroidExplosion = [astroExplosion1, astroExplosion2, astroExplosion3, astroExplosion4, astroExplosion5];
+            this.texturaNaveEnemiga = enimigoTexture;
+            
+            // Verificar que la textura se cargó correctamente
+            if (!this.texturaNaveEnemiga) {
+                console.error('Error: textura de nave enemiga no se cargó');
+            }
             
             // console.log('Assets cargados correctamente - Jugador:', this.texturaJugador, 'Asteroide:', this.texturaAsteroide);
         } catch (error) {
@@ -297,23 +347,40 @@ export class Game {
         
         // Verificar si hay una textura de fondo cargada
         if (this.texturaFondo) {
-            // Crear sprite con la imagen de fondo
-            const fondoSprite = new PIXI.Sprite(this.texturaFondo);
+            // Crear fondo infinito usando mosaicos (tiling)
+            // Esto permite que el espacio sea infinito
             
-            // Escalar la imagen para que cubra toda la pantalla
-            // Mantener la proporción original
-            const escalaX = w / this.texturaFondo.width;
-            const escalaY = h / this.texturaFondo.height;
-            const escala = Math.max(escalaX, escalaY); // Usar la más grande para cubrir
+            // Crear un contenedor para el fondo
+            this.contenedorFondo = new PIXI.Container();
             
-            fondoSprite.scale.set(escala);
+            // Calcular cuántas veces cabe la imagen horizontal y verticalmente
+            const imagenAncho = this.texturaFondo.width;
+            const imagenAlto = this.texturaFondo.height;
             
-            // Centrar la imagen
-            fondoSprite.x = (w - this.texturaFondo.width * escala) / 2;
-            fondoSprite.y = (h - this.texturaFondo.height * escala) / 2;
+            const columnas = Math.ceil(w / imagenAncho) + 1;
+            const filas = Math.ceil(h / imagenAlto) + 1;
+            
+            // Crear mosaicos para cubrir toda la pantalla
+            this.mosaicosFondo = [];
+            
+            for (let col = 0; col < columnas; col++) {
+                for (let fila = 0; fila < filas; fila++) {
+                    const mosaico = new PIXI.Sprite(this.texturaFondo);
+                    mosaico.x = col * imagenAncho;
+                    mosaico.y = fila * imagenAlto;
+                    this.contenedorFondo.addChild(mosaico);
+                    this.mosaicosFondo.push(mosaico);
+                }
+            }
             
             // Agregar al stage
-            this.aplicacion.stage.addChild(fondoSprite);
+            this.aplicacion.stage.addChild(this.contenedorFondo);
+            
+            // Guardar dimensiones para el movimiento infinito
+            this._anchoMosaico = imagenAncho;
+            this._altoMosaico = imagenAlto;
+            this._columnasMosaico = columnas;
+            this._filasMosaico = filas;
         } else {
             // Fallback: dibujar estrellas programáticamente
             this._crearFondoConEstrellas(w, h);
@@ -393,6 +460,14 @@ export class Game {
         this.elementoBarraUlti = document.getElementById('ulti-bar-fill');
         this.contenedorBarraUlti = document.getElementById('ulti-container');
         
+        // Referencia a la barra de aceleración (W)
+        this.elementoBarraAceleracion = document.getElementById('aceleracion-bar-fill');
+        this.contenedorBarraAceleracion = document.getElementById('aceleracion-container');
+        
+        // Referencia a la barra de escudos
+        this.elementoBarraEscudos = document.getElementById('escudos-bar-fill');
+        this.contenedorBarraEscudos = document.getElementById('escudos-container');
+        
         // Crear elemento para mostrar la oleada (wave)
         this.elementoOleada = document.getElementById('wave');
         if (!this.elementoOleada) {
@@ -413,43 +488,31 @@ export class Game {
      */
     _actualizarUI() {
         if (this.elementoPuntuacion) {
-            // Obtener los escudos del jugador (porcentaje)
-            let shield = this.jugador ? this.jugador.escudos : 0;
-            const isOverheated = this.jugador ? this.jugador.sobrecalentado : false;
-            
-            // Texto base de escudos
-            let shieldText = `Escudos: ${Math.round(shield)}%`;
-            
-            // Si está en sobrecalentamiento, mostrar en rojo y agregar timer
-            if (isOverheated) {
-                const timer = this.jugador ? Math.ceil(this.jugador.temporizadorEnfriamiento) : 0;
-                shieldText = `ENFRIAMIENTO: ${Math.round(shield)}% (${timer}s)`;
-                
-                // Aplicar color usando HTML
-                this.elementoPuntuacion.innerHTML = `Puntuación: ${this.puntuacion} | <span style="color: #FF0000;">${shieldText}</span>`;
-                
-                // También actualizar el style del elemento padre si existe
-                if (this.elementoPuntuacion.parentElement) {
-                    this.elementoPuntuacion.parentElement.style.borderColor = isOverheated ? '#FF0000' : '#0044CC';
-                }
-                return;
-            }
-            
-            // Verificar si el ataque especial está listo
-            const ultiStatus ='';  //this.jugador && this.jugador.ultiListo ? ' [ULTI LISTO]' : 
-            
-            // Verificar porcentaje de mejora de velocidad de disparo
+            // Solo mostrar puntuación y velocidad de disparo
             const speedBoost = this.jugador ? this.jugador.obtenerPorcentajeMejoraVelocidad() : 0;
             const speedText = speedBoost > 0 ? ` | Velocidad: +${Math.round(speedBoost)}%` : '';
             
-            // Actualizar el texto del elemento HTML
-            this.elementoPuntuacion.textContent = `Puntuación: ${this.puntuacion} | ${shieldText}${ultiStatus}${speedText}`;
+            // Actualizar el texto del elemento HTML (solo puntuación)
+            this.elementoPuntuacion.textContent = `Puntuación: ${this.puntuacion}${speedText}`;
         }
         
         // Actualizar display de oleada
         if (this.elementoOleada) {
             const faltantes = this.objetivoOleada - this.asteroidesDestruidos;
-            this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Faltan: ${faltantes} | Intervalo: ${this.intervaloSpawn.toFixed(2)}s`;
+            this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Faltan: ${faltantes} | Ast: ${this.intervaloSpawn.toFixed(1)}s | Naves: ${this.intervaloNaveEnemiga.toFixed(1)}s`;
+        }
+        
+        // Actualizar barra de escudos
+        if (this.elementoBarraEscudos && this.jugador) {
+            const porcentajeEscudos = this.jugador.escudos;
+            this.elementoBarraEscudos.style.width = `${porcentajeEscudos}%`;
+            
+            // Si está en sobrecalentamiento de escudos, mostrar efecto rojo
+            if (this.jugador.sobrecalentado && this.contenedorBarraEscudos) {
+                this.contenedorBarraEscudos.classList.add('overheated');
+            } else if (this.contenedorBarraEscudos) {
+                this.contenedorBarraEscudos.classList.remove('overheated');
+            }
         }
         
         // Actualizar barra de carga del Ulti
@@ -467,6 +530,19 @@ export class Game {
                 this.contenedorBarraUlti.classList.remove('ready');
             }
         }
+        
+        // Actualizar barra de aceleración (W)
+        if (this.elementoBarraAceleracion && this.jugador) {
+            const porcentajeAcel = this.jugador.cargaAceleracion;
+            this.elementoBarraAceleracion.style.width = `${porcentajeAcel}%`;
+            
+            // Si está sobrecalentado, mostrar diferente
+            if (this.jugador.sobrecalentadoAceleracion && this.contenedorBarraAceleracion) {
+                this.contenedorBarraAceleracion.classList.add('overheated');
+            } else if (this.contenedorBarraAceleracion) {
+                this.contenedorBarraAceleracion.classList.remove('overheated');
+            }
+        }
     }
     
     /**
@@ -478,8 +554,8 @@ export class Game {
      * @param {number} direction - Dirección del proyectil en radianes (ángulo)
      */
     crearProyectil(x, y, direction) {
-        // Crear el proyectil
-        const projectile = new Proyectil(x, y, direction, this.anchoJuego, this.altoJuego);
+        // Crear el proyectil con la textura
+        const projectile = new Proyectil(x, y, direction, this.anchoJuego, this.altoJuego, this.texturaProyectil);
         
         // Renderizarlo en el stage
         projectile.render(this.aplicacion.stage);
@@ -502,8 +578,8 @@ export class Game {
             this.jugador.y,              // Posición Y del jugador
             this.anchoJuego,             // Ancho del juego
             this.altoJuego,            // Alto del juego
-            this.enemigos,              // Lista de enemigos para destruir
-            // Callback = función que se ejecuta cuando se destruye un enemigo
+            this.enemigos,              // Lista de asteroides para destruir
+            // Callback = función que se ejecuta cuando se destruye un asteroide
             function(enemy) {
                 // Sumar puntos
                 game.puntuacion += enemy.puntos;
@@ -512,6 +588,13 @@ export class Game {
                 // (para equilibrar el juego)
                 
                 // CONTAR para la oleada (igual que los proyectiles)
+                game.asteroidesDestruidos++;
+            },
+            // Lista de naves enemigas
+            this.enemigosNaves,
+            // Callback cuando se destruye una nave enemiga
+            function(nave) {
+                game.puntuacion += 500;
                 game.asteroidesDestruidos++;
                 
                 // Verificar si completamos la oleada (cada 10 asteroides)
@@ -530,7 +613,9 @@ export class Game {
                         );
                     }
                 }
-            }
+            },
+            // Referencia al juego para crear animaciones
+            this
         );
         
         // Renderizar el efecto
@@ -542,17 +627,19 @@ export class Game {
      * Se llama periódicamente para crear nuevos enemigos
      */
     _generarEnemigo() {
-        // SIN LÍMITE - los asteroides siempre aparecen
-        // if (this.enemigos.length >= this.maximoEnemigos) return;
+        // Sin límite en pantalla - siempre spawnea nuevos asteroides
         
         // Elegir un tamaño aleatorio
         const rand = Math.random();
+        let size;
+        
+        // Calcular probabilidad de special: 2% normal, 4% desde oleada 10
+        const probabilidadSpecial = (this.contadorOleadas >= 10) ? 0.04 : 0.02;
         
         // Distribución de tipos de asteroides:
-        // special: 5%, rezagados: 39% (13% cada uno), large: 22%, medium: 17%, small: 17%
-        let size;
-        if (rand < 0.05) {
-            size = 'special';          // 5%
+        // special: 2% (4% desde oleada 10), rezagados: 39% (13% cada uno), large: 22%, medium: 17%, small: 20%
+        if (rand < probabilidadSpecial) {
+            size = 'special';          // 2% (4% desde oleada 10)
         } else if (rand < 0.18) {
             size = 'large_rezagado';  // 13%
         } else if (rand < 0.31) {
@@ -564,7 +651,7 @@ export class Game {
         } else if (rand < 0.83) {
             size = 'medium';          // 17%
         } else {
-            size = 'small';           // 17%
+            size = 'small';           // 20%
         }
         
         // console.log('Size asignado directamente:', size);
@@ -580,15 +667,48 @@ export class Game {
                           size === 'small_rezagado';
         
         if (size === 'special') {
-            // Los especiales aparecen desde el centro de los bordes
-            if (Math.random() < 0.5) {
-                // Aparece desde izquierda o derecha (eje horizontal)
-                x = Math.random() < 0.5 ? -120 : w + 120;
-                y = h / 2; // Centro vertical
+            // Verificar límite de especiales (máximo 3 en pantalla)
+            if (this.enemigosSpeciales.length >= 3) {
+                size = 'large'; // Si llegó al límite, crear uno normal
             } else {
-                // Aparece desde arriba o abajo (eje vertical)
-                x = w / 2; // Centro horizontal
-                y = Math.random() < 0.5 ? -120 : h + 120;
+                // Aparece fuera de la pantalla y se mueve hacia el jugador
+                const w = this.anchoJuego;
+                const h = this.altoJuego;
+                
+                // Elegir un borde aleatorio para spawnear
+                const borde = Math.floor(Math.random() * 4);
+                let x, y;
+                
+                switch (borde) {
+                    case 0: // Top
+                        x = Math.random() * w;
+                        y = -80;
+                        break;
+                    case 1: // Bottom
+                        x = Math.random() * w;
+                        y = h + 80;
+                        break;
+                    case 2: // Left
+                        x = -80;
+                        y = Math.random() * h;
+                        break;
+                    case 3: // Right
+                        x = w + 80;
+                        y = Math.random() * h;
+                        break;
+                }
+                
+                // Crear con posición fuera de la pantalla
+                const especial = new SpecialEnemy(
+                    x, y,
+                    this.jugador,
+                    this.texturaAsteroideSpecial,
+                    this.anchoJuego,
+                    this.altoJuego
+                );
+                especial.render(this.aplicacion.stage);
+                this.enemigosSpeciales.push(especial);
+                return; // No crear más
             }
         } else if (size === 'large_rezagado' || size === 'medium_rezagado' || size === 'small_rezagado') {
             // Los rezagados aparecen desde un borde y cruzan la pantalla
@@ -639,8 +759,11 @@ export class Game {
                 }
             }
             
+            // Elegir textura según el tipo
+            const textura = (size === 'special') ? this.texturaAsteroideSpecial : this.texturaAsteroide;
+            
             // Crear el enemigo
-            const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
+            const enemigo = new Enemigo(x, y, size, this.jugador, textura, null, false, this.anchoJuego, this.altoJuego);
             
             // === AUMENTAR VELOCIDAD CADA 5 OLEADAS ===
             // Cada 5 oleadas, los asteroides aumentan un 10% su velocidad
@@ -660,19 +783,43 @@ export class Game {
             return;
         } else {
             // Asteroides normales aparecen desde cualquier borde
-            if (Math.random() < 0.5) {
-                // Eje horizontal (izquierda o derecha)
-                x = Math.random() < 0.5 ? -60 : w + 60;
-                y = Math.random() * h;
-            } else {
-                // Eje vertical (arriba o abajo)
-                x = Math.random() * w;
-                y = Math.random() < 0.5 ? -60 : h + 60;
+            // Intentamos hasta 5 veces encontrar una posición libre
+            let intentos = 0;
+            let posicionLibre = false;
+            
+            while (!posicionLibre && intentos < 5) {
+                if (Math.random() < 0.5) {
+                    // Eje horizontal (izquierda o derecha)
+                    x = Math.random() < 0.5 ? -60 : w + 60;
+                    y = Math.random() * h;
+                } else {
+                    // Eje vertical (arriba o abajo)
+                    x = Math.random() * w;
+                    y = Math.random() < 0.5 ? -60 : h + 60;
+                }
+                
+                // Obtener radio según el tipo de asteroide
+                let radioNuevo = 16; // default small
+                if (size === 'large') radioNuevo = 64;
+                else if (size === 'medium') radioNuevo = 32;
+                else if (size === 'small') radioNuevo = 16;
+                
+                // Verificar si la posición está libre
+                posicionLibre = this._verificarPosicionLibre(x, y, radioNuevo);
+                intentos++;
+            }
+            
+            // Si no encontró posición libre después de 5 intentos, no crear el asteroide
+            if (!posicionLibre) {
+                return;
             }
         }
         
+        // Elegir textura según el tipo
+        const texturaNormal = (size === 'special') ? this.texturaAsteroideSpecial : this.texturaAsteroide;
+        
         // Crear el enemigo con todos los parámetros necesarios
-        const enemigo = new Enemigo(x, y, size, this.jugador, this.texturaAsteroide, null, false, this.anchoJuego, this.altoJuego);
+        const enemigo = new Enemigo(x, y, size, this.jugador, texturaNormal, null, false, this.anchoJuego, this.altoJuego);
         
         // === AUMENTAR VELOCIDAD CADA 5 OLEADAS ===
         // === AUMENTAR VELOCIDAD CADA 5 OLEADAS ===
@@ -692,6 +839,87 @@ export class Game {
         // console.log('Enemigo renderizado, parent:', enemigo.imagen?.parent);
         
         this.enemigos.push(enemigo);
+    }
+    
+    /**
+     * Crea una nave enemiga que aparece en cada oleada
+     * Aparece FUERA de la pantalla (como los asteroides) y se acerca al jugador
+     */
+    _crearNaveEnemiga() {
+        const w = this.anchoJuego;
+        const h = this.altoJuego;
+        
+        // Elegir un borde aleatorio para spawnear (fuera de la pantalla)
+        const borde = Math.floor(Math.random() * 4);
+        let x, y;
+        
+        // La posición de generación está estrictamente fuera de la pantalla
+        switch (borde) {
+            case 0: // Arriba (fuera de pantalla)
+                x = Math.random() * w;
+                y = -80;
+                break;
+            case 1: // Abajo (fuera de pantalla)
+                x = Math.random() * w;
+                y = h + 80;
+                break;
+            case 2: // Izquierda (fuera de pantalla)
+                x = -80;
+                y = Math.random() * h;
+                break;
+            case 3: // Derecha (fuera de pantalla)
+                x = w + 80;
+                y = Math.random() * h;
+                break;
+        }
+        
+        // Crear la nave enemiga solo si hay menos de 10
+        if (this.enemigosNaves.length < 10) {
+            const naveEnemiga = new EnemyShip(
+                x, y, 
+                this.texturaNaveEnemiga, 
+                this.jugador, 
+                this.enemigos,
+                this.anchoJuego, 
+                this.altoJuego
+            );
+            
+            // Renderizar y agregar a la lista
+            naveEnemiga.render(this.aplicacion.stage);
+            this.enemigosNaves.push(naveEnemiga);
+        }
+    }
+    
+    /**
+     * Crea un proyectil disparado por una nave enemiga
+     * 
+     * @param {number} x - Posición X
+     * @param {number} y - Posición Y
+     * @param {number} direction - Dirección del disparo
+     */
+    _crearProyectilEnemigo(x, y, direction) {
+        // Calcular la posición de la punta de la nave
+        const distanciaPuntera = 35;
+        const origenX = x + Math.cos(direction) * distanciaPuntera;
+        const origenY = y + Math.sin(direction) * distanciaPuntera;
+        
+        // Crear proyectil teledirigido
+        const projectile = new EnemyProjectile(
+            origenX, origenY, direction,
+            this.anchoJuego, this.altoJuego,
+            this.texturaProyectil,
+            this.jugador,
+            this.enemigos
+        );
+        
+        // Renderizarlo
+        projectile.render(this.aplicacion.stage);
+        
+        // Agregar a la lista
+        if (!this.proyectilesEnemigos) {
+            this.proyectilesEnemigos = [];
+        }
+        this.proyectilesEnemigos.push(projectile);
     }
     
     /**
@@ -717,6 +945,44 @@ export class Game {
         // Hay colisión si la distancia es menor a la suma de los radios
         // Esto significa que los círculos se superponen
         return dist < (radio1 + radio2);
+    }
+    
+    /**
+     * Verifica si una posición de spawn está libre de asteroides
+     * Evita que aparezcan asteroides uno encima de otro
+     * 
+     * @param {number} x - Posición X del nuevo asteroide
+     * @param {number} y - Posición Y del nuevo asteroide
+     * @param {number} radio - Radio del nuevo asteroide
+     * @returns {boolean} - true si está libre, false si hay colisión
+     */
+    _verificarPosicionLibre(x, y, radio) {
+        // Verificar contra todos los asteroides normales
+        for (const enemigo of this.enemigos) {
+            if (!enemigo.active) continue;
+            
+            const dist = Math.sqrt((x - enemigo.x) ** 2 + (y - enemigo.y) ** 2);
+            const sumaRadios = radio + enemigo.radio;
+            
+            // Si la distancia es menor a la suma de radios, hay superposición
+            if (dist < sumaRadios * 1.5) {
+                return false; // Posición ocupada
+            }
+        }
+        
+        // Verificar contra especiales
+        for (const especial of this.enemigosSpeciales) {
+            if (!especial.active) continue;
+            
+            const dist = Math.sqrt((x - especial.x) ** 2 + (y - especial.y) ** 2);
+            const sumaRadios = radio + especial.radio;
+            
+            if (dist < sumaRadios * 1.5) {
+                return false;
+            }
+        }
+        
+        return true; // Posición libre
     }
     
     /**
@@ -751,12 +1017,48 @@ export class Game {
      * Se llama en cada frame del juego
      */
     _procesarColisionesProyectiles() {
+        // === VERIFICAR COLISIÓN ENTRE PROYECTILES ALIADOS Y ENEMIGOS ===
+        if (this.proyectiles && this.proyectiles.length > 0 && 
+            this.proyectilesEnemigos && this.proyectilesEnemigos.length > 0) {
+            
+            for (let i = this.proyectiles.length - 1; i >= 0; i--) {
+                const projectile = this.proyectiles[i];
+                if (!projectile || !projectile.active) continue;
+                
+                // Verificar colisión con proyectiles enemigos
+                for (let j = this.proyectilesEnemigos.length - 1; j >= 0; j--) {
+                    const projEnemigo = this.proyectilesEnemigos[j];
+                    if (!projEnemigo || !projEnemigo.active) continue;
+                    
+                    if (this._verificarColision(projectile, projEnemigo)) {
+                        // Animación de colisión (típica de proyectil)
+                        const explosion = new ProyectilExplosion(
+                            projectile.x, projectile.y,
+                            this.texturaExplosion,
+                            1.0
+                        );
+                        explosion.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(explosion);
+                        
+                        // Destruir ambos proyectiles
+                        projectile.destroy();
+                        this.proyectiles.splice(i, 1);
+                        
+                        projEnemigo.destroy();
+                        this.proyectilesEnemigos.splice(j, 1);
+                        
+                        break; // El proyectil aliado ya no puede chocar con nada más
+                    }
+                }
+            }
+        }
+        
         // Recorrer todos los proyectiles (de atrás hacia adelante para poder eliminar)
         for (let i = this.proyectiles.length - 1; i >= 0; i--) {
             const projectile = this.proyectiles[i];
             
             // Si el proyectil ya no está activo, saltar
-            if (!projectile.active) continue;
+            if (!projectile || !projectile.active) continue;
             
             // Verificar colisión con cada enemigo
             for (let j = this.enemigos.length - 1; j >= 0; j--) {
@@ -765,6 +1067,14 @@ export class Game {
                 
                 // Verificar si hay colisión
                 if (this._verificarColision(projectile, enemy)) {
+                    // Crear efecto visual de explosión del proyectil (animación de 5 frames)
+                    const explocion = new ProyectilExplosion(
+                        enemy.x, enemy.y, 
+                        this.texturaExplosion
+                    );
+                    explocion.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(explocion);
+                    
                     // Crear efecto visual de impacto (doble tamaño: escala = 2)
                     const hit = new HitEffect(enemy.x, enemy.y, 'hit', 2);
                     hit.render(this.aplicacion.stage);
@@ -789,6 +1099,33 @@ export class Game {
                     
                     // Si el enemigo fue destruido (health <= 0)
                     if (!enemy.active) {
+                        // Crear animación de destrucción del asteroide (solo para no especiales)
+                        // Ajustar escala según el tamaño del asteroide (+20%)
+                        if (enemy.tamanio !== 'special') {
+                            let escalaAnim = 0.24; // SMALL +20%
+                            if (enemy.tamanio === 'medium') {
+                                escalaAnim = 0.42; // +20%
+                            } else if (enemy.tamanio === 'large') {
+                                escalaAnim = 0.84; // +20%
+                            } else if (enemy.tamanio === 'rezagado1') {
+                                escalaAnim = 0.84; // LARGE +20%
+                            } else if (enemy.tamanio === 'rezagado2') {
+                                escalaAnim = 0.42; // MEDIUM +20%
+                            } else if (enemy.tamanio === 'rezagado3') {
+                                escalaAnim = 0.24; // SMALL +20%
+                            }
+                            
+                            // Usar animación de ASTEROIDE
+                            const astroExplosion = new AsteroidExplosion(
+                                enemy.x, enemy.y, 
+                                this.texturaAsteroidExplosion,
+                                escalaAnim
+                            );
+                            astroExplosion.render(this.aplicacion.stage);
+                            this.efectosImpacto.push(astroExplosion);
+                        }
+                        
+                        // El especial se destruye sin animación de destrucción
                         // Sumar puntos
                         this.puntuacion += enemy.puntos;
                         
@@ -814,17 +1151,9 @@ export class Game {
                                     this.intervaloSpawn - this.tasaDisminucionSpawn
                                 );
                             }
-                        }
-                        
-                        // Si es el asteroide especial, dar power-up
-                        if (enemy.tamanio === 'special') {
-                            // Aumentar velocidad de disparo
-                            this.jugador.aumentarVelocidadDisparo();
                             
-                            // Crear efecto de burst (explosión de partículas)
-                            const burst = new BurstEffect(enemy.x, enemy.y);
-                            burst.render(this.aplicacion.stage);
-                            this.efectosExplosion.push(burst);
+                            // El avance de oleadas se maneja por temporizador (cada 10 segundos)
+                            // this._crearNaveEnemiga(); // Deshabilitado - ahora aparece por temporizador
                         }
                         
                         // Remover el enemigo de la lista
@@ -839,6 +1168,126 @@ export class Game {
                     this._actualizarUI();
                     
                     // Salir del for de enemigos (el proyectil solo puede golpear uno)
+                    break;
+                }
+            }
+            
+            // Verificar colisión con enemigos especiales
+            for (let k = this.enemigosSpeciales.length - 1; k >= 0; k--) {
+                const especial = this.enemigosSpeciales[k];
+                if (!especial || !especial.active) continue;
+                
+                if (this._verificarColision(projectile, especial)) {
+                    // Si está en órbita, el proyectil del aliado traspasa (no colisiona)
+                    if (especial.enOrbita) {
+                        // No hacer nada, el proyectil sigue su camino
+                    } else {
+                        // Animación de proyectil (típica cuando colisiona)
+                        const explosion = new ProyectilExplosion(
+                            especial.x, especial.y,
+                            this.texturaExplosion,
+                            1.5
+                        );
+                        explosion.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(explosion);
+                        
+                        // El proyectil hace daño
+                        especial.salud -= projectile.dano;
+                        
+                        // Si fue destruido
+                        if (especial.salud <= 0) {
+                            // Animación de destrucción del Special Enemy (AZUL)
+                            const astroExplosion = new AsteroidExplosion(
+                                especial.x, especial.y,
+                                this.texturaAsteroidExplosion,
+                                0.84,  // Escala LARGE
+                                0x0000FF  // Color AZUL
+                            );
+                            astroExplosion.render(this.aplicacion.stage);
+                            this.efectosImpacto.push(astroExplosion);
+                            
+                            // Dar power-up al jugador: velocidad de disparo + 20% escudos
+                            this.jugador.aumentarVelocidadDisparo();
+                            
+                            // Agregar 20% de escudos (también sale del sobrecalentamiento si estaba)
+                            this.jugador.agregarEscudos(20);
+                            
+                            // Puntos
+                            this.puntuacion += especial.puntos;
+                            
+                            especial.destroy();
+                            this.enemigosSpeciales.splice(k, 1);
+                        }
+                        
+                        projectile.destroy();
+                        this.proyectiles.splice(i, 1);
+                        this._actualizarUI();
+                    }
+                    break;
+                }
+            }
+            
+            // Verificar colisión con cada nave enemiga
+            for (let k = this.enemigosNaves.length - 1; k >= 0; k--) {
+                const naveEnemiga = this.enemigosNaves[k];
+                if (!naveEnemiga || !naveEnemiga.active) continue;
+                
+                // Verificar si hay colisión
+                if (this._verificarColision(projectile, naveEnemiga)) {
+                    // Crear efecto visual de impacto (doble tamaño: escala = 2)
+                    const hit = new HitEffect(naveEnemiga.x, naveEnemiga.y, 'hit', 2);
+                    hit.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(hit);
+                    
+                    // El proyectil hace daño a la nave enemiga
+                    const destruida = naveEnemiga.recibirDano(projectile.dano);
+                    
+                    // Si la nave enemiga fue destruida
+                    if (destruida) {
+                        // Crear animación de destrucción de la nave enemiga (color verde)
+                        const naveExplosion = new AsteroidExplosion(
+                            naveEnemiga.x, naveEnemiga.y,
+                            this.texturaAsteroidExplosion,
+                            0.5, // Escala para nave enemiga
+                            0x00FF00 // Color verde
+                        );
+                        naveExplosion.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(naveExplosion);
+                        
+                        // Sumar puntos por destruir nave enemiga
+                        this.puntuacion += 500;
+                        
+                        // Agregar carga de ULTi
+                        this.jugador.agregarCargaUlti(naveEnemiga.cargaUlti);
+                        
+                        // Incrementar contador
+                        this.asteroidesDestruidos++;
+                        
+                        // Verificar si completamos la oleada
+                        if (this.asteroidesDestruidos >= this.objetivoOleada) {
+                            this.contadorOleadas++;
+                            this.asteroidesDestruidos = 0;
+                            this.objetivoOleada = 10 + (this.contadorOleadas * 10);
+                            if (this.intervaloSpawn > this.intervaloMinimoSpawn) {
+                                this.intervaloSpawn = Math.max(
+                                    this.intervaloMinimoSpawn,
+                                    this.intervaloSpawn - this.tasaDisminucionSpawn
+                                );
+                            }
+                            // Nave enemiga aparece por temporizador (cada 10s)
+                        }
+                        
+                        // Remover la nave enemiga de la lista
+                        this.enemigosNaves.splice(k, 1);
+                    }
+                    
+                    // Destruir el proyectil
+                    projectile.destroy();
+                    this.proyectiles.splice(i, 1);
+                    
+                    // Actualizar la UI
+                    this._actualizarUI();
+                    
                     break;
                 }
             }
@@ -868,6 +1317,28 @@ export class Game {
                     this.jugador.recibirDano(enemy.dano);
                 }
                 
+                // === ANIMACIÓN DE DESTRUCCIÓN DEL ASTEROIDE ===
+                let escalaAnim = 0.24; // SMALL
+                if (enemy.tamanio === 'medium') {
+                    escalaAnim = 0.42;
+                } else if (enemy.tamanio === 'large') {
+                    escalaAnim = 0.84;
+                } else if (enemy.tamanio === 'rezagado1') {
+                    escalaAnim = 0.84;
+                } else if (enemy.tamanio === 'rezagado2') {
+                    escalaAnim = 0.42;
+                } else if (enemy.tamanio === 'rezagado3') {
+                    escalaAnim = 0.24;
+                }
+                
+                const astroExplosion = new AsteroidExplosion(
+                    enemy.x, enemy.y,
+                    this.texturaAsteroidExplosion,
+                    escalaAnim
+                );
+                astroExplosion.render(this.aplicacion.stage);
+                this.efectosImpacto.push(astroExplosion);
+                
                 // Destruir el enemigo (siempre se destruye al chocar)
                 enemy.destroy();
                 this.enemigos.splice(i, 1);
@@ -876,6 +1347,301 @@ export class Game {
                 this._actualizarUI();
             }
         }
+        
+        // Verificar colisión con enemigos especiales
+        for (let i = this.enemigosSpeciales.length - 1; i >= 0; i--) {
+            const especial = this.enemigosSpeciales[i];
+            if (!especial || !especial.active) continue;
+            
+            if (this._verificarColision(this.jugador, especial)) {
+                // Si el especial NO está en órbita, convertirlo en mini y orbitar
+                if (!especial.enOrbita) {
+                    // Primero hacer la animación de destrucción
+                    const astroExplosion = new AsteroidExplosion(
+                        especial.x, especial.y,
+                        this.texturaAsteroidExplosion,
+                        0.84,  // Escala LARGE
+                        0x0000FF  // Color AZUL
+                    );
+                    astroExplosion.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(astroExplosion);
+                    
+                    // Contar cuántos especiales ya están en órbita para asignar índice único
+                    let indiceOrbita = 0;
+                    for (const esp of this.enemigosSpeciales) {
+                        if (esp !== especial && esp.active && esp.enOrbita) {
+                            indiceOrbita++;
+                        }
+                    }
+                    
+                    // Asignar índice para evitar superposición
+                    especial.indiceOrbita = indiceOrbita;
+                    
+                    // Luego convertir en modo órbita
+                    especial.convertirEnOrbita();
+                    
+                    // No dar power-up ni puntos (solo cuando se destruye con proyectil)
+                    // El especial se queda orbitando
+                } else {
+                    // Si ya está en órbita, hacer daño a sus HP (25 - same as medium asteroid)
+                    especial.salud -= 25;
+                    
+                    // Crear animación de impacto
+                    const hit = new HitEffect(especial.x, especial.y, 'hit', 1.5);
+                    hit.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(hit);
+                    
+                    // Si se destruyó porcollisión con enemigo
+                    if (especial.salud <= 0) {
+                        // Animación de destrucción
+                        const astroExplosion = new AsteroidExplosion(
+                            especial.x, especial.y,
+                            this.texturaAsteroidExplosion,
+                            0.42,  // Escala MEDIUM
+                            0x0000FF  // Color AZUL
+                        );
+                        astroExplosion.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(astroExplosion);
+                        
+                        especial.destroy();
+                        this.enemigosSpeciales.splice(i, 1);
+                    }
+                }
+                
+                this._actualizarUI();
+            }
+        }
+        
+        // Verificar colisión de especiales en órbita con otros enemigos
+        for (let i = this.enemigosSpeciales.length - 1; i >= 0; i--) {
+            const especial = this.enemigosSpeciales[i];
+            if (!especial || !especial.active || !especial.enOrbita) continue;
+            
+            // Verificar colisión con asteroides normales
+            for (let j = this.enemigos.length - 1; j >= 0; j--) {
+                const enemy = this.enemigos[j];
+                if (!enemy || !enemy.active) continue;
+                
+                if (this._verificarColision(especial, enemy)) {
+                    // El especial en órbita recibe daño según el tipo de asteroide
+                    // Mismo daño que el asteroide le hace al jugador
+                    const danoAsteroide = enemy.dano || 25;
+                    especial.salud -= danoAsteroide;
+                    
+                    // Animación de impacto
+                    const hit = new HitEffect(especial.x, especial.y, 'hit', 1.5);
+                    hit.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(hit);
+                    
+                    // === ANIMACIÓN DE DESTRUCCIÓN DEL ASTEROIDE ===
+                    let escalaAnim = 0.24; // SMALL
+                    if (enemy.tamanio === 'medium') {
+                        escalaAnim = 0.42;
+                    } else if (enemy.tamanio === 'large') {
+                        escalaAnim = 0.84;
+                    } else if (enemy.tamanio === 'rezagado1') {
+                        escalaAnim = 0.84;
+                    } else if (enemy.tamanio === 'rezagado2') {
+                        escalaAnim = 0.42;
+                    } else if (enemy.tamanio === 'rezagado3') {
+                        escalaAnim = 0.24;
+                    }
+                    
+                    const astroExplosion = new AsteroidExplosion(
+                        enemy.x, enemy.y,
+                        this.texturaAsteroidExplosion,
+                        escalaAnim
+                    );
+                    astroExplosion.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(astroExplosion);
+                    
+                    // Dar puntos al jugador por destruir el asteroide
+                    const puntosAsteroide = enemy.puntos || 10;
+                    this.puntuacion += puntosAsteroide;
+                    
+                    // Agregar carga de ULTi
+                    this.jugador.agregarCargaUlti(enemy.cargaUlti || 5);
+                    
+                    // Destruir el asteroide que chocó
+                    enemy.destroy();
+                    this.enemigos.splice(j, 1);
+                    
+                    // Si el especial se destruyó
+                    if (especial.salud <= 0) {
+                        const astroExplosion = new AsteroidExplosion(
+                            especial.x, especial.y,
+                            this.texturaAsteroidExplosion,
+                            0.42,
+                            0x0000FF
+                        );
+                        astroExplosion.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(astroExplosion);
+                        
+                        especial.destroy();
+                        this.enemigosSpeciales.splice(i, 1);
+                        break; // Salir del loop de enemigos
+                    }
+                }
+            }
+        }
+        
+        // Verificar colisión con proyectiles enemigos
+        if (this.proyectilesEnemigos) {
+            for (let i = this.proyectilesEnemigos.length - 1; i >= 0; i--) {
+                const projEnemigo = this.proyectilesEnemigos[i];
+                if (!projEnemigo.active) continue;
+                
+                // Verificar colisión con el jugador
+                if (this._verificarColision(this.jugador, projEnemigo)) {
+                    // El jugador recibe daño
+                    this.jugador.recibirDano(25); // Mismo daño que el jugador
+                    
+                    // Destruir el proyectil
+                    projEnemigo.destroy();
+                    this.proyectilesEnemigos.splice(i, 1);
+                    
+                    this._actualizarUI();
+                    continue;
+                }
+                
+                // Verificar colisión con mini asteroides especiales en órbita
+                for (let j = this.enemigosSpeciales.length - 1; j >= 0; j--) {
+                    const especial = this.enemigosSpeciales[j];
+                    if (!especial || !especial.active || !especial.enOrbita) continue;
+                    
+                    if (this._verificarColision(projEnemigo, especial)) {
+                        // El proyectil enemigo hace daño al mini asteroide en órbita (25)
+                        especial.salud -= 25;
+                        
+                        // Animación de impacto
+                        const hit = new HitEffect(especial.x, especial.y, 'hit', 1.5);
+                        hit.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(hit);
+                        
+                        // Destruir el proyectil enemigo
+                        projEnemigo.destroy();
+                        this.proyectilesEnemigos.splice(i, 1);
+                        
+                        // Si el especial se destruyó
+                        if (especial.salud <= 0) {
+                            const astroExplosion = new AsteroidExplosion(
+                                especial.x, especial.y,
+                                this.texturaAsteroidExplosion,
+                                0.42,
+                                0x0000FF
+                            );
+                            astroExplosion.render(this.aplicacion.stage);
+                            this.efectosImpacto.push(astroExplosion);
+                            
+                            especial.destroy();
+                            this.enemigosSpeciales.splice(j, 1);
+                        }
+                        
+                        this._actualizarUI();
+                        break; // Salir del loop de especiales
+                    }
+                }
+            }
+        }
+        
+        // Verificar colisión con naves enemigas
+        for (let i = this.enemigosNaves.length - 1; i >= 0; i--) {
+            const naveEnemiga = this.enemigosNaves[i];
+            if (!naveEnemiga || !naveEnemiga.active) continue;
+            
+            if (this._verificarColision(this.jugador, naveEnemiga)) {
+                // Crear animación de explosión (color verde)
+                const explosion = new AsteroidExplosion(
+                    naveEnemiga.x, naveEnemiga.y,
+                    this.texturaAsteroidExplosion,
+                    0.5,
+                    0x00FF00 // Color verde
+                );
+                explosion.render(this.aplicacion.stage);
+                this.efectosImpacto.push(explosion);
+                
+                // El jugador recibe daño por chocar con la nave enemiga
+                this.jugador.recibirDano(25);
+                
+                // Agregar carga de ULTi
+                this.jugador.agregarCargaUlti(naveEnemiga.cargaUlti);
+                
+                // Destruir la nave enemiga
+                naveEnemiga.destroy();
+                this.enemigosNaves.splice(i, 1);
+                
+                this._actualizarUI();
+            }
+        }
+        
+        // Verificar colisión de mini asteroides en órbita con naves enemigas
+        for (let i = this.enemigosSpeciales.length - 1; i >= 0; i--) {
+            const especial = this.enemigosSpeciales[i];
+            if (!especial || !especial.active || !especial.enOrbita) continue;
+            
+            for (let j = this.enemigosNaves.length - 1; j >= 0; j--) {
+                const naveEnemiga = this.enemigosNaves[j];
+                if (!naveEnemiga || !naveEnemiga.active) continue;
+                
+                if (this._verificarColision(especial, naveEnemiga)) {
+                    // El mini asteroide hace 25 de daño a la nave enemiga
+                    naveEnemiga.salud -= 25;
+                    
+                    // Animación de impacto
+                    const hit = new HitEffect(naveEnemiga.x, naveEnemiga.y, 'hit', 1.5);
+                    hit.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(hit);
+                    
+                    // Si la nave enemiga se destruyó
+                    if (naveEnemiga.salud <= 0) {
+                        // Animación de destrucción (verde)
+                        const explosion = new AsteroidExplosion(
+                            naveEnemiga.x, naveEnemiga.y,
+                            this.texturaAsteroidExplosion,
+                            0.5,
+                            0x00FF00
+                        );
+                        explosion.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(explosion);
+                        
+                        // Puntos por destruir nave
+                        this.puntuacion += 500;
+                        
+                        // Agregar carga de ULTi
+                        this.jugador.agregarCargaUlti(naveEnemiga.cargaUlti);
+                        
+                        naveEnemiga.destroy();
+                        this.enemigosNaves.splice(j, 1);
+                    }
+                    
+                    // El mini asteroide también recibe daño (25 - same as a medium asteroid)
+                    especial.salud -= 25;
+                    
+                    // Animación de impacto en el especial
+                    const hitEsp = new HitEffect(especial.x, especial.y, 'hit', 1.5);
+                    hitEsp.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(hitEsp);
+                    
+                    // Si el especial se destruyó
+                    if (especial.salud <= 0) {
+                        const astroExplosion = new AsteroidExplosion(
+                            especial.x, especial.y,
+                            this.texturaAsteroidExplosion,
+                            0.42,
+                            0x0000FF
+                        );
+                        astroExplosion.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(astroExplosion);
+                        
+                        especial.destroy();
+                        this.enemigosSpeciales.splice(i, 1);
+                        break; // Salir del loop de naves
+                    }
+                }
+            }
+        }
+        
+        // Las colisiones nave-asteroide se verifican en el loop de actualización de naves enemigas
     }
     
     /**
@@ -883,8 +1649,9 @@ export class Game {
      * Muestra la pantalla de fin de juego con puntuación y opción de reiniciar
      */
     async gameOver() {
-        // Marcar el juego como no corriendo
+        // Marcar el juego como no corriendo y en Game Over
         this.ejecutando = false;
+        this.enGameOver = true;
         
         // Array para guardar los elementos de UI para poder limpiarlos después
         this.elementosFinJuego = [];
@@ -902,9 +1669,10 @@ export class Game {
         // Crear sprite con la imagen
         const gameOverSprite = new PIXI.Sprite(gameOverTexture);
         
-        // Ajustar el tamaño de la imagen (escalar para que no sea muy grande)
+        // Ajustar el tamaño de la imagen
+        // maxHeight controls how tall the image can be (0.5 = 50% of screen, 1 = full screen)
         const maxWidth = this.anchoJuego * 1;
-        const maxHeight = this.altoJuego * 0.5;
+        const maxHeight = this.altoJuego * 0.5;  // Aumentado de 0.5 a 0.9
         const scale = Math.min(maxWidth / gameOverSprite.width, maxHeight / gameOverSprite.height);
         gameOverSprite.scale.set(scale);
         
@@ -932,7 +1700,7 @@ export class Game {
         });
         titleText.anchor.set(0.5);
         titleText.x = this.anchoJuego / 2;
-        titleText.y = this.altoJuego / 2 - (gameOverSprite.height * scale) / 2 + 40;
+        titleText.y = this.altoJuego / 2 - (gameOverSprite.height * scale) / 2 + 100;
         this.aplicacion.stage.addChild(titleText);
         this.elementosFinJuego.push(titleText);
         
@@ -967,11 +1735,13 @@ export class Game {
         // === VERIFICAR SI CALIFICA PARA TOP 5 ===
         // Si ya se usó el nombre o no califica, no pedir
         // Solo muestra el input si la puntuación está en el top 5
-        console.log('Game - Verificando Top 5, puntuación:', this.puntuacion);
         const calificaTop5 = await this.top5.califica(this.puntuacion);
-        console.log('Game - ¿Califica para Top 5?:', calificaTop5);
         
         if (!this.nombreIngresado && calificaTop5) {
+            // Flag para saber que estamos esperando nombre
+            // Evita que los clicks reinicien el juego mientras se escribe el nombre
+            this.esperandoNombreTop5 = true;
+            
             // Deshabilitar el input del teclado para que no interfiera con el input HTML
             // Esto evita que las teclas W/A/S/D afecten al juego mientras se escribe el nombre
             this.gestorEntrada.deshabilitar();
@@ -1021,16 +1791,11 @@ export class Game {
             input.style.color = '#0044CC';                                        // Texto azul
             input.style.fontFamily = 'Segoe Script, cursive';                     // Tipo de letra
             
-            // Botón para guardar el nombre
-            const button = document.createElement('button');
-            button.textContent = 'GUARDAR';                                       // Texto del botón
-            button.style.padding = '10px 20px';                                  // Espacio interno
-            button.style.fontSize = '16px';                                       // Tamaño de letra
-            button.style.background = '#0044CC';                                 // Fondo azul
-            button.style.color = 'white';                                         // Texto blanco
-            button.style.border = 'none';                                         // Sin borde
-            button.style.cursor = 'pointer';                                      // Cursor de mano
-            button.style.fontFamily = 'Segoe Script, cursive';                    // Tipo de letra
+            // Botón para guardar el nombre (imagen)
+            const button = document.createElement('img');
+            button.src = 'assets/guardadoBoton.png';
+            button.style.cursor = 'pointer';
+            button.style.marginLeft = '10px';
             
             // Agregar los elementos al contenedor y al documento
             inputContainer.appendChild(label);       // Agregar etiqueta
@@ -1060,6 +1825,7 @@ export class Game {
                 if (await this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
                     // Si se guardó correctamente
                     this.nombreIngresado = true;                    // Marcar que ya se usó el nombre
+                    this.esperandoNombreTop5 = false;               // Ya no esperamos nombre
                     inputContainer.remove();                       // Cerrar el formulario
                     if (this.bgImageRecord) {                     // Limpiar imagen de fondo
                         this.bgImageRecord.remove();
@@ -1080,6 +1846,7 @@ export class Game {
                     const nombre = input.value;
                     if (await this.top5.agregarEntrada(nombre, this.puntuacion, this.contadorOleadas)) {
                         this.nombreIngresado = true;
+                        this.esperandoNombreTop5 = false;
                         inputContainer.remove();
                         if (this.bgImageRecord) {
                             this.bgImageRecord.remove();
@@ -1112,7 +1879,7 @@ export class Game {
         // Crear botón de reinicio DENTRO de la imagen
         const buttonContainer = new PIXI.Container();
         buttonContainer.x = this.anchoJuego / 2.3;
-        buttonContainer.y = this.altoJuego / 2.2 + (gameOverSprite.height * scale) / 2 - 20;
+        buttonContainer.y = this.altoJuego / 2.2 + (gameOverSprite.height * scale) / 2 - 60;
         
         // Habilitar eventos de puntero (click/touch)
         buttonContainer.eventMode = 'static';
@@ -1154,6 +1921,9 @@ export class Game {
         
         // Acción cuando se hace click en el botón
         buttonContainer.on('pointerdown', (event) => {
+            // Si estamos esperando nombre para el Top 5, no hacer nada
+            if (this.esperandoNombreTop5) return;
+            
             event.stopPropagation();
             this._limpiarFinJuego();
             this._reiniciarJuego();
@@ -1163,44 +1933,34 @@ export class Game {
         this.elementosFinJuego.push(buttonContainer);
         
         // === BOTÓN TOP 5 ===
+        // Cargar textura del botón Top 5
+        const top5Texture = await PIXI.Assets.load('assets/top5Boton.png');
+        
         const top5Container = new PIXI.Container();
         top5Container.x = this.anchoJuego / 2 + 120;
-        top5Container.y = this.altoJuego / 2.2 + (gameOverSprite.height * scale) / 2 - 20;
+        top5Container.y = this.altoJuego / 2.2 + (gameOverSprite.height * scale) / 2 - 60;
         top5Container.eventMode = 'static';
         top5Container.cursor = 'pointer';
         
-        const top5Bg = new PIXI.Graphics();
-        top5Bg.roundRect(-60, -25, 120, 50, 10);
-        top5Bg.fill({ color: 0xCC0000 });
-        top5Container.addChild(top5Bg);
+        // Crear sprite con la imagen del botón
+        const top5Sprite = new PIXI.Sprite(top5Texture);
+        top5Sprite.anchor.set(0.5);
+        top5Container.addChild(top5Sprite);
         
-        const top5Text = new PIXI.Text({
-            text: 'TOP 5',
-            style: {
-                fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
-                fontSize: 22,
-                fill: 0xFFFFFF,
-                fontWeight: 'bold'
-            }
-        });
-        top5Text.x = -top5Text.width / 2;
-        top5Text.y = -top5Text.height / 2;
-        top5Container.addChild(top5Text);
-        
+        // Efecto hover
         top5Container.on('pointerover', () => {
-            top5Bg.clear();
-            top5Bg.roundRect(-60, -25, 120, 50, 10);
-            top5Bg.fill({ color: 0xFF0000 });
+            top5Sprite.alpha = 0.8;  // Más transparente al hover
         });
         
         top5Container.on('pointerout', () => {
-            top5Bg.clear();
-            top5Bg.roundRect(-60, -25, 120, 50, 10);
-            top5Bg.fill({ color: 0xCC0000 });
+            top5Sprite.alpha = 1;  // Volver a normal
         });
         
         // Detener propagación para que no reinicie el juego
         top5Container.on('pointerdown', async (event) => {
+            // Si estamos esperando nombre para el Top 5, no hacer nada
+            if (this.esperandoNombreTop5) return;
+            
             event.stopPropagation();
             // Deshabilitar el handler de click del stage
             this.clickHandlerActivo = false;
@@ -1225,7 +1985,9 @@ export class Game {
         
         // También permitir click en cualquier parte de la pantalla (solo si no se hizo click en botón)
         const clickHandler = () => {
-            if (!this.clickHandlerActivo) return;
+            // Si estamos esperando nombre para el Top 5, NO reiniciar
+            if (this.esperandoNombreTop5 || !this.clickHandlerActivo) return;
+            
             window.removeEventListener('keydown', restartHandler);
             this.aplicacion.stage.off('pointerdown', clickHandler);
             this._limpiarFinJuego();
@@ -1288,17 +2050,26 @@ export class Game {
         this.puntuacion = 0;
         this.proyectiles = [];
         this.enemigos = [];
+        this.enemigosNaves = []; // Limpiar naves enemigas
+        this.enemigosSpeciales = []; // Limpiar especiales
+        this.proyectilesEnemigos = []; // Limpiar proyectiles enemigos
         this.efectosExplosion = [];
         this.efectoUlti = null;
         
         // Reiniciar flag de nombre
         this.nombreIngresado = false;
+        this.esperandoNombreTop5 = false;
+        this.enGameOver = false;
         
         // Reiniciar variables de oleadas y dificultad
         this.contadorOleadas = 0;
         this.asteroidesDestruidos = 0;
         this.objetivoOleada = 10;
         this.intervaloSpawn = 1.5;
+        
+        // Reiniciar temporizadores de naves enemigas
+        this.temporizadorNaveEnemiga = 0;
+        this.intervaloNaveEnemiga = 10;
         
         // Recrear el fondo
         this._crearFondo();
@@ -1368,9 +2139,144 @@ export class Game {
             }
         }
         
+        // === ACTUALIZAR PROYECTILES ENEMIGOS ===
+        // Siempre actualizar (aunque no haya naves)
+        if (this.proyectilesEnemigos) {
+            for (let i = this.proyectilesEnemigos.length - 1; i >= 0; i--) {
+                const proj = this.proyectilesEnemigos[i];
+                proj.update(delta);
+                
+                // Verificar colisión con asteroides
+                for (let j = this.enemigos.length - 1; j >= 0; j--) {
+                    const ast = this.enemigos[j];
+                    if (!ast.active) continue;
+                    
+                    if (this._verificarColision(proj, ast)) {
+                        proj.active = false;
+                        
+                        // Destruir asteroide (SIN puntos para el jugador)
+                        const escala = ast.radio / 64;
+                        const explosion = new AsteroidExplosion(
+                            ast.x, ast.y,
+                            this.texturaAsteroidExplosion,
+                            escala * 0.35
+                        );
+                        explosion.render(this.aplicacion.stage);
+                        this.efectosImpacto.push(explosion);
+                        
+                        ast.destroy();
+                        this.enemigos.splice(j, 1);
+                        break;
+                    }
+                }
+                
+                if (!proj.active) {
+                    const projVisual = proj.imagen || proj.sprite;
+                    if (projVisual && projVisual.parent) {
+                        projVisual.parent.removeChild(projVisual);
+                    }
+                    this.proyectilesEnemigos.splice(i, 1);
+                }
+            }
+        }
+        
         // === ACTUALIZAR ENEMIGOS ===
         for (const enemy of this.enemigos) {
             enemy.update(delta);
+        }
+        
+        // === ACTUALIZAR ENEMIGOS ESPECIALES ===
+        for (let i = this.enemigosSpeciales.length - 1; i >= 0; i--) {
+            const especial = this.enemigosSpeciales[i];
+            if (!especial.active) {
+                this.enemigosSpeciales.splice(i, 1);
+                continue;
+            }
+            especial.update(delta);
+        }
+        
+        // === ACTUALIZAR NAVES ENEMIGAS ===
+        for (let i = this.enemigosNaves.length - 1; i >= 0; i--) {
+            const naveEnemiga = this.enemigosNaves[i];
+            
+            if (!naveEnemiga.active) continue;
+            
+            // Actualizar la nave enemiga
+            naveEnemiga.update(delta);
+            
+            // Solo disparar si está en pantalla
+            if (naveEnemiga.x > 0 && naveEnemiga.x < this.anchoJuego &&
+                naveEnemiga.y > 0 && naveEnemiga.y < this.altoJuego) {
+                
+                // Verificar si dispara (cada 3 segundos)
+                if (naveEnemiga.yaDisparo && !naveEnemiga.disparoCreado) {
+                    // Calcular ángulo hacia el jugador
+                    const dx = this.jugador.x - naveEnemiga.x;
+                    const dy = this.jugador.y - naveEnemiga.y;
+                    const anguloDisparo = Math.atan2(dy, dx);
+                    
+                    // Verificar si la nave está apuntando hacia el jugador (diferencia < 30°)
+                    let diff = anguloDisparo - naveEnemiga.rotacion;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    
+                    // Solo dispara si está apuntando hacia el jugador (±30° = ±PI/6)
+                    if (Math.abs(diff) < Math.PI / 6) {
+                        // Gira hacia el jugador
+                        naveEnemiga.rotacion += diff * 8 * delta;
+                        
+                        // Crear el proyectil desde la punta de la nave
+                        this._crearProyectilEnemigo(naveEnemiga.x, naveEnemiga.y, anguloDisparo);
+                        naveEnemiga.disparoCreado = true;
+                    } else {
+                        // Si no está apuntando, girar hacia el jugador sin disparar
+                        naveEnemiga.rotacion += diff * 5 * delta;
+                    }
+                    
+                    // Resetear para el siguiente disparo
+                    naveEnemiga.yaDisparo = false;
+                }
+            }
+            
+            // Verificar colisión con asteroides
+            for (let j = this.enemigos.length - 1; j >= 0; j--) {
+                const asteroid = this.enemigos[j];
+                if (!asteroid.active) continue;
+                
+                if (naveEnemiga.verificarColision(asteroid)) {
+                    // Ambos se destruyen
+                    asteroid.salud = 0;
+                    asteroid.active = false;
+                    asteroid.destroy();
+                    
+                    // Crear efecto de explosión del asteroide
+                    const escala = asteroid.radio / 64;
+                    const astroExplosion = new AsteroidExplosion(
+                        asteroid.x, asteroid.y,
+                        this.texturaAsteroidExplosion,
+                        escala * 0.35
+                    );
+                    astroExplosion.render(this.aplicacion.stage);
+                    this.efectosImpacto.push(astroExplosion);
+                    
+                    // Destruir la nave enemiga
+                    naveEnemiga.destroy();
+                    this.enemigos.splice(j, 1);
+                    break;
+                }
+            }
+            
+            // Si la nave enemiga está muy lejos, destruirla
+            const margin = 200;
+            if (naveEnemiga.x < -margin || naveEnemiga.x > this.anchoJuego + margin ||
+                naveEnemiga.y < -margin || naveEnemiga.y > this.altoJuego + margin) {
+                naveEnemiga.destroy();
+            }
+            
+            // Eliminar si no está activa
+            if (!naveEnemiga.active) {
+                this.enemigosNaves.splice(i, 1);
+            }
         }
         
         // Eliminar enemigos que están muy lejos de la pantalla (fuera de vista)
@@ -1427,21 +2333,76 @@ export class Game {
         if (this.temporizadorSpawn >= this.intervaloSpawn) {
             this.temporizadorSpawn = 0;
             this._generarEnemigo();
+        }
+        
+        // NOTA: El avance de oleadas ahora se maneja cuando se destruyen asteroides
+        // en _procesarColisionesProyectiles()
+        
+        // === GENERAR NAVE ENEMIGA ===
+        // Las naves enemigas aparecen desde el inicio con intervalo progresivo
+        // Cada 5 oleadas aparece un grupo de 3 naves ADICIONAL a la generación normal
+        if (this.contadorOleadas >= 0) {
+            // Calcular intervalo: 25s (oleada 0) -> 5s (oleada 15)
+            // Formula: 25 - (oleada * 1.333), mínimo 5 segundos
+            const reduccion = this.contadorOleadas * (20 / 15); // 1.333 por oleada
+            this.intervaloNaveEnemiga = Math.max(5, 25 - reduccion);
             
-            // NOTA: El avance de oleadas ahora se maneja cuando se destruyen asteroides
-            // en _procesarColisionesProyectiles()
+            this.temporizadorNaveEnemiga += delta;
+            if (this.temporizadorNaveEnemiga >= this.intervaloNaveEnemiga) {
+                this.temporizadorNaveEnemiga = 0;
+                
+                // Cantidad de naves según oleada:
+                // 0-9: 1 nave
+                // 10-29: 2 naves
+                // 30+: 3 naves
+                let navesPorVez = 1;
+                if (this.contadorOleadas >= 30) {
+                    navesPorVez = 3;
+                } else if (this.contadorOleadas >= 10) {
+                    navesPorVez = 2;
+                }
+                
+                // Generación normal: 1, 2 o 3 naves según la oleada
+                for (let i = 0; i < navesPorVez; i++) {
+                    this._crearNaveEnemiga();
+                }
+                
+                // Cada 5 oleadas: generar 3 naves ADICIONALES (total 4 o 5)
+                if (this.contadorOleadas > 0 && this.contadorOleadas % 5 === 0) {
+                    for (let i = 0; i < 3; i++) {
+                        this._crearNaveEnemiga();
+                    }
+                }
+            }
         }
         
         // === ACTUALIZAR UI ===
         this._actualizarUI();
+        
+        // === ACTUALIZAR FONDO INFINITO ===
+        if (this.contenedorFondo && this.mosaicosFondo) {
+            // Mover el fondo lentamente para dar efecto de movimiento
+            // Usar velocidad basada en delta (60fps base)
+            const velocidadFondo = 0.3 * delta;
+            
+            // Mover cada mosaico
+            for (const mosaico of this.mosaicosFondo) {
+                mosaico.x -= velocidadFondo;
+                
+                // Si el mosaico sale de la pantalla por la izquierda, moverlo a la derecha
+                if (mosaico.x < -this._anchoMosaico) {
+                    mosaico.x += this._anchoMosaico * this._columnasMosaico;
+                }
+            }
+        }
     }
     
     /**
      * Procesa colisiones entre asteroides
-     * Cuando dos asteroides chocan, rebotan en dirección opuesta
+     * - Todos los asteroides rebotan al chocar
+     - Solo los asteroides GRANDES entre sí se hacen daño y se fragmentan
      */
     _procesarColisionesEnemigos() {
-        // Verificar colisiones entre todos los asteroides
         for (let i = 0; i < this.enemigos.length; i++) {
             const enemy1 = this.enemigos[i];
             if (!enemy1.active) continue;
@@ -1463,16 +2424,63 @@ export class Game {
                     this.efectosImpacto.push(hit);
                     
                     // ALTERAR DIRECCIÓN de TODOS los asteroides que chocan
-                    // Esto afecta tanto rezagados como normales
                     enemy1.alterDirection();
                     enemy2.alterDirection();
                     
                     // Aplicar cooldown para evitar colisiones múltiples seguidas
                     enemy1.enfriamientoColision = 0.5;
                     enemy2.enfriamientoColision = 0.5;
+                    
+                    // === SÓLO LOS GRANDES RECIBEN DAÑO ===
+                    // Si ambos son grandes (o rezagados), se hacen daño mutuo
+                    const esGrande1 = enemy1.tamanio === 'large' || enemy1.tamanio === 'large_rezagado';
+                    const esGrande2 = enemy2.tamanio === 'large' || enemy2.tamanio === 'large_rezagado';
+                    
+                    if (esGrande1 && esGrande2) {
+                        // Ambos asteroides reciben daño por la colisión
+                        // El daño es el mismo que el grande hace al jugador (50)
+                        const danoColision = 50;
+                        enemy1.salud -= danoColision;
+                        enemy2.salud -= danoColision;
+                        
+                        // Si la salud llega a 0 o menos, el asteroide se destruye y fragmenta
+                        if (enemy1.salud <= 0) {
+                            this._destruirYFragmentar(enemy1);
+                        }
+                        
+                        if (enemy2.salud <= 0) {
+                            this._destruirYFragmentar(enemy2);
+                        }
+                    }
                 }
             }
         }
+    }
+    
+    /**
+     * Destruye un asteroide y crea fragmentos
+     * Método helper para usar en colisiones
+     */
+    _destruirYFragmentar(enemy) {
+        enemy.salud = 0;
+        enemy.active = false;
+        
+        // Destruir sprite
+        if (enemy.imagen && enemy.imagen.parent) {
+            enemy.imagen.parent.removeChild(enemy.imagen);
+        }
+        
+        // Crear fragmentos
+        const fragmentos = enemy._romper();
+        for (const frag of fragmentos) {
+            frag.render(this.aplicacion.stage);
+            this.enemigos.push(frag);
+        }
+        
+        // Efecto de explosión (usar las texturas de animación de asteroides)
+        const astroExplosion = new AsteroidExplosion(enemy.x, enemy.y, this.texturaAsteroidExplosion, 0.5);
+        astroExplosion.render(this.aplicacion.stage);
+        this.efectosExplosion.push(astroExplosion);
     }
     
     /**
@@ -1527,15 +2535,33 @@ export class Game {
     
     /**
      * Muestra la pantalla de Top 5
+     * Se puede llamar desde pausa (juego en curso) o desde Game Over
      */
     async _mostrarTop5() {
-        // Limpiar solo el UI del game over, mantener el fondo
-        for (const elemento of this.elementosFinJuego) {
-            if (elemento && elemento.destroy) {
-                elemento.destroy();
+        // Si no está en Game Over ni en pausa, el Top 5 debería mostrarse de forma diferente
+        // Verificar si el juego está en curso (no pausado, no game over)
+        const juegoEnCurso = !this.pausado && !this.enGameOver;
+        
+        if (juegoEnCurso) {
+            // Durante el juego: solo mostrar el Top 5 sin limpiar nada del juego
+            // Pausar el juego primero
+            this.pausado = true;
+            this.mostrandoTop5EnPausa = true;
+            
+            // Desactivar los listeners del stage para evitar reinicios no deseados
+            if (this.aplicacion && this.aplicacion.stage) {
+                this.aplicacion.stage.removeAllListeners('pointerdown');
+                this.aplicacion.stage.eventMode = 'none';
             }
+        } else {
+            // Desde Game Over o pausa: limpiar UI del game over
+            for (const elemento of this.elementosFinJuego) {
+                if (elemento && elemento.destroy) {
+                    elemento.destroy();
+                }
+            }
+            this.elementosFinJuego = [];
         }
-        this.elementosFinJuego = [];
         
         // Cargar imagen de puntuación (await para asegurar que cargue)
         const puntuacionTexture = await PIXI.Assets.load('assets/puntuacion2.png');
@@ -1661,14 +2687,33 @@ export class Game {
         backContainer.addChild(backText);
         
         backContainer.on('pointerdown', () => {
-            // Volver según el estado
-            this._limpiarFinJuego();
-            this.clickHandlerActivo = true;
+            // Limpiar solo los elementos del Top 5 (no todo)
+            if (this.elementosFinJuego) {
+                for (const el of this.elementosFinJuego) {
+                    try {
+                        if (el && el.parent) {
+                            el.parent.removeChild(el);
+                            if (el.destroy && typeof el.destroy === 'function') {
+                                el.destroy();
+                            }
+                        }
+                    } catch (e) {
+                        // Ignorar errores
+                    }
+                }
+                this.elementosFinJuego = [];
+            }
+            
+            // Restaurar eventMode del stage para permitir interacciones
+            if (this.aplicacion && this.aplicacion.stage) {
+                this.aplicacion.stage.eventMode = 'static';
+            }
             
             if (this.mostrandoTop5EnPausa) {
-                // Si estábamos en pausa, volver al juego pausado
-                // No hacer nada especial, solo salir y el juego seguirá pausado
-                // IMPORTANTE: No reactivas el pause, queda en pausa
+                // Si estábamos en pausa durante el juego, reanudar el juego
+                this.pausado = false;
+                this.mostrandoTop5EnPausa = false;
+                this.clickHandlerActivo = true;
             } else {
                 // Si era desde Game Over, volver al Game Over
                 this.gameOver();
@@ -1677,5 +2722,9 @@ export class Game {
         
         this.aplicacion.stage.addChild(backContainer);
         this.elementosFinJuego.push(backContainer);
+        
+        // IMPORTANTE: Restaurar eventMode del stage para que el botón VOLVER funcione
+        // Si estaba en 'none' (porque se mostró desde pausa durante el juego), restaurar a 'static'
+        this.aplicacion.stage.eventMode = 'static';
     }
 }
