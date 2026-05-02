@@ -46,7 +46,7 @@
 | `dc8319f` | Feat: Agregado sistema de pausa (P) y Top 5 (T) |
 | `12c1e81` | Fix: Corregido carga de lista desde Firebase |
 | `847d7d0` | Fix: Agregado async al handler de ENTER |
-| `fcaba12` | Fix: Corregido Firebase SDK (version compat) y async handlers |
+| `fcaba12` | Fix: Corregido Firebase SDK (versión compat) y async handlers |
 | `a584d75` | Fix: Actualizada configuración de Firebase con nuevo proyecto |
 | `0230ab1` | Feat: Sistema Top 5 con Firebase Firestore para guardado permanente |
 
@@ -104,8 +104,8 @@
 | `9b71deb` | Fix: asteroids large se acercan de manera eliptica - reducen distancia gradualmente |
 | `893893f` | Fix: restaurar movimientos de asteroids del commit c45041b |
 | `055da21` | Fix: corregir error de sintaxis en Game.js |
-| `e32d6df` | Fix: rezagados cruzan toda la pantalla - orbitan椭圆Acerca a nave - fragmentos heredan trayectoria |
-| `fa870f2` | Fix: asteroids large agora orbitam - medium e small van directo a nave |
+| `e32d6df` | Fix: rezagados cruzan toda la pantalla - orbitan alrededor de la nave - fragmentos heredan trayectoria |
+| `fa870f2` | Fix: asteroids large ahora orbitan - medium y small van directo a nave |
 | `4a128a6` | Revert: quitar imagen de fondo de puntuacion |
 | `2dc5eff` | Revert: solo rezagados se destruyen al llegar al centro |
 | `aeb5125` | Fix: fondo de puntuacion tamano fijo - orbita de asteroids large ahora estable a 180px |
@@ -182,10 +182,10 @@
 | `44e9236` | Feat: mostrar mejora de velocidad de disparo (+%) en UI |
 | `b82e767` | Feat: spawn progresivo - los meteoritos aparecen cada vez más rápido |
 | `4289c06` | Fix: agregar cooldown de colisión para evitar rezagados pegados |
-| `c6fcc5c` | Oleadas cada 1 segundo |
-| `6d2ce14` | Reducir oleadas a 2s, agregar cleanup de enemigos muy lejos |
-| `dda8074` | Oleadas cada 1 segundo |
-| `8ab8f8d` | Fix: duplicate code en _break() method |
+| `c6fcc5c` | Feature: oleadas cada 1 segundo |
+| `6d2ce14` | Feature: reducir oleadas a 2s, agregar cleanup de enemigos muy lejos |
+| `dda8074` | Feature: oleadas cada 1 segundo |
+| `8ab8f8d` | Fix: eliminar código duplicado en método _break() |
 | `d90158e` | Fix: fragmentos separados con direcciones diferentes, special verde, rezagados violeta |
 | `f9d327c` | Fix: sobrecalentamiento se activa solo cuando escudos llegan a 0, vulnerable por 10seg, al terminar carga escudos a 100% |
 | `df14f9e` | Fix: colisiones asteroides rebotan, fragmentos separados al romper, sobrecalentamiento se activa al recibir cualquier daño que baje de 100% |
@@ -198,10 +198,10 @@
 |--------|-------------|
 | `e3bd0b4` | Fix: verificar sprite null al inicio de update para evitar errores |
 | `977ea47` | Fix: null check en sprite.rotation para evitar error cuando el sprite ya fue destruido |
-| `5690bb4` | Ajustar: spawnInterval 2s, maxEnemies 30 |
-| `96e248f` | Duplicar aparición de asteroides: spawnInterval 2s->1s, maxEnemies 10->20 |
-| `364260c` | Agregar asteroides rezagados: LARGE_REZAGADO, MEDIUM_REZAGADO, SMALL_REZAGADO - pasan de largo, dirección aleatoria, al chocar con otros asteroides cambian dirección, fragmentos con dirección aleatoria |
-| `0e9b923` | Agregar sistema de sobrecalentamiento: no muere al recibir daño con 100% escudos, entra en enfriamiento por 10s, si choca pierde enfriamiento, UI en rojo |
+| `5690bb4` | Feature: ajustar spawnInterval 2s, maxEnemies 30 |
+| `96e248f` | Feature: duplicar aparición de asteroides - spawnInterval 2s->1s, maxEnemies 10->20 |
+| `364260c` | Feature: agregar asteroides rezagados - LARGE_REZAGADO, MEDIUM_REZAGADO, SMALL_REZAGADO - pasan de largo, dirección aleatoria, al chocar con otros asteroides cambian dirección, fragmentos con dirección aleatoria |
+| `0e9b923` | Feature: agregar sistema de sobrecalentamiento - no muere al recibir daño con 100% escudos, entra en enfriamiento por 10s, si choca pierde enfriamiento, UI en rojo |
 
 ---
 
@@ -209,11 +209,11 @@
 
 | Commit | Descripción |
 |--------|-------------|
-| `0829a4b` | Documentar todos los archivos restantes con comentarios en español |
-| `a28b3f5` | Documentar Game.js y Enemy.js con comentarios detallados en español |
-| `09367c3` | Agregar escala x2 a la nave y documentar Player.js con comentarios detallados en español |
-| `54d2abb` | Actualizar SPEC.md con todas las características implementadas |
-| `6138cad` | Aumentar tamaño de la nave (radius 32 -> 64) |
+| `0829a4b` | Docs: Documentar todos los archivos restantes con comentarios en español |
+| `a28b3f5` | Docs: Documentar Game.js y Enemy.js con comentarios detallados en español |
+| `09367c3` | Feature: Agregar escala x2 a la nave y documentar Player.js con comentarios detallados en español |
+| `54d2abb` | Docs: Actualizar SPEC.md con todas las características implementadas |
+| `6138cad` | Feature: Aumentar tamaño de la nave (radius 32 -> 64) |
 
 ---
 
@@ -221,17 +221,17 @@
 
 | Commit | Descripción |
 |--------|-------------|
-| `db76d77` | Especial no hace daño al chocar con la nave |
-| `1164067` | Power-up solo al destruir special, eliminardar power-up al tocar |
-| `4e8338f` | Eliminar aumento de tamaño de nave, solo aumenta velocidad de disparo |
-| `860bc82` | Nave más grande (radius 32), asteroides tintados de rojo |
-| `c61a2ab` | Slowdown reducido a 70% (solo 30% de velocidad) |
-| `751617f` | Slowdown ahora es temporal (1 segundo) y no se acumula, resetea el timer si ya estaba activo |
-| `9c7931d` | Cambiar retroceso por reducción de velocidad al recibir impacto de proyectil |
-| `9591149` | Especial no se rompe, solo da power-up al destruirse |
-| `365394c` | Especial ahora tiene apariencia grande (120px) pero comportamiento de small (movimiento directo, speed 120), se rompe en 2 small |
-| `ba68470` | Asteroide especial ahora se rompe en 2 medianos y da power-up |
-| `35e14e0` | Asteroide especial = power-up sin daño, da velocidad al dispara al tocarlo o destruirlo |
+| `db76d77` | Fix: Especial no hace daño al chocar con la nave |
+| `1164067` | Feature: Power-up solo al destruir special, eliminar power-up al tocar |
+| `4e8338f` | Fix: Eliminar aumento de tamaño de nave, solo aumenta velocidad de disparo |
+| `860bc82` | Feature: Nave más grande (radius 32), asteroides tintados de rojo |
+| `c61a2ab` | Fix: Slowdown reducido a 70% (solo 30% de velocidad) |
+| `751617f` | Fix: Slowdown ahora es temporal (1 segundo) y no se acumula, resetea el timer si ya estaba activo |
+| `9c7931d` | Fix: Cambiar retroceso por reducción de velocidad al recibir impacto de proyectil |
+| `9591149` | Fix: Especial no se rompe, solo da power-up al destruirse |
+| `365394c` | Fix: Especial ahora tiene apariencia grande (120px) pero comportamiento de small (movimiento directo, speed 120), se rompe en 2 small |
+| `ba68470` | Feature: Asteroide especial ahora se rompe en 2 medianos y da power-up |
+| `35e14e0` | Feature: Asteroide especial = power-up sin daño, da velocidad al dispara al tocarlo o destruirlo |
 
 ---
 
@@ -239,14 +239,14 @@
 
 | Commit | Descripción |
 |--------|-------------|
-| `a72b541` | Aumentar tamaño base de la nave (radius 20 -> 28) |
-| `75c56c0` | Agregar: retroceso al recibir impacto, efecto visual de hit, asteroid special más rápido (50) y más daño (90%), nave crece al destruir special |
+| `a72b541` | Feature: Aumentar tamaño base de la nave (radius 20 -> 28) |
+| `75c56c0` | Feature: Agregar retroceso al recibir impacto, efecto visual de hit, asteroid special más rápido (50) y más daño (90%), nave crece al destruir special |
 | `5531f64` | Fix: fragmentos de medianos solo heredan órbita si el padre orbitaba |
-| `ca8ec9a` | Fragmentos heredan órbita del padre: dirección orbital + shouldOrbit forzado |
-| `775bb5d` | Actualizar comentarios: fragmentos heredan trayectoria orbital |
-| `2bea933` | Fragmentos heredan trayectoria orbital (curvatura) con timer de transición |
-| `53c5721` | Fragmentos heredan trayectoria hacia la nave en lugar de velocidad del padre |
-| `617bbed` | Duplicar tamaño de asteroides (small, medium, large) manteniendo special igual |
+| `ca8ec9a` | Feature: Fragmentos heredan órbita del padre - dirección orbital + shouldOrbit forzado |
+| `775bb5d` | Docs: Actualizar comentarios - fragmentos heredan trayectoria orbital |
+| `2bea933` | Feature: Fragmentos heredan trayectoria orbital (curvatura) con timer de transición |
+| `53c5721` | Feature: Fragmentos heredan trayectoria hacia la nave en lugar de velocidad del padre |
+| `617bbed` | Feature: Duplicar tamaño de asteroides (small, medium, large) manteniendo special igual |
 
 ---
 
@@ -254,17 +254,17 @@
 
 | Commit | Descripción |
 |--------|-------------|
-| `33c0bfd` | Remove impulse/velocity inheritance - fragments now directly orbit |
-| `3c3a5fe` | Fix duplicate code in Enemy.js |
-| `957d0c8` | Fix: asteroid fragments now inherit orbital movement from parent |
-| `cbc4d06` | Fix: asteroid fragments inherit direction from parent - fragments continue in same direction before moving toward ship |
-| `ddb90f9` | Fix: fragments now move concentrically toward the ship, not orbit |
-| `50f4506` | Fix: asteroid fragments now maintain orbital movement, added _orbitTargetDirect method |
-| `d449f39` | Fix: asteroids inherit orbital movement after breaking - now uses smooth orbit blending with inherited velocity |
-| `86b6673` | Fix texture check in Enemy.js (use !== null instead of truthy check) |
-| `bac3302` | Fix extra closing brace in Enemy.js |
-| `f6d6a99` | Fix syntax error in Enemy.js (extra closing brace) |
-| `5ebd9f5` | Update title in index.html to 'Jugando en el Espacio' |
+| `33c0bfd` | Fix: Eliminar herencia de impulso/velocidad - fragmentos ahora orbitan directamente |
+| `3c3a5fe` | Fix: Eliminar código duplicado en Enemy.js |
+| `957d0c8` | Fix: Fragmentos de asteroides ahora heredan movimiento orbital del padre |
+| `cbc4d06` | Fix: Fragmentos de asteroides heredan dirección del padre - fragmentos continúan en la misma dirección antes de dirigirse a la nave |
+| `ddb90f9` | Fix: Fragmentos ahora se mueven concéntricamente hacia la nave, no orbitan |
+| `50f4506` | Feature: Fragmentos de asteroides ahora mantienen movimiento orbital, agregado método _orbitTargetDirect |
+| `d449f39` | Fix: Asteroides heredan movimiento orbital al romperse - ahora usa interpolación suave de órbita con velocidad heredada |
+| `86b6673` | Fix: Verificar textura en Enemy.js (usar !== null en lugar de verificación de verdad) |
+| `bac3302` | Fix: Corregir llave extra de cierre en Enemy.js |
+| `f6d6a99` | Fix: Corregir error de sintaxis en Enemy.js (llave extra de cierre) |
+| `5ebd9f5` | Feature: Actualizar título en index.html a 'Jugando en el Espacio' |
 
 ---
 
@@ -272,13 +272,13 @@
 
 | Commit | Descripción |
 |--------|-------------|
-| `2c27a5e` | Add burst visual effect when special asteroid is destroyed, and reset shoot speed on restart |
-| `17b1139` | Fix: increase shoot speed when special asteroid is destroyed |
-| `489f384` | Add asteroid damage percentages, special boss type, and updated SPEC.md |
-| `6b7a0fe` | Fix game over screen not clearing on restart |
-| `e7dffd6` | Update README with game name 'Jugando en el Espacio' and add prominent game link |
-| `ded0165` | Add restart button and better game over screen with click to restart |
-| `33c863c` | Add visual improvements: line projectiles, damage sphere effect, shield system, and expanding ring ulti effect |
+| `2c27a5e` | Feature: Agregar efecto visual de explosión cuando se destruye asteroide especial, y resetear velocidad de disparo al reiniciar |
+| `17b1139` | Fix: Aumentar velocidad de disparo cuando se destruye asteroide especial |
+| `489f384` | Feature: Agregar porcentajes de daño de asteroides, tipo boss especial, y actualizar SPEC.md |
+| `6b7a0fe` | Fix: Pantalla de Game Over no se borra al reiniciar |
+| `e7dffd6` | Docs: Actualizar README con nombre del juego 'Jugando en el Espacio' y agregar enlace destacado al juego |
+| `ded0165` | Feature: Agregar botón de reiniciar y mejor pantalla de Game Over con clic para reiniciar |
+| `33c863c` | Feature: Agregar mejoras visuales - proyectiles de línea, efecto de esfera de daño, sistema de escudo, y efecto de anillo expansivo del ULTi |
 
 ---
 
@@ -286,10 +286,10 @@
 
 | Commit | Descripción |
 |--------|-------------|
-| `cc14462` | Update README with game description, controls and instructions |
-| `3a972f7` | Implement complete game with rotation controls, asteroids, projectiles and fullscreen support |
-| `1d69755` | Update team member and project requirements |
-| `2c4884a` | reame |
+| `cc14462` | Docs: Actualizar README con descripción del juego, controles e instrucciones |
+| `3a972f7` | Feature: Implementar juego completo con controles de rotación, asteroides, proyectiles y soporte de pantalla completa |
+| `1d69755` | Docs: Actualizar integrante del equipo y requisitos del proyecto |
+| `2c4884a` | Fix: Corregir escritura de README |
 
 ---
 
@@ -297,7 +297,7 @@
 
 | Commit | Descripción |
 |--------|-------------|
-| `f910fca` | Initial commit |
+| `f910fca` | Commit inicial del proyecto |
 
 ---
 
@@ -316,7 +316,7 @@
 | v1.0.9 | ~15 | Fragmentos de asteroides con órbitas |
 | v1.0.8 | ~10 | Efectos visuales, efectos de partículas |
 | v1.0.7 | ~5 | README, controls, game description |
-| v1.0.6 | 1 | Initial commit |
+| v1.0.6 | 1 | Commit inicial |
 
 ---
 
