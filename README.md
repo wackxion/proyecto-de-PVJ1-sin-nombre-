@@ -1,7 +1,7 @@
-# 🎮 Jugando en el Espacio
+﻿# 🎮 Jugando en el Espacio
 
 [![GitHub Pages](https://img.shields.io/badge/Jugar-Aquí-0044CC?style=for-the-badge)](https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/)
-[![Versión](https://img.shields.io/badge/Versión-v1.3.4-FFA500?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-sin-nombre-//releases/tag/v1.3.4)
+[![Versión](https://img.shields.io/badge/Versión-v1.3.5-FFA500?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-sin-nombre-//releases/tag/v1.3.5)
 
 ---
 
@@ -20,7 +20,7 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 
 **Jugando en el Espacio** es un juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides y naves enemigas.
 
-### Mecánicas del Juego (v1.3.4)
+### Mecánicas del Juego (v1.3.5)
 - **Movimiento tipo tanque** - La nave rota (A/D) y avanza (W) con inercia
 - **Sistema de aceleración** - Mantén W para acelerar (1s), luego sobrecalentamiento (3s)
 - **Disparar** proyectiles (Espacio) hacia la dirección que apunta la nave
@@ -194,7 +194,90 @@ serve .
 
 ## 📜 Historial de Versiones
 
-### v1.3.2 (Actual)
+### v1.3.5 (Actual)
+> **Pantalla de inicio y menú principal** - Nueva experiencia de usuario
+
+#### Nuevas Características
+
+**Pantalla de carga:**
+- Fondo negro con nave girando en el centro
+- Texto "CARGANDO..." en azul
+- Transición suave al iniciar el juego
+
+**Menú principal (pantalla de inicio):**
+- Fondo: imagen fondoEspacio2.png
+- Botones: Jugar, Tutorial, Top 5, Créditos
+- Estilos con gradiente azul y bordes redondeados
+- Efectos hover en botones (escala y brillo)
+- El menú se muestra SIN cargar el juego
+- El botón JUGAR inicia la carga bajo demanda
+
+**Botón TUTORIAL:**
+- Imagen tutorial.png + controles en modal
+- Modal con botón VOLVER
+- Fondo oscuro (rgba 0,0,0,0.9)
+
+**Botón TOP 5:**
+- Imagen gameOver.jpg como fondo
+- Fondo oscuro (rgba 0,0,0,0.9)
+- Datos precargados al iniciar (más rápido)
+- Pantalla de carga con nave girando mientras carga
+- Polling para actualizar cuando datos listos
+- Tabla con N°, NOMBRE, PUNTOS, OLEADAS
+- Todo en azul y negrita
+
+**Botón CRÉDITOS:**
+- Imagen gameOver.jpg como fondo
+- Fondo oscuro (rgba 0,0,0,0.9)
+- Información del juego y desarrollador
+- Todo en azul y negrita
+
+**Top 5 desde Game Over:**
+- Imagen gameOver.jpg como fondo (era puntuacion2.png)
+
+**Otros cambios:**
+- Efecto hover en botón de guardar record
+- Mini tutorial del juego desactivado
+- Código optimizado con funciones reutilizables
+
+**Nueva UI en la parte inferior del juego:**
+- Imagen UX Experimental en parte inferior central
+- Barra de aceleración adicional debajo de la imagen UX
+- Panel de puntuación en parte inferior izquierda
+- Icono de ESCUDO sobre imagen UX con marco
+  - Cambio de imagen según % de escudos (escudo1, escudo2, escudo3)
+  - Animación en bucle (escudo4-escudo5) cuando está sobrecalentado
+  - Marco con brillo de impacto al recibir daño
+  - Marco rojo con animación cuando se rompe el escudo
+- Icono de ULTI sobre imagen UX con marco
+  - Cambio de imagen según % de carga (ultiicon1-5)
+  - Animación en bucle (ultiicon3-4-5) cuando está listo (100%)
+  - Marco con brillo azul cuando ULTi está lista
+- Panel superior simplificado (solo información de oleada)
+  - Muestra: Oleada, Faltan, Ast, Naves
+- Estilo blanco, Arial 12px
+
+---
+
+### v1.3.4
+> **Iconos UI, botones con imágenes, versión en pantalla**
+
+#### Nuevas Características
+- Iconos visuales para UI: `escudo1.png`, `ultiicon1.png`, `aceleracion1.png`
+- Botón Top 5 con imagen (`top5Boton.png`)
+- Botón Guardar con imagen (`guardadoBoton.png`)
+- Imagen de fondo para Top 5 (`guardarPuuntos.png`)
+- Versión del juego en pantalla (v1.3.4)
+
+#### Modificaciones
+- Código CSS limpiado (eliminados duplicados)
+- Posiciones de botones de Game Over ajustadas
+- Imagen de Game Over más grande (90% altura)
+- HTML limpiado y organizado
+
+---
+
+### v1.3.2
 > **Naves enemigas desde el inicio + Mejor sistema de escudos**
 
 #### Nuevas Características
@@ -236,3 +319,4 @@ serve .
 ## 📝 Licencia
 
 MIT
+

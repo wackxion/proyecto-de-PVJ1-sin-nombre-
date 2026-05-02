@@ -1,9 +1,9 @@
-# SPEC.md - Jugando en el Espacio
+﻿# SPEC.md - Jugando en el Espacio
 
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.3.4
+- **Versión:** v1.3.5 (EN DESARROLLO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -17,7 +17,7 @@
 
 **Concepto:** Juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides de diferentes tamaños y naves enemigas.
 
-**Mecánicas Principales (v1.3.4):**
+**Mecánicas Principales (v1.3.5):**
 - Nave puede **rotar** hacia la izquierda (A) o derecha (D)
 - **Avanzar** con inercia (W) - sistema de aceleración con sobrecalentamiento
 - **Disparar** proyectiles (Espacio) hacia la dirección que apunta la nave
@@ -29,10 +29,12 @@
 - Sistema de **Top 5** con Firebase Firestore
 - **Campo gravitatorio** de la nave atrae asteroides
 - **Iconos visuales** para escudos, ULTi y aceleración (imágenes png)
+- **Pantalla de carga** con nave girando al iniciar el juego
+- **Menú principal** con fondo espacio2 y 4 botones
 
 ---
 
-### 2.2 Naves Enemigas (v1.3.3)
+### 2.2 Naves Enemigas (v1.3.5)
 
 | Característica | Valor |
 |--------------|-------|
@@ -105,7 +107,7 @@
 
 ---
 
-### 2.5 Sistema de Escudos (v1.3.3)
+### 2.5 Sistema de Escudos (v1.3.5)
 
 - Rango: 0% a 100%
 - **Sobrecalentamiento:** al llegar a 0%, la barra se pone roja
@@ -138,16 +140,100 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-### 2.8 UI del Juego
+### 2.8 UI del Juego (v1.3.5)
 
-- **🛡️** - Barra de escudos (azul, roja en sobrecalentamiento)
+- **Shield** - Barra de escudos (azul, roja en sobrecalentamiento)
+- **ULTi** - Barra de carga ULTi
+- **Acceleration** - Barra de aceleraci:n (W)
+- Indicador: Oleada: X | Faltan: Y | Ast: Zs | Naves: Ws
+
+**Pantalla de Game Over:**
+- Imagen de fondo (gameOver.jpg)
+- Titulo GAME OVER
+- Puntuaci:n conseguida y oleada alcanzada
+- Botones: REINICIAR, TOP 5
+- Al volver del Top 5 se preservan los textos (score, oleada)
+
+---
+
+## 3. Changelog v1.3.5**🛡️** - Barra de escudos (azul, roja en sobrecalentamiento)
 - **⚡** - Barra de carga ULTi
 - **🚀** - Barra de aceleración (W)
 - Indicador: `Oleada: X | Faltan: Y | Ast: Zs | Naves: Ws`
 
 ---
 
-## 3. Changelog v1.3.4
+## 3. Changelog v1.3.5
+
+### Enfoque
+**Cambios visuales y UX** - Nueva pantalla de inicio, menú principal y optimizaciones
+
+### Agregado
+- **Pantalla de carga** al iniciar el juego
+  - Fondo negro (#0D0D1A)
+  - Nave girando en el centro (animación CSS)
+  - Texto "CARGANDO..." en azul
+  - Transición suave al iniciar
+  
+- **Menú principal** (pantalla de inicio)
+  - Fondo: imagen fondoEspacio2.png
+  - Botones: Jugar, Tutorial, Top 5, Créditos (uno debajo del otro)
+  - Estilos con gradiente azul y bordes redondeados
+  - Efectos hover en botones (escala y brillo)
+  
+- **Botón JUGAR**
+  - Muestra pantalla de carga con nave girando
+  - Inicializa el juego solo al hacer click (carga bajo demanda)
+  
+- **Botón TUTORIAL**
+  - Imagen tutorial.png + controles en modal
+  - Texto: "W: Avanzar | ESPACIO: Disparar | A/D: Rotar | S: ULTi"
+  - Modal con botón VOLVER
+  
+- **Botón TOP 5**
+  - Imagen gameOver.jpg como fondo
+  - Datos precargados al iniciar el menú (más rápido)
+  - Tabla con N°, NOMBRE, PUNTOS, OLEADAS
+  - Todo en azul y negrita
+  - Botón VOLVER
+  
+- **Botón CRÉDITOS**
+  - Imagen gameOver.jpg como fondo
+  - Información del juego y desarrollador
+  - Todo en azul y negrita
+  - Botón VOLVER
+  
+- **Efecto hover** en botón de guardar record (escala + brillo)
+- **Mini tutorial** del juego desactivado (ahora en menú)
+
+### Nuevos elementos en la UI del juego
+
+- **Imagen UX Experimental** en parte inferior central (debajo de todo)
+- **Barra de aceleración** adicional debajo de la imagen UX
+- **Panel de puntuación** en parte inferior izquierda
+- **Icono de ESCUDO** con marco sobre imagen UX
+  - Cambio de imagen según % de escudos (1, 2, 3)
+  - Animación en bucle (4-5) cuando está sobrecalentado
+  - Marco con brillo de impacto al recibir daño
+  - Marco rojo con animación cuando se rompe
+
+- **Icono de ULTi** con marco sobre imagen UX
+  - Cambio de imagen según % de carga (1-5)
+  - Animación en bucle (3-4-5) cuando está listo (100%)
+  - Marco con brillo azul cuando ULTi está lista
+
+- **Panel superior simplificado** (solo información de oleada)
+  - Solo muestra: Oleada, Faltan, Ast, Naves
+  - Estilo: blanco, Arial 12px, esquina superior izquierda
+
+### Modificado
+- Código optimizado: funciones reutilizables (crearBotonMenu, crearBotonVolver)
+- Sistema de precarga del Top 5 en segundo plano
+- HTML limpiado (mini tutorial comentado)
+
+---
+
+## 4. Changelog v1.3.4
 
 ### Agregado
 - Iconos visuales para UI: `escudo1.png`, `ultiicon1.png`, `aceleracion1.png`
@@ -167,7 +253,29 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-## 4. Changelog v1.3.3
+## 5. Changelog v1.3.5 (ACTUAL - EN DESARROLLO)
+
+### Agregado
+- **Rediseño de UI** - Nueva interfaz inferior con imagen UX Experimental
+- **Iconos dinámicos** - Escudo y ULTi cambian según porcentaje
+- **Barra de aceleración** adicional debajo de imagen UX
+- **Panel de puntuación** en parte inferior izquierda
+- **Menú principal** - Nuevo sistema de menús (INICIO, TOP 5, CRÉDITOS)
+- **Efectos hover** en botones
+
+### Modificado
+- **Controles** - Ahora en menú (no en pantalla de juego)
+- **HTML/CSS** - Estructura reorganizada para nueva UI
+- **Indicador de oleada** - Muestra intervalos de spawn
+
+### Pendiente (por terminar)
+- Testing de nueva UI
+- Verificar cambios de iconos
+- Subir a producción
+
+---
+
+## 6. Changelog v1.3.3
 
 ### Agregado
 - Campo gravitatorio de la nave (100px)
@@ -181,4 +289,6 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-*Documento actualizado para v1.3.4*
+*Documento actualizado para v1.3.5*
+
+

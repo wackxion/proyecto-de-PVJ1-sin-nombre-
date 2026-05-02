@@ -2,268 +2,81 @@
  * =============================================================================
  * CSS - Hoja de Estilos del Juego "Jugando en el Espacio"
  * 
- * Este archivo controla toda la apariencia visual de la interfaz de usuario (UI)
- * que se muestra sobre el juego: barras, score, controles, etc.
+ * ESTE ARCHIVO YA NO CONTIENE LOS ESTILOS DEL HUD - están en UIManager.js
+ * Solo mantiene estilos generales y de elementos que no se usan desde JS
  * 
- * La mayoría de elementos tienen "position: absolute" para posicionarse sobre el 
- * canvas de PixiJS sin interferir con el juego.
  * =============================================================================
  */
 
 /* -----------------------------------------------------------------------------
  * ESTILOS GENERALES
  * -----------------------------------------------------------------------------
- * Aplica a todos los elementos de la página
  */
 
-/* Selector universal: elimina márgenes y paddings por defecto del navegador */
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* El padding no aumenta el tamaño del elemento */
+    box-sizing: border-box;
 }
 
-/* 
- * body: contenedor principal de toda la página
- * Define el fondo negro espacial y la fuente manuscrita
- */
 body {
-    background-color: #0D0D1A;  /* Negro espacial - color de fondo del juego */
-    width: 100vw;                 /* Ancho completo del viewport */
-    height: 100vh;               /* Alto completo del viewport */
-    overflow: hidden;            /* Ocultar barras de scroll */
-    
-    /* Fuente manuscrita estilo "juego casero" - fallback en cascade */
+    background-color: #0D0D1A;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
     font-family: 'Segoe Script', 'Lucida Handwriting', 'Bradley Hand', cursive;
 }
 
 /* -----------------------------------------------------------------------------
  * CONTENEDOR DEL JUEGO (CANVAS DE PIXIJS)
  * -----------------------------------------------------------------------------
- * Aquí es donde PixiJS renderiza todo el contenido del juego
  */
 
-/* Contenedor principal que aloja el canvas de PixiJS */
 #game-container {
-    position: relative;  /* Positioned relativamente para contener elementos hijos posicionados */
+    position: relative;
     width: 100%;
     height: 100%;
 }
 
-/* El canvas de PixiJS generado automáticamente */
 #game-container canvas {
-    display: block;                   /* Eliminar comportamiento inline */
-    width: 100% !important;           /* Forzar ancho completo */
-    height: 100% !important;         /* Forzar alto completo */
-    object-fit: contain;              /* Ajustar contenido manteniendo proporción */
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
 }
 
 /* -----------------------------------------------------------------------------
- * UI OVERLAY (CAPA DE INTERFAZ)
+ * UI OVERLAY
  * -----------------------------------------------------------------------------
  * Capa transparente que contiene todos los elementos de UI (HUD)
- * Se posiciona ABSOLUTAMENTE sobre el juego
- * 
- * pointer-events: none permite que los clicks pasen a través de esta capa
- * hacia el canvas del juego (el jugador puede hacer click en el juego)
+ * pointer-events: none permite que los clicks pasen a través
  */
+
 #ui-overlay {
-    position: absolute;  /* Se posiciona sobre todo lo demás */
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none; /* Los clicks pasan a través - NO bloquea el juego */
+    pointer-events: none;
     padding: 0px;
 }
 
 /* -----------------------------------------------------------------------------
- * PANEL IZQUIERDO (Score, Oleada)
+ * IMAGENES DECORATIVAS (fondo del menú)
  * -----------------------------------------------------------------------------
- * Muestra la puntuación actual, la oleada y cuántos asteroides faltan
- */
-#left-panel {
-    position: absolute;
-    top: 0px;
-    left: 35px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 10px;
-}
-
-/* Texto de puntuación y oleada - color azul Birome */
-#score {
-    color: #0044CC;         /* Azul Birome */
-    font-size: 20px;
-    font-weight: bold;
-    text-shadow: 0 0 10px #ffffff;  /* Brillo blanco alrededor del texto */
-}
-
-/* Versión del juego en esquina inferior derecha */
-#version-display {
-    position: absolute;
-    bottom: 10px;
-    right: 15px;
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    color: #FFFFFF;
-    opacity: 0.7;
-}
-
-#wave {
-    color: #0044CC;
-    font-size: 16px;
-    font-weight: bold;
-    text-shadow: 0 0 10px #ffffff;
-}
-
-/* -----------------------------------------------------------------------------
- * SISTEMA DE BARRAS DE PROGRESO
- * -----------------------------------------------------------------------------
- * Tres barras: ESCUDOS, ULTi, ACELERACIÓN
- * Cada barra tiene 3 partes: contenedor, relleno (fill), y etiqueta (label)
- * 
- * El relleno (bar-fill) cambia su width con JavaScript para mostrar progreso
  */
 
-/* === CONTENEDOR DE ULTi === */
-#ulti-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Imagen del icono ULTi */
-#ulti-icon {
-    width: 58px;
-    height: auto;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-}
-
-/* === CONTENEDOR DE ESCUDOS === */
-#escudos-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Imagen del escudo */
-#escudos-icon {
-    width: 58px;
-    height: auto;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-}
-
-/* === CONTENEDOR DE ACELERACIÓN (W) === */
-#aceleracion-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Imagen del icono de aceleración */
-#aceleracion-icon {
-    width: 58px;
-    height: auto;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-}
-
-/* Fondo de la barra con borde azul */
-#ulti-bar-bg, #escudos-bar-bg, #aceleracion-bar-bg {
-    width: 120px;             /* Ancho fijo de la barra */
-    height: 20px;             /* Alto fijo de la barra */
-    background-color: #1a1a2e00;  /* Transparente */
-    border: 2px solid #0044CC;   /* Borde azul */
-    border-radius: px;           /* Bordes redondeados */
-    overflow: hidden;             /* Ocultar contenido que sobresale */
-    box-shadow: 0 0 10px #0044CC; /* Brillo azul */
-}
-
-/* Relleno de la barra - el width se modifica con JavaScript */
-#ulti-bar-fill, #escudos-bar-fill, #aceleracion-bar-fill {
-    width: 0%;                 /* Porcentaje de carga (0-100) - se cambia con JS */
-    height: 100%;
-    background: linear-gradient(90deg, #0044CC, #0044CC);  /* Azul sólido */
-    transition: width 0.3s ease-out;  /* Animación suave al cambiar ancho */
-    box-shadow: 0 0 10px #0044CC;
-}
-
-/* Relleno de escudos - siempre muestra 100% cuando tiene escudos */
-#escudos-bar-fill {
-    width: 100%;
-}
-
-/* Animación de parpadeo cuando ULTi está listo */
-#ulti-container.ready #ulti-bar-fill {
-    animation: ulti-pulse 0.5s infinite;  /* Parpadeo infinito */
-}
-
-/* Keyframes para la animación de pulso */
-@keyframes ulti-pulse {
-    0%, 100% { opacity: 1; }    /* Opacidad completa */
-    50% { opacity: 0.6; }        /* Opacidad reducida a la mitad */
-}
-
-/* ===== ESTADO SOBRECALENTADO (ESCUDOS) ===== */
-#escudos-container.overheated #escudos-bar-fill {
-    background: linear-gradient(90deg, #CC0000, #CC0000);  /* Rojo */
-    box-shadow: 0 0 10px #CC0000;
-}
-
-#escudos-container.overheated #escudos-bar-bg {
-    border-color: #CC0000;
-    box-shadow: 0 0 10px #CC0000;
-}
-
-/* ===== ESTADO SOBRECALENTADO (ACELERACIÓN) ===== */
-#aceleracion-container.overheated #aceleracion-bar-fill {
-    background: linear-gradient(90deg, #CC0000, #CC0000);
-    box-shadow: 0 0 10px #CC0000;
-}
-
-#aceleracion-container.overheated #aceleracion-bar-bg {
-    border-color: #CC0000;
-    box-shadow: 0 0 10px #CC0000;
-}
-
-/* -----------------------------------------------------------------------------
- * CONTROLES (TEXTO INFERIOR)
- * -----------------------------------------------------------------------------
- * Muestra los controles del juego en la parte inferior de la pantalla
- */
-#controls {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-/* -----------------------------------------------------------------------------
- * IMAGENES DECORATIVAS
- * -----------------------------------------------------------------------------
- * Imágenes que se muestran detrás de la UI para dar ambiente
- */
-
-/* Imagen del tutorial (W, Espacio, A, D, S) */
 #tutorial-icon {
     position: absolute;
-    top: -70px;        /* Desplazada hacia arriba del panel */
-    left: -450px;      /* Desplazada hacia la izquierda */
+    top: -70px;
+    left: -450px;
     width: 900px;
     height: 150px;
-    image-rendering: pixelated;     /* Pixel art nítido sin blur */
+    image-rendering: pixelated;
     image-rendering: crisp-edges;
 }
 
-/* Texto del tutorial */
 #tutorial-text {
     position: absolute;
     top: -20px;
@@ -275,7 +88,6 @@ body {
     text-shadow: 0 0 10px #0044CC;
 }
 
-/* Imagen decorativa del Top 5 (puntuación) */
 #ship-icon {
     position: absolute;
     top: -90px;
@@ -288,17 +100,27 @@ body {
 }
 
 /* -----------------------------------------------------------------------------
- * RESUMEN DE PROPIEDADES CSS USADAS
+ * CONTROLES (TEXTO INFERIOR)
  * -----------------------------------------------------------------------------
+ */
+
+#controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* -----------------------------------------------------------------------------
+ * NOTAS
+ * -----------------------------------------------------------------------------
+ * Los estilos del HUD (marcos de iconos, barras, score, wave) 
+ * ahora están en UIManager.js en el bloque 'hud-styles'
  * 
- * position: absolute  → Posicionar sobre el canvas del juego
- * display: flex       → Organizar elementos en fila o columna
- * color              → Color del texto
- * background-color  → Color de fondo
- * border             → Borde alrededor de elementos
- * box-shadow         → Efecto de brillo/alumbra
- * text-shadow        → Brillo del texto
- * transition         → Animación suave cuando cambia un valor
- * pointer-events     → Permitir clicks a través de elementos
- * image-rendering    → Calidad de imágenes pixeladas
+ * Este archivo solo contiene estilos generales que no necesitan 
+ * ser regenerados dinámicamente
  */

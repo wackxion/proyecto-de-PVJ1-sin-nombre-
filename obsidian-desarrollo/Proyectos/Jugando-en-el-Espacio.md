@@ -3,7 +3,7 @@
 ## Información del Proyecto
 
 - **Nombre:** Jugando en el Espacio
-- **Versión:** [[v1.3.4]] - Completado ✅
+- **Versión:** [[v1.3.5]] (EN DESARROLLO) - Completado ✅
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -16,14 +16,16 @@ Juego de nave espacial en vista superior (top-down) donde el jugador controla un
 ## Estado del Proyecto
 
 - ✅ **Completado** - Todas las mecánicas implementadas (v1.3.4)
+- ⏳ **EN DESARROLLO** - Nueva UI con UX Experimental (v1.3.5)
 - ✅ **Publicación** - Desplegado en GitHub Pages
 - ✅ **Top 5** - Sistema persistente con Firebase
 - ✅ **Fondo Infinito** - Movimiento de mosaicos
 - ✅ **Naves Enemigas** - IA con órbita y disparo teledirigido
 - ✅ **Sistema de Colisiones** - Proyectiles aliados vs enemigos
 - ✅ **Iconos UI** - Imágenes para escudos, ULTi y aceleración
+- ✅ **Menú Principal** - INICIO, TOP 5, CRÉDITOS (v1.3.5)
 
-## Características Principales (v1.3.4)
+## Características Principales (v1.3.5)
 
 ### Movimiento y Controles
 - Movimiento tipo tanque (W = avanzar con inercia)

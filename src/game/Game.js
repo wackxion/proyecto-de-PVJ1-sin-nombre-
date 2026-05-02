@@ -22,6 +22,7 @@ import { HitEffect } from './HitEffect.js';
 import { ProyectilExplosion } from './ProyectilExplosion.js';
 import { AsteroidExplosion } from './AsteroidExplosion.js';
 import { Top5 } from './Top5.js';
+import { UIManager } from '../ui/UIManager.js';
 import { GestorEntrada } from '../systems/InputManager.js';
 
 export class Game {
@@ -114,12 +115,14 @@ export class Game {
         this.texturaFondo = null;
         
         // Elementos UI
-        this.elementoPuntuacion = null;
+        this.elementoPuntuacionAcumulada = null;
         this.elementoOleada = null;
-        this.elementoBarraUlti = null;
-        this.contenedorBarraUlti = null;
-        this.elementoBarraEscudos = null;  // Nueva barra de escudos
-        this.contenedorBarraEscudos = null;  // Contenedor para efecto de enfriamiento
+        this.iconoUltiUX = null;
+        this.iconoEscudoUX = null;
+        this.marcoEscudoUX = null;
+        this.marcoUltiUX = null;
+        this.escudosAnterior = 100;
+        this.elementoBarraAceleracionUX = null;
         
         // Elementos de fin de juego
         this.elementosFinJuego = [];
@@ -191,6 +194,9 @@ export class Game {
      * @param {HTMLDivElement} container - Elemento HTML donde se va a dibujar el juego
      */
     async init(container) {
+        // Guardar referencia al contenedor
+        this.contenedorJuego = container;
+        
         // console.log('=== INICIANDO JUEGO ===');
         // console.log('Container:', container);
         
@@ -449,37 +455,39 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
     }
     
     /**
-     * Configura la interfaz de usuario
-     * Busca los elementos HTML donde se muestra la puntuación
+     * Configura la interfaz de usuario usando UIManager
+     * Crea los elementos HTML dinámicamente
      */
     _configurarUI() {
-        // Buscar el elemento HTML con id="score"
-        this.elementoPuntuacion = document.getElementById('score');
-        
-        // Referencia a la barra de carga del Ulti
-        this.elementoBarraUlti = document.getElementById('ulti-bar-fill');
-        this.contenedorBarraUlti = document.getElementById('ulti-container');
-        
-        // Referencia a la barra de aceleración (W)
-        this.elementoBarraAceleracion = document.getElementById('aceleracion-bar-fill');
-        this.contenedorBarraAceleracion = document.getElementById('aceleracion-container');
-        
-        // Referencia a la barra de escudos
-        this.elementoBarraEscudos = document.getElementById('escudos-bar-fill');
-        this.contenedorBarraEscudos = document.getElementById('escudos-container');
-        
-        // Crear elemento para mostrar la oleada (wave)
-        this.elementoOleada = document.getElementById('wave');
-        if (!this.elementoOleada) {
-            this.elementoOleada = document.createElement('div');
-            this.elementoOleada.id = 'wave';
-            // El estilo ahora está en CSS (#wave en style.css)
-            document.body.appendChild(this.elementoOleada);
+        // Crear UIManager y HUD
+        if (!this.uiManager && this.contenedorJuego) {
+            this.uiManager = new UIManager(this.contenedorJuego, {});
         }
         
-        // Actualizar la UI por primera vez
-        this._actualizarUI();
+        if (this.uiManager) {
+            // Crear HUD y obtener referencias
+            const hud = this.uiManager.crearHUD();
+            
+            // Asignar referencias de UI (solo las que mantienen)
+            this.elementoOleada = hud.elementoOleada;
+            this.elementoPuntuacionAcumulada = hud.elementoPuntuacionAcumulada;
+            
+            // Barra de aceleración (solo la de UX)
+            this.elementoBarraAceleracionUX = hud.elementoBarraAceleracionUX;
+            
+            // Iconos UX
+            this.iconoEscudoUX = hud.iconoEscudoUX;
+            this.marcoEscudoUX = hud.marcoEscudoUX;
+            this.fondoEscudoUX = hud.fondoEscudoUX;
+            this.iconoUltiUX = hud.iconoUltiUX;
+            this.marcoUltiUX = hud.marcoUltiUX;
+            
+            // Actualizar UI por primera vez
+            this._actualizarUI();
+        }
     }
+    
+    /**
     
     /**
      * Actualiza la interfaz de usuario
@@ -487,13 +495,9 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
      * Si está en sobrecalentamiento, muestra en rojo
      */
     _actualizarUI() {
-        if (this.elementoPuntuacion) {
-            // Solo mostrar puntuación y velocidad de disparo
-            const speedBoost = this.jugador ? this.jugador.obtenerPorcentajeMejoraVelocidad() : 0;
-            const speedText = speedBoost > 0 ? ` | Velocidad: +${Math.round(speedBoost)}%` : '';
-            
-            // Actualizar el texto del elemento HTML (solo puntuación)
-            this.elementoPuntuacion.textContent = `Puntuación: ${this.puntuacion}${speedText}`;
+        // Actualizar el panel de puntuación acumulada
+        if (this.elementoPuntuacionAcumulada) {
+            this.elementoPuntuacionAcumulada.textContent = this.puntuacion.toString();
         }
         
         // Actualizar display de oleada
@@ -502,45 +506,98 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Faltan: ${faltantes} | Ast: ${this.intervaloSpawn.toFixed(1)}s | Naves: ${this.intervaloNaveEnemiga.toFixed(1)}s`;
         }
         
-        // Actualizar barra de escudos
-        if (this.elementoBarraEscudos && this.jugador) {
+        // Actualizar icono de escudo y marco en UX según el estado
+        if (this.jugador && this.iconoEscudoUX && this.marcoEscudoUX) {
             const porcentajeEscudos = this.jugador.escudos;
-            this.elementoBarraEscudos.style.width = `${porcentajeEscudos}%`;
             
-            // Si está en sobrecalentamiento de escudos, mostrar efecto rojo
-            if (this.jugador.sobrecalentado && this.contenedorBarraEscudos) {
-                this.contenedorBarraEscudos.classList.add('overheated');
-            } else if (this.contenedorBarraEscudos) {
-                this.contenedorBarraEscudos.classList.remove('overheated');
+            // Detectar impacto (los escudos bajaron y no está sobrecalentado)
+            const huboImpacto = porcentajeEscudos < this.escudosAnterior && !this.jugador.sobrecalentado;
+            
+            // Si hubo impacto, agregar animación de brillo blanco (solo flash, no cambia color)
+            if (huboImpacto) {
+                this.marcoEscudoUX.classList.remove('impact');
+                void this.marcoEscudoUX.offsetWidth;
+                this.marcoEscudoUX.classList.add('impact');
+                // También al fondo
+                this.fondoEscudoUX.classList.remove('impact');
+                void this.fondoEscudoUX.offsetWidth;
+                this.fondoEscudoUX.classList.add('impact');
             }
+            
+            // Si está sobrecalentado (escudo roto), animación entre escudo4 y escudo5 y marco rojo
+            if (this.jugador.sobrecalentado) {
+                const tiempo = Date.now();
+                const indiceAnimacion = Math.floor(tiempo / 200) % 2 + 4;
+                this.iconoEscudoUX.src = `assets/escudo${indiceAnimacion}.png`;
+                this.marcoEscudoUX.classList.add('overheated');
+                // Cambiar color del marco Y del fondo a ROJO
+                this.marcoEscudoUX.style.borderColor = '#CC0000';
+                this.marcoEscudoUX.style.boxShadow = '0 0 15px #CC0000';
+                this.fondoEscudoUX.style.borderColor = '#CC0000';
+                this.fondoEscudoUX.style.boxShadow = '0 0 15px #CC0000';
+            } else {
+                // Mostrar icono según el porcentaje de escudos (1, 2 o 3)
+                let indiceIcono;
+                if (porcentajeEscudos > 60) {
+                    indiceIcono = 1;
+                } else if (porcentajeEscudos > 30) {
+                    indiceIcono = 2;
+                } else {
+                    indiceIcono = 3;
+                }
+                this.iconoEscudoUX.src = `assets/escudo${indiceIcono}.png`;
+                this.marcoEscudoUX.classList.remove('overheated');
+                // Solo restaurar colores si NO hubo impacto reciente
+                // (el impacto tiene su propia animación de flash blanco)
+                if (!huboImpacto) {
+                    this.marcoEscudoUX.style.borderColor = '#0044CC';
+                    this.marcoEscudoUX.style.boxShadow = '0 0 10px #0044CC';
+                    this.fondoEscudoUX.style.borderColor = '#0044CC';
+                    this.fondoEscudoUX.style.boxShadow = '0 0 10px #0044CC';
+                    this.fondoEscudoUX.style.backgroundColor = 'white';
+                }
+            }
+            
+            // Guardar valor actual para próximos impactos
+            this.escudosAnterior = porcentajeEscudos;
         }
         
-        // Actualizar barra de carga del Ulti
-        if (this.elementoBarraUlti && this.jugador) {
-            // Calcular porcentaje de carga (0 a 100)
+        // Actualizar icono de ULTi en UX
+        if (this.jugador && this.iconoUltiUX && this.marcoUltiUX) {
             const porcentajeCarga = Math.min(100, (this.jugador.cargaUlti / this.jugador.cargaMaxUlti) * 100);
             
-            // Actualizar ancho de la barra
-            this.elementoBarraUlti.style.width = `${porcentajeCarga}%`;
-            
-            // Agregar efecto visual cuando está listo
-            if (this.jugador.ultiListo && this.contenedorBarraUlti) {
-                this.contenedorBarraUlti.classList.add('ready');
-            } else if (this.contenedorBarraUlti) {
-                this.contenedorBarraUlti.classList.remove('ready');
+            if (this.jugador.ultiListo) {
+                const tiempo = Date.now();
+                const indiceAnimacion = Math.floor(tiempo / 200) % 3 + 3;
+                this.iconoUltiUX.src = `assets/ultiicon${indiceAnimacion}.png`;
+                this.marcoUltiUX.classList.add('ready');
+            } else {
+                let indiceIcono = Math.floor(porcentajeCarga / 20) + 1;
+                if (indiceIcono < 1) indiceIcono = 1;
+                if (indiceIcono > 5) indiceIcono = 5;
+                this.iconoUltiUX.src = `assets/ultiicon${indiceIcono}.png`;
+                this.marcoUltiUX.classList.remove('ready');
             }
         }
         
-        // Actualizar barra de aceleración (W)
-        if (this.elementoBarraAceleracion && this.jugador) {
+        // Actualizar barra de aceleración (UX)
+        if (this.jugador && this.elementoBarraAceleracionUX) {
             const porcentajeAcel = this.jugador.cargaAceleracion;
-            this.elementoBarraAceleracion.style.width = `${porcentajeAcel}%`;
+            this.elementoBarraAceleracionUX.style.width = `${porcentajeAcel}%`;
             
-            // Si está sobrecalentado, mostrar diferente
-            if (this.jugador.sobrecalentadoAceleracion && this.contenedorBarraAceleracion) {
-                this.contenedorBarraAceleracion.classList.add('overheated');
-            } else if (this.contenedorBarraAceleracion) {
-                this.contenedorBarraAceleracion.classList.remove('overheated');
+            // Si está sobrecalentado, pintar la barra de rojo
+            if (this.jugador.sobrecalentadoAceleracion) {
+                this.elementoBarraAceleracionUX.style.background = '#CC0000';
+                const contenedorUX = document.getElementById('aceleracion-ux-container');
+                if (contenedorUX) {
+                    contenedorUX.classList.add('overheated');
+                }
+            } else {
+                this.elementoBarraAceleracionUX.style.background = '#0044CC';
+                const contenedorUX = document.getElementById('aceleracion-ux-container');
+                if (contenedorUX) {
+                    contenedorUX.classList.remove('overheated');
+                }
             }
         }
     }
@@ -1685,6 +1742,9 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
         this.aplicacion.stage.addChild(gameOverSprite);
         this.elementosFinJuego.push(gameOverSprite);
         
+        // Guardar referencia para poder restaurar despues
+        this.gameOverSprite = gameOverSprite;
+        
         // Estilo de letra manuscrita (como Birome)
         const fontStyle = {
             fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
@@ -1709,7 +1769,8 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             text: `Puntuación Final: ${this.puntuacion}`,
             style: {
                 ...fontStyle,
-                fontSize: 30
+                fontSize: 30,
+                fill: 0x0044CC
             }
         });
         scoreText.anchor.set(0.5);
@@ -1742,7 +1803,13 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             // Evita que los clicks reinicien el juego mientras se escribe el nombre
             this.esperandoNombreTop5 = true;
             
-            // Deshabilitar el input del teclado para que no interfiera con el input HTML
+            // Ocultar botones de Game Over mientras se ingresa el nombre
+            const btnReiniciar = document.getElementById('btn-reiniciar');
+            const btnTop5 = document.getElementById('btn-top5');
+            if (btnReiniciar) btnReiniciar.style.display = 'none';
+            if (btnTop5) btnTop5.style.display = 'none';
+            
+            // Deshabilitar el input del teclado
             // Esto evita que las teclas W/A/S/D afecten al juego mientras se escribe el nombre
             this.gestorEntrada.deshabilitar();
             
@@ -1796,6 +1863,21 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             button.src = 'assets/guardadoBoton.png';
             button.style.cursor = 'pointer';
             button.style.marginLeft = '10px';
+            button.style.transition = 'transform 0.2s ease, filter 0.2s ease';
+            button.style.transform = 'scale(1)';
+            button.style.filter = 'brightness(1)';
+            
+            // Efecto hover (mouse encima)
+            button.addEventListener('mouseenter', () => {
+                button.style.transform = 'scale(1.1)';
+                button.style.filter = 'brightness(1.3) drop-shadow(0 0 10px #0044CC)';
+            });
+            
+            // Efecto cuando el mouse sale
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'scale(1)';
+                button.style.filter = 'brightness(1)';
+            });
             
             // Agregar los elementos al contenedor y al documento
             inputContainer.appendChild(label);       // Agregar etiqueta
@@ -1833,6 +1915,12 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
                     }
                     this.clickHandlerActivo = true;                // Reactivar clicks para reiniciar
                     this.gestorEntrada.habilitar();                // Reactivar teclado del juego
+                    
+                    // Mostrar botones de nuevo
+                    const btnReiniciar = document.getElementById('btn-reiniciar');
+                    const btnTop5 = document.getElementById('btn-top5');
+                    if (btnReiniciar) btnReiniciar.style.display = 'block';
+                    if (btnTop5) btnTop5.style.display = 'block';
                 } else {
                     // Si el nombre no es válido (vacío o con caracteres inválidos)
                     alert('Nombre inválido. Solo letras y números.');
@@ -1854,13 +1942,19 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
                         }
                         this.clickHandlerActivo = true;
                         this.gestorEntrada.habilitar();
+                        
+                        // Mostrar botones de nuevo
+                        const btnReiniciar = document.getElementById('btn-reiniciar');
+                        const btnTop5 = document.getElementById('btn-top5');
+                        if (btnReiniciar) btnReiniciar.style.display = 'block';
+                        if (btnTop5) btnTop5.style.display = 'block';
                     } else {
                         alert('Nombre inválido. Solo letras y números.');
                     }
                 }
             };
             
-            // === LIMPIEZA DEL INPUT ===
+// === LIMPIEZA DEL INPUT ===
             // Función que se llama cuando se limpian los elementos de fin de juego
             // Asegura que el input se cierre correctamente
             this.elementosFinJuego.push({ destroy: () => {
@@ -1871,107 +1965,27 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
                     this.bgImageRecord = null;
                 }
                 this.clickHandlerActivo = true;                // Reactivar clicks para reiniciar
-                this.gestorEntrada.habilitar();                // Reactivar teclado del juego
-            } });
+                this.gestorEntrada.habilitar();            // Reactivar teclado del juego
+                
+                // Mostrar botones de nuevo
+                const btnReiniciar = document.getElementById('btn-reiniciar');
+                const btnTop5 = document.getElementById('btn-top5');
+                if (btnReiniciar) btnReiniciar.style.display = 'block';
+                if (btnTop5) btnTop5.style.display = 'block';
+    } });
         }
+         
+        // =====================================================
+        // Crear botones HTML nativos para Game Over
+        // (mas confiables que los botones de PixiJS)
+        // =====================================================
+        this._crearBotonesGameOverHTML(gameOverSprite.x, gameOverSprite.y, gameOverSprite.width * scale);
         
-        
-        // Crear botón de reinicio DENTRO de la imagen
-        const buttonContainer = new PIXI.Container();
-        buttonContainer.x = this.anchoJuego / 2.3;
-        buttonContainer.y = this.altoJuego / 2.2 + (gameOverSprite.height * scale) / 2 - 60;
-        
-        // Habilitar eventos de puntero (click/touch)
-        buttonContainer.eventMode = 'static';
-        buttonContainer.cursor = 'pointer';
-        
-        // Fondo del botón
-        const buttonBg = new PIXI.Graphics();
-        buttonBg.roundRect(-80, -25, 160, 50, 10);
-        buttonBg.fill({ color: 0x0044CC });
-        buttonContainer.addChild(buttonBg);
-        
-        // Texto del botón
-        const buttonText = new PIXI.Text({
-            text: 'REINICIAR',
-            style: {
-                fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
-                fontSize: 22,
-                fill: 0xFFFFFF,
-                fontWeight: 'bold'
-            }
-        });
-        buttonText.x = -buttonText.width / 2;
-        buttonText.y = -buttonText.height / 2;
-        buttonContainer.addChild(buttonText);
-        
-        // Efecto cuando el mouse está sobre el botón
-        buttonContainer.on('pointerover', () => {
-            buttonBg.clear();
-            buttonBg.roundRect(-80, -25, 160, 50, 10);
-            buttonBg.fill({ color: 0x0066FF }); // Azul más claro
-        });
-        
-        // Efecto cuando el mouse sale del botón
-        buttonContainer.on('pointerout', () => {
-            buttonBg.clear();
-            buttonBg.roundRect(-80, -25, 160, 50, 10);
-            buttonBg.fill({ color: 0x0044CC }); // Volver al azul normal
-        });
-        
-        // Acción cuando se hace click en el botón
-        buttonContainer.on('pointerdown', (event) => {
-            // Si estamos esperando nombre para el Top 5, no hacer nada
-            if (this.esperandoNombreTop5) return;
-            
-            event.stopPropagation();
-            this._limpiarFinJuego();
-            this._reiniciarJuego();
-        });
-        
-        this.aplicacion.stage.addChild(buttonContainer);
-        this.elementosFinJuego.push(buttonContainer);
-        
-        // === BOTÓN TOP 5 ===
-        // Cargar textura del botón Top 5
-        const top5Texture = await PIXI.Assets.load('assets/top5Boton.png');
-        
-        const top5Container = new PIXI.Container();
-        top5Container.x = this.anchoJuego / 2 + 120;
-        top5Container.y = this.altoJuego / 2.2 + (gameOverSprite.height * scale) / 2 - 60;
-        top5Container.eventMode = 'static';
-        top5Container.cursor = 'pointer';
-        
-        // Crear sprite con la imagen del botón
-        const top5Sprite = new PIXI.Sprite(top5Texture);
-        top5Sprite.anchor.set(0.5);
-        top5Container.addChild(top5Sprite);
-        
-        // Efecto hover
-        top5Container.on('pointerover', () => {
-            top5Sprite.alpha = 0.8;  // Más transparente al hover
-        });
-        
-        top5Container.on('pointerout', () => {
-            top5Sprite.alpha = 1;  // Volver a normal
-        });
-        
-        // Detener propagación para que no reinicie el juego
-        top5Container.on('pointerdown', async (event) => {
-            // Si estamos esperando nombre para el Top 5, no hacer nada
-            if (this.esperandoNombreTop5) return;
-            
-            event.stopPropagation();
-            // Deshabilitar el handler de click del stage
-            this.clickHandlerActivo = false;
-            await this._mostrarTop5();
-        });
-        
-        this.aplicacion.stage.addChild(top5Container);
-        this.elementosFinJuego.push(top5Container);
+        // === FIN GAME OVER ===
         
         // Flag para controlar el click handler
         this.clickHandlerActivo = true;
+        this.botonClicked = false;  // Track si se hizo click en un boton
         
         // Esperar la tecla ENTER para reiniciar
         const restartHandler = (e) => {
@@ -1984,9 +1998,23 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
         window.addEventListener('keydown', restartHandler);
         
         // También permitir click en cualquier parte de la pantalla (solo si no se hizo click en botón)
-        const clickHandler = () => {
+        const clickHandler = (event) => {
+            // Si ya se hizo click en un botón, no hacer nada
+            if (this.botonClicked) {
+                this.botonClicked = false;
+                return;
+            }
+            
             // Si estamos esperando nombre para el Top 5, NO reiniciar
             if (this.esperandoNombreTop5 || !this.clickHandlerActivo) return;
+            
+            // Si los botones están ocultos (input de guardar activo), no hacer nada
+            const btnReiniciar = document.getElementById('btn-reiniciar');
+            const btnTop5 = document.getElementById('btn-top5');
+            if ((btnReiniciar && btnReiniciar.style.display === 'none') || 
+                (btnTop5 && btnTop5.style.display === 'none')) {
+                return;
+            }
             
             window.removeEventListener('keydown', restartHandler);
             this.aplicacion.stage.off('pointerdown', clickHandler);
@@ -1994,6 +2022,7 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             this._reiniciarJuego();
         };
         this.aplicacion.stage.eventMode = 'static';
+        this.aplicacion.stage.hitArea = null;  // Asegurar que el stage tiene hitArea
         this.aplicacion.stage.on('pointerdown', clickHandler);
     }
     
@@ -2005,6 +2034,12 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
         // Flag para evitar múltiples limpiezas simultáneas
         if (this.limpiezaEnProgreso) return;
         this.limpiezaEnProgreso = true;
+        
+        // Remover botones HTML
+        if (this.botonesHTML) {
+            this.botonesHTML.forEach(btn => btn.remove());
+            this.botonesHTML = null;
+        }
         
         // Remover todos los elementos guardados
         if (this.elementosFinJuego) {
@@ -2035,6 +2070,97 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             this.limpiezaEnProgreso = false;
         }, 100);
     }
+    
+/**
+ * Crea botones HTML nativos para Game Over
+ * Se posicionan a la derecha de la imagen de Game Over
+ */
+_crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
+    const canvas = this.aplicacion.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const scaleY = rect.height / this.altoJuego;
+    
+    // Posicion Y debajo de la imagen de Game Over (un poco mas arriba)
+    const btnY = yCentro + (ancho * 0.18);
+    
+    // Botón Reiniciar - centrado debajo de la imagen
+    const btnReiniciar = document.createElement('img');
+    btnReiniciar.src = 'assets/reiniciar.png';
+    btnReiniciar.id = 'btn-reiniciar';
+    btnReiniciar.style.cssText = `
+        position: absolute;
+        left: ${this.anchoJuego * 0.42}px;
+        top: ${btnY * scaleY}px;
+        transform: translate(-50%, -50%);
+        width: 175px;
+        height: auto;
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.2s ease;
+    `;
+    
+    // Efecto hover para REINICIAR
+    btnReiniciar.addEventListener('mouseenter', () => {
+        btnReiniciar.style.transform = 'translate(-50%, -50%) scale(1.1)';
+        btnReiniciar.style.filter = 'brightness(1.3) drop-shadow(0 0 10px #0044CC)';
+    });
+    
+    btnReiniciar.addEventListener('mouseleave', () => {
+        btnReiniciar.style.transform = 'translate(-50%, -50%) scale(1)';
+        btnReiniciar.style.filter = 'brightness(1) drop-shadow(0 0 0 transparent)';
+    });
+    
+    btnReiniciar.onclick = () => {
+        // No hacer nada si el boton esta oculto (cuando se muestra el input de guardar)
+        const btn = document.getElementById('btn-reiniciar');
+        if (!btn || btn.style.display === 'none') return;
+        
+        this._limpiarFinJuego();
+        this._reiniciarJuego();
+    };
+    document.body.appendChild(btnReiniciar);
+    
+    // Botón Top 5 - a la derecha, debajo de la imagen
+    const btnTop5 = document.createElement('img');
+    btnTop5.id = 'btn-top5';
+    btnTop5.src = 'assets/top5Boton.png';
+    btnTop5.style.cssText = `
+        position: absolute;
+        left: ${this.anchoJuego * 0.58}px;
+        top: ${btnY * scaleY}px;
+        transform: translate(-50%, -50%);
+        width: 120px;
+        height: auto;
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.2s ease;
+    `;
+    
+    // Efecto hover para TOP 5
+    btnTop5.addEventListener('mouseenter', () => {
+        btnTop5.style.transform = 'translate(-50%, -50%) scale(1.1)';
+        btnTop5.style.filter = 'brightness(1.3) drop-shadow(0 0 10px #0044CC)';
+    });
+    
+    btnTop5.addEventListener('mouseleave', () => {
+        btnTop5.style.transform = 'translate(-50%, -50%) scale(1)';
+        btnTop5.style.filter = 'brightness(1) drop-shadow(0 0 0 transparent)';
+    });
+    
+    btnTop5.onclick = async () => {
+        // Ocultar botones mientras se muestra el Top 5
+        const btnReiniciar = document.getElementById('btn-reiniciar');
+        const btnTop5El = document.getElementById('btn-top5');
+        if (btnReiniciar) btnReiniciar.style.display = 'none';
+        if (btnTop5El) btnTop5El.style.display = 'none';
+        
+        await this._mostrarTop5();
+    };
+    document.body.appendChild(btnTop5);
+    
+    // Guardar referencias para limpiar despues
+    this.botonesHTML = [btnReiniciar, btnTop5];
+}
     
     /**
      * Reinicia el juego a su estado inicial
@@ -2107,15 +2233,9 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             this.gestorEntrada.reiniciar();
         }
         
-        // Si el juego está pausado, salir del loop
+// Si el juego está pausado, salir del loop
         if (this.pausado) {
-            // Verificar si se quiere mostrar el Top 5 con la tecla T
-            if (this.gestorEntrada.debeMostrarTop5()) {
-                this.mostrandoTop5EnPausa = true;
-                await this._mostrarTop5();
-                // IMPORTANTE: No resetear mostrandoTop5EnPausa aquí
-                // Se resetea cuando el usuario hace click en VOLVER
-            }
+            // No mostrar Top 5 con T - solo funciona desde el menu principal
             return;
         }
         
@@ -2490,10 +2610,7 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
      */
     agregarPuntuacion(points) {
         this.puntuacion += points;
-        if (this.elementoPuntuacion) {
-            const shield = this.jugador ? this.jugador.escudos : 0;
-            this.elementoPuntuacion.textContent = `Puntuación: ${this.puntuacion} | Escudos: ${shield}%`;
-        }
+        // elementoPuntuacion ya no existe, solo se usa elementoPuntuacionAcumulada
     }
     
     /**
@@ -2553,26 +2670,29 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
                 this.aplicacion.stage.removeAllListeners('pointerdown');
                 this.aplicacion.stage.eventMode = 'none';
             }
-        } else {
-            // Desde Game Over o pausa: limpiar UI del game over
-            for (const elemento of this.elementosFinJuego) {
-                if (elemento && elemento.destroy) {
-                    elemento.destroy();
-                }
+        } else if (this.pausado) {
+            // Desde pausa (tecla T en menu de pausa): setear flag
+            this.mostrandoTop5EnPausa = true;
+            
+            // Desactivar listeners
+            if (this.aplicacion && this.aplicacion.stage) {
+                this.aplicacion.stage.eventMode = 'none';
             }
-            this.elementosFinJuego = [];
+        } else {
+            // Desde Game Over: NO limpiar - solo agregar elementos del Top 5
+            // Los elementos de Game Over ya estan en elementosFinJuego
         }
         
-        // Cargar imagen de puntuación (await para asegurar que cargue)
-        const puntuacionTexture = await PIXI.Assets.load('assets/puntuacion2.png');
+        // Cargar imagen de puntuación (usando gameOver.jpg como fondo)
+        const puntuacionTexture = await PIXI.Assets.load('assets/gameOver.jpg');
         
         // Crear sprite con la imagen
         const puntuacionSprite = new PIXI.Sprite(puntuacionTexture);
         
         // === IMAGEN MÁS GRANDE, FIJA Y CENTRADA ===
         // Usar ~65% del ancho y ~75% del alto (más grande que antes)
-        const maxWidth = this.anchoJuego * 0.65;
-        const maxHeight = this.altoJuego * 0.75;
+        const maxWidth = this.anchoJuego * 0.5;
+        const maxHeight = this.altoJuego * 0.5;
         const scale = Math.min(maxWidth / puntuacionSprite.width, maxHeight / puntuacionSprite.height);
         puntuacionSprite.scale.set(scale);
         puntuacionSprite.anchor.set(0.5);
@@ -2637,7 +2757,7 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             const textPuntos = new PIXI.Text({ text: puntos, style: this.estilos.filaTabla });
             const textOleada = new PIXI.Text({ text: oleada, style: this.estilos.filaTabla });
             
-            // Posicionar cada columna en la fila (mismo spacing que el encabezado)
+// Posicionar cada columna en la fila (mismo spacing que el encabezado)
             textNum.x = -180;      // N° más a la izquierda
             textNombre.x = -100;   // NOMBRE
             textPuntos.x = 50;     // PUNTOS
@@ -2654,77 +2774,83 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             this.elementosFinJuego.push(rowContainer);
         }
         
-        // === BOTÓN VOLVER (esquina inferior izquierda, separado de los bordes) ===
-        const backContainer = new PIXI.Container();
+        // === BOTÓN VOLVER (HTML nativo) ===
+        // Calcular posicion
+        const margenSeparacion = 40,
+            bordeIzq = (this.anchoJuego / 2) - (imagenAncho / 2) + margenSeparacion,
+            bordeInf = (this.altoJuego / 2) + (imagenAlto / 2) - margenSeparacion;
         
-        // Posicionar en la esquina inferior izquierda de la imagen, separado de los bordes
-        const margenSeparacion = 40;  // px separado de los bordes
-        const bordeIzquierdo = (this.anchoJuego / 2) - (imagenAncho / 2) + margenSeparacion;
-        const bordeInferior = (this.altoJuego / 2) + (imagenAlto / 2) - margenSeparacion;
+        const btnVolver = document.createElement('img');
+        btnVolver.src = 'assets/volver.png';
+        btnVolver.id = 'btn-volver';
+        btnVolver.style.cssText = `
+            position: absolute;
+            left: ${bordeIzq + 80}px;
+            top: ${bordeInf - 40}px;
+            transform: translateY(-50%);
+            width: 156px;
+            height: auto;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.2s ease;
+        `;
         
-        // Botón en esquina inferior izquierda (a la derecha del borde izquierdo)
-        backContainer.x = bordeIzquierdo + 115;
-        backContainer.y = bordeInferior -228;
-        backContainer.eventMode = 'static';
-        backContainer.cursor = 'pointer';
-        
-        const backBg = new PIXI.Graphics();
-        backBg.roundRect(-60, -18, 120, 30, 10);
-        backBg.fill({ color: 0x0044CC });
-        backContainer.addChild(backBg);
-        
-        const backText = new PIXI.Text({
-            text: 'VOLVER',
-            style: {
-                fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
-                fontSize: 20,
-                fill: 0xFFFFFF,
-                fontWeight: 'bold'
-            }
+        // Efecto hover para VOLVER
+        btnVolver.addEventListener('mouseenter', () => {
+            btnVolver.style.transform = 'translateY(-50%) scale(1.1)';
+            btnVolver.style.filter = 'brightness(1.3) drop-shadow(0 0 10px #0044CC)';
         });
-        backText.x = -backText.width / 2;
-        backText.y = -backText.height / 2;
-        backContainer.addChild(backText);
         
-        backContainer.on('pointerdown', () => {
-            // Limpiar solo los elementos del Top 5 (no todo)
-            if (this.elementosFinJuego) {
-                for (const el of this.elementosFinJuego) {
+        btnVolver.addEventListener('mouseleave', () => {
+            btnVolver.style.transform = 'translateY(-50%) scale(1)';
+            btnVolver.style.filter = 'brightness(1) drop-shadow(0 0 0 transparent)';
+        });
+        
+        btnVolver.onclick = () => {
+            // Remover solo los elementos del Top 5 (indices 5 en adelante)
+            // Conservar: 0=bg, 1=gameOver, 2=titleText, 3=scoreText, 4=waveText
+            if (this.elementosFinJuego && this.elementosFinJuego.length > 5) {
+                const elementosAQuitar = this.elementosFinJuego.slice(5);
+                for (const el of elementosAQuitar) {
                     try {
                         if (el && el.parent) {
                             el.parent.removeChild(el);
-                            if (el.destroy && typeof el.destroy === 'function') {
-                                el.destroy();
-                            }
+                            if (el.destroy) el.destroy();
                         }
-                    } catch (e) {
-                        // Ignorar errores
-                    }
+                    } catch (e) {}
                 }
-                this.elementosFinJuego = [];
             }
             
-            // Restaurar eventMode del stage para permitir interacciones
+            // Remover boton VOLVER HTML
+            const btnVolverEl = document.getElementById('btn-volver');
+            if (btnVolverEl) btnVolverEl.remove();
+            
+            // Restaurar eventMode del stage
             if (this.aplicacion && this.aplicacion.stage) {
                 this.aplicacion.stage.eventMode = 'static';
             }
             
             if (this.mostrandoTop5EnPausa) {
-                // Si estábamos en pausa durante el juego, reanudar el juego
-                this.pausado = false;
+                // Si estábamos en pausa, volver a pausa (no reanudar)
                 this.mostrandoTop5EnPausa = false;
-                this.clickHandlerActivo = true;
-            } else {
-                // Si era desde Game Over, volver al Game Over
-                this.gameOver();
+                this.pausado = true;
             }
-        });
+            // Desde Game Over: solo mostrar los botones que ya existen (ocultos)
+            const btnReiniciar = document.getElementById('btn-reiniciar');
+            const btnTop5El = document.getElementById('btn-top5');
+            if (btnReiniciar) btnReiniciar.style.display = 'block';
+            if (btnTop5El) btnTop5El.style.display = 'block';
+        };
         
-        this.aplicacion.stage.addChild(backContainer);
-        this.elementosFinJuego.push(backContainer);
+        document.body.appendChild(btnVolver);
         
-        // IMPORTANTE: Restaurar eventMode del stage para que el botón VOLVER funcione
-        // Si estaba en 'none' (porque se mostró desde pausa durante el juego), restaurar a 'static'
-        this.aplicacion.stage.eventMode = 'static';
+        // Guardar referencia para limpiar despues
+        this.botonesHTML = this.botonesHTML || [];
+        this.botonesHTML.push(btnVolver);
+        
+        // IMPORTANTE: Restaurar eventMode del stage para que funcione
+        if (this.aplicacion && this.aplicacion.stage) {
+            this.aplicacion.stage.eventMode = 'static';
+        }
     }
 }
