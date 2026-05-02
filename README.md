@@ -149,7 +149,9 @@ serve .
 
 ```
 ├── index.html              # Página principal
+├── GDD.md                  # Historial de versiones y commits
 ├── SPEC.md                 # Especificaciones del juego
+├── PENDIENTES.md           # Tareas pendientes y roadmap
 ├── README.md               # Este archivo
 ├── package.json            # Configuración npm
 ├── css/
@@ -163,6 +165,8 @@ serve .
 │   └── guardarPuuntos.png # Imagen de formulario Top 5
 └── src/
     ├── main.js            # Punto de entrada
+    ├── ui/
+    │   └── UIManager.js   # Gestión de UI y menús
     ├── game/
     │   ├── Game.js        # Clase principal
     │   ├── Player.js      # Nave del jugador (clase: Jugador)

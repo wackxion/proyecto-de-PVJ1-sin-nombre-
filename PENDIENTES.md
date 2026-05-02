@@ -1,6 +1,6 @@
 # Pendientes - Jugando en el Espacio
 
-**Última actualización:** 28/04/2026  
+**Última actualización:** 02/05/2026  
 **Versión:** v1.3.5
 
 ---
@@ -35,18 +35,23 @@
 
 ## ✅ Historial de Completados (v1.3.5)
 
+### v1.3.5
 - Pantalla de carga con nave girando desde el centro
 - Top 5 desde menú con pantalla de carga + polling
 - Top 5 desde Game Over con fondo gameOver.jpg
 - Fondo oscuro en Tutorial, Top 5, Créditos
 - Preservar textos Game Over al volver del Top 5
+- **Nueva clase UIManager.js** - Gestión de UI centralizada
+- **Iconos de habilidades en HUD**: cohetes, escudo, ulti, tiempo fuera, propulsor, deborador
+- **Efectos de escudo**: flash blanco al recibir impacto, marco rojo al sobrecalentarse
+- **GDD.md** creado con historial completo de commits
 
 ---
 
 ## 📝 Notas
 
 - **Object Pooling** pedido para más adelante (no es urgente)
-- **Boids** documentado en `docs/PROPUESTA_BOIDS.md` para v1.5.0+
+- **Boids** documentado en GDD.md para v1.5.0+
 - El proyecto funciona bien, los pendientes son mejoras opcionales
 
 ---

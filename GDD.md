@@ -1,0 +1,331 @@
+# 📋 GDD - Historial de Versiones
+
+**Proyecto:** Jugando en el Espacio  
+**Versión actual:** v1.3.5  
+**Curso:** Programación de Videojuegos 1 - UNAHUR  
+**Profesor:** Facundo Saiegh  
+**Desarrollador:** Braian Zapater
+
+---
+
+## 📜 Registro de Commits por Versión
+
+### v1.3.5 (Actual)
+> **UI mejorada: iconos de habilidades, efectos de escudo**
+
+| Commit | Descripción |
+|--------|-------------|
+| `fbe7bfb` | v1.3.5 - UI mejorada: iconos de habilidades, efectos de escudo y documentación actualizada |
+| `f8aa13b` | Agregado obsidian-desarrollo al gitignore |
+| `c8b8112` | v1.3.4 - Iconos UI, botones con imágenes, versión en pantalla, código limpiado |
+| `24052fc` | Docs: Actualizado SPEC.md y notas para v1.3 - Movimiento tanque |
+| `9ad975d` | Docs: Creados 3 agentes especializados para el proyecto |
+| `dad3d39` | Docs: Creada documentación Obsidian y preparada v1.3 |
+
+---
+
+### v1.3.4
+> **Iconos UI, botones con imágenes, versión en pantalla**
+
+| Commit | Descripción |
+|--------|-------------|
+| `2734458` | Docs: Actualizado README.md y SPEC.md para v1.2 |
+| `8c5eeed` | Fix: Top 5 posicionado correctamente dentro de la imagen |
+| `87dd7e6` | Fix: Botón VOLVER ahora en posición fija |
+| `a121bd9` | Fix: Filtrar elementos vacíos/inválidos del Top 5 |
+| `c61d30e` | Debug: Más logs para ver estructura de datos |
+| `b0a86b0` | Debug: Agregado más logs para ver estructura de datos |
+| `1535478` | Fix: Velocidad máxima de asteroides ahora es 60% |
+| `a82d8ae` | Fix: Medium y Small ahora son 17% cada uno |
+| `940e780` | Feat: Small comunes 26% + Debug Top5 para verificar calificación |
+| `d57ecd7` | Fix: Botón VOLVER ahora mantiene el juego en pausa |
+| `f3f084b` | Clean: Removida función de desarrollo (tecla L) |
+| `7f12526` | Debug: Agregado log de lista en Game.js |
+| `0fc3f79` | Fix: Mejorado log para debug de carga de Top 5 |
+| `2191c6d` | Fix: Agregado async a _gameLoop para usar await |
+| `dc8319f` | Feat: Agregado sistema de pausa (P) y Top 5 (T) |
+| `12c1e81` | Fix: Corregido carga de lista desde Firebase |
+| `847d7d0` | Fix: Agregado async al handler de ENTER |
+| `fcaba12` | Fix: Corregido Firebase SDK (version compat) y async handlers |
+| `a584d75` | Fix: Actualizada configuración de Firebase con nuevo proyecto |
+| `0230ab1` | Feat: Sistema Top 5 con Firebase Firestore para guardado permanente |
+
+---
+
+### v1.3.3 - Top 5
+> **Sistema de puntuación Top 5**
+
+| Commit | Descripción |
+|--------|-------------|
+| `02725ff` | Clean: Removidos console.log de debug |
+| `9dfa9ea` | Debug: Agregados console.log en _mostrarTop5 para troubleshooting |
+| `57ff91c` | Refactor: Estilos predefinidos para PIXI.Text en Game.js |
+| `6bdb431` | Fix: Sistema de respaldo en memoria para Top 5 cuando localStorage no funciona |
+| `e57fdc0` | Fix: Agregado favicon al proyecto |
+| `6a16d35` | Fix: Corregido nombre de asset (nave322.png -> Nave322.png) |
+| `2f51026` | Revert "Fix: Corregido nombre de asset de nave (nave322.png -> nave.png)" |
+| `0144437` | Fix: Corregido nombre de asset de nave (nave322.png -> nave.png) |
+| `a576962` | Docs: Actualizados SPEC.md y README.md con sistema Top 5 y dificultad progresiva |
+| `2495d30` | Feat: Sistema Top 5 con localStorage y mejoras de juego |
+
+---
+
+### v1.3.2
+> **Naves enemigas desde el inicio + Mejor sistema de escudos**
+
+| Commit | Descripción |
+|--------|-------------|
+| `86155cb` | Fix: removido limite de asteroides en pantalla y ajustado intervalo de oleadas |
+| `8fa1d25` | Feature: Efectos visuales mejorados - rotación de nave, fragmentación de asteroides y colisiones |
+| `5ef1381` | Feature: UI mejorada con imágenes, sistema de oleadas por destrucción y Game Over con imagen |
+| `3f828aa` | Feature: HitEffect doble tamaño (escala=2) - usado en proyectiles y colisiones de asteroides |
+| `cfe7c6d` | Fix: eliminar metodo _moverRezagado duplicado que iba al centro |
+| `2bb5c61` | Fix: juego del tamaño de la pantalla |
+| `fca3280` | Fix: juego con tamano fijo 800x600 |
+| `be3fb30` | Fix: resolution fija a 1 para mantener tamaño normal |
+| `7fc3cb6` | Revert "Fix: rezagados sin objetivo (null) para que no vayan a la nave" |
+| `475b26c` | Revert "Fix: rezagados tienen direccion correcta (dirX y dirY inicializadas)" |
+| `10203e4` | Fix: rezagados tienen direccion correcta (dirX y dirY inicializadas) |
+| `c390afb` | Fix: rezagados sin objetivo (null) para que no vayan a la nave |
+
+---
+
+### v1.3.1 - Correcciones de movimiento
+> **Órbitas y movimiento de asteroides**
+
+| Commit | Descripción |
+|--------|-------------|
+| `19c6560` | Fix: corregir error de sintaxis en Enemy.js |
+| `ab8ac5b` | Fix: no sobrescribir direccion de rezagados si ya fue asignada |
+| `abd4b32` | Fix: rezagados ahora van en línea recta correcta asignada manualmente |
+| `864ee8e` | Fix: rezagados aparecen en zonas extremas sin pasar por el centro |
+| `3354511` | Fix: rezagados evitan la zona central donde está la nave |
+| `1af807b` | Fix: restaurar movimiento orbital del commit c45041b |
+| `9b71deb` | Fix: asteroids large se acercan de manera eliptica - reducen distancia gradualmente |
+| `893893f` | Fix: restaurar movimientos de asteroids del commit c45041b |
+| `055da21` | Fix: corregir error de sintaxis en Game.js |
+| `e32d6df` | Fix: rezagados cruzan toda la pantalla - orbitan椭圆Acerca a nave - fragmentos heredan trayectoria |
+| `fa870f2` | Fix: asteroids large agora orbitam - medium e small van directo a nave |
+| `4a128a6` | Revert: quitar imagen de fondo de puntuacion |
+| `2dc5eff` | Revert: solo rezagados se destruyen al llegar al centro |
+| `aeb5125` | Fix: fondo de puntuacion tamano fijo - orbita de asteroids large ahora estable a 180px |
+| `764879b` | Fix: ajustar tamano del fondo de puntuacion al texto |
+| `2b7f0bc` | Feature: agregar imagen fondo de puntuacion debajo del score |
+| `2e58650` | Fix: órbita se acerca gradualmente a la nave - distancia reduce 5px por segundo |
+| `92d8ed0` | Feature: agregar movimiento orbital para asteroids grandes - ahora large orbita alrededor de la nave |
+
+---
+
+### v1.3 - Sistema de Oleadas y Naves Enemigas
+
+| Commit | Descripción |
+|--------|-------------|
+| `1886454` | Fix: unificar colores del HUD - todo azul #0044CC |
+| `8b7d5a1` | Fix: verificar si imagen existe antes de actualizar posicion en Enemy.update |
+| `5d76803` | Fix: quitar referencia a _orbitarObjetivo que no existe - simplificar movimiento |
+| `3ebf3bc` | Fix: corregir llave extra en Enemy.js |
+| `ddfc0fb` | Fix: rezagados ahora van hacia el centro y se destruyen ahí - no cruzan toda la pantalla |
+| `c45041b` | Fix: unificar estilo de oleada con score en CSS - quitar limite de maximoEnemigos - rezagados pasan mas cerca del centro |
+| `2d80a6d` | Feature: agregar fondo de espacio desde imagen 'fondoEspacio.png' - ahora carga la imagen y la usa como fondo, con fallback de estrellas |
+
+---
+
+### v1.3 - Sistema ULTi y Sobrecalentamiento
+
+| Commit | Descripción |
+|--------|-------------|
+| `379015b` | Revert: volver probabilidad de rezagados a 35% |
+| `ac3cadb` | Fix: ulti no carga cuando se usa - Feature: aumentar aparicion de rezagados de 35% a 50% |
+| `d9ce6bd` | Revert "Feature: agregar animacion de explosion con sprite sheet - BurstEffect ahora usa 'animacion de explosion.png' (4 frames, 32x36) en lugar de particulas" |
+| `a768dc0` | Revert "Fix: el ulti ya no carga mas cuando se usa - solo da puntos, no carga el ataque especial" |
+| `69c8ee5` | Feature: agregar animacion de explosion con sprite sheet - BurstEffect ahora usa 'animacion de explosion.png' (4 frames, 32x36) en lugar de particulas |
+| `a633184` | Fix: el ulti ya no carga mas cuando se usa - solo da puntos, no carga el ataque especial |
+| `6aa8796` | Feature: agregar barra de carga visual del Ulti - aumentar cargaMaxUlti de 100 a 300 para hacerlo mas dificil, agregar barra visual en HTML/CSS con animacion cuando esta listo |
+| `f59b7f5` | Chore: desactivar console.log de debug en Game.js y main.js |
+| `999c0bd` | Fix: corregir offsetIndex -> indiceOffset en _crearFragmentoConOffset |
+| `7b992bc` | Fix: corregir offsetIndex -> indiceOffset y size -> tamanio en _crearFragmentoRezagado |
+| `0d0a5bd` | Fix: corregir this._draw -> this._dibujar en HitEffect update() |
+| `682d4a4` | Fix: corregir _draw -> _dibujar en HitEffect y BurstEffect |
+| `db10915` | Fix: corregir nombres de propiedades y metodos a espanol - shield->escudos, isOverheated->sobrecalentado, enemies->enemigos, createProjectile->crearProyectil, triggerUlti->activarUlti - corregir carga de assets con PIXI.Assets.init() |
+| `953384a` | Fix: usar strings para verificar rezagados en Game.js |
+| `b03b826` | Fix: eliminar código duplicado en _romper() |
+| `8072e53` | Fix: usar strings simples en lugar de TamanioAsteroide para evitar problemas de importación |
+| `e1d1321` | Debug: agregar logs en _generarEnemigo y quitar estilos que rompen el canvas |
+| `2511a9a` | Debug: agregar más logs para seguir el flujo |
+| `24dc86d` | Fix: crear texturas programáticamente en lugar de cargar archivos |
+| `091a3f0` | Debug: agregar logs para carga de assets |
+| `483d884` | Debug: agregar logs al inicio del juego |
+| `da86ed2` | Debug: agregar logs para ver qué está pasando con la renderización |
+
+---
+
+### v1.2 - Refactor y Nomenclatura Española
+
+| Commit | Descripción |
+|--------|-------------|
+| `cbb3377` | Fix: eliminar código duplicado en Enemy.js |
+| `9ea308f` | Fix: renombrar Projectile a Proyectil y actualizar todas sus propiedades |
+| `b29a67b` | Fix: usar tamanio en lugar de size en Enemy.js y Game.js |
+| `e578b09` | Fix: actualizar referencias de sprite a imagen en todo el código |
+| `0a88ff7` | Fix: usar enemigo en lugar de enemy en _generarEnemigo |
+| `f5c1b1c` | Fix: renombrar todos los métodos privados a español en todos los archivos |
+| `eb48d8f` | Fix: renombrar métodos restantes en Player.js |
+| `74844a9` | Fix: usar Enemigo en lugar de Enemy en fragmentos |
+| `749d7dd` | Refactor: renombrar todas las clases y variables a camelCase en español |
+
+---
+
+### v1.2 - Spawn Progresivo y UI
+
+| Commit | Descripción |
+|--------|-------------|
+| `44e9236` | Feat: mostrar mejora de velocidad de disparo (+%) en UI |
+| `b82e767` | Feat: spawn progresivo - los meteoritos aparecen cada vez más rápido |
+| `4289c06` | Fix: agregar cooldown de colisión para evitar rezagados pegados |
+| `c6fcc5c` | Oleadas cada 1 segundo |
+| `6d2ce14` | Reducir oleadas a 2s, agregar cleanup de enemigos muy lejos |
+| `dda8074` | Oleadas cada 1 segundo |
+| `8ab8f8d` | Fix: duplicate code en _break() method |
+| `d90158e` | Fix: fragmentos separados con direcciones diferentes, special verde, rezagados violeta |
+| `f9d327c` | Fix: sobrecalentamiento se activa solo cuando escudos llegan a 0, vulnerable por 10seg, al terminar carga escudos a 100% |
+| `df14f9e` | Fix: colisiones asteroides rebotan, fragmentos separados al romper, sobrecalentamiento se activa al recibir cualquier daño que baje de 100% |
+
+---
+
+### v1.2 - Sistema de Sobrecalentamiento
+
+| Commit | Descripción |
+|--------|-------------|
+| `e3bd0b4` | Fix: verificar sprite null al inicio de update para evitar errores |
+| `977ea47` | Fix: null check en sprite.rotation para evitar error cuando el sprite ya fue destruido |
+| `5690bb4` | Ajustar: spawnInterval 2s, maxEnemies 30 |
+| `96e248f` | Duplicar aparición de asteroides: spawnInterval 2s->1s, maxEnemies 10->20 |
+| `364260c` | Agregar asteroides rezagados: LARGE_REZAGADO, MEDIUM_REZAGADO, SMALL_REZAGADO - pasan de largo, dirección aleatoria, al chocar con otros asteroides cambian dirección, fragmentos con dirección aleatoria |
+| `0e9b923` | Agregar sistema de sobrecalentamiento: no muere al recibir daño con 100% escudos, entra en enfriamiento por 10s, si choca pierde enfriamiento, UI en rojo |
+
+---
+
+### v1.1 - Documentación y Mejoras
+
+| Commit | Descripción |
+|--------|-------------|
+| `0829a4b` | Documentar todos los archivos restantes con comentarios en español |
+| `a28b3f5` | Documentar Game.js y Enemy.js con comentarios detallados en español |
+| `09367c3` | Agregar escala x2 a la nave y documentar Player.js con comentarios detallados en español |
+| `54d2abb` | Actualizar SPEC.md con todas las características implementadas |
+| `6138cad` | Aumentar tamaño de la nave (radius 32 -> 64) |
+
+---
+
+### v1.1 - Sistema Special y Power-up
+
+| Commit | Descripción |
+|--------|-------------|
+| `db76d77` | Especial no hace daño al chocar con la nave |
+| `1164067` | Power-up solo al destruir special, eliminardar power-up al tocar |
+| `4e8338f` | Eliminar aumento de tamaño de nave, solo aumenta velocidad de disparo |
+| `860bc82` | Nave más grande (radius 32), asteroides tintados de rojo |
+| `c61a2ab` | Slowdown reducido a 70% (solo 30% de velocidad) |
+| `751617f` | Slowdown ahora es temporal (1 segundo) y no se acumula, resetea el timer si ya estaba activo |
+| `9c7931d` | Cambiar retroceso por reducción de velocidad al recibir impacto de proyectil |
+| `9591149` | Especial no se rompe, solo da power-up al destruirse |
+| `365394c` | Especial ahora tiene apariencia grande (120px) pero comportamiento de small (movimiento directo, speed 120), se rompe en 2 small |
+| `ba68470` | Asteroide especial ahora se rompe en 2 medianos y da power-up |
+| `35e14e0` | Asteroide especial = power-up sin daño, da velocidad al dispara al tocarlo o destruirlo |
+
+---
+
+### v1.1 - Mejoras de Jugabilidad
+
+| Commit | Descripción |
+|--------|-------------|
+| `a72b541` | Aumentar tamaño base de la nave (radius 20 -> 28) |
+| `75c56c0` | Agregar: retroceso al recibir impacto, efecto visual de hit, asteroid special más rápido (50) y más daño (90%), nave crece al destruir special |
+| `5531f64` | Fix: fragmentos de medianos solo heredan órbita si el padre orbitaba |
+| `ca8ec9a` | Fragmentos heredan órbita del padre: dirección orbital + shouldOrbit forzado |
+| `775bb5d` | Actualizar comentarios: fragmentos heredan trayectoria orbital |
+| `2bea933` | Fragmentos heredan trayectoria orbital (curvatura) con timer de transición |
+| `53c5721` | Fragmentos heredan trayectoria hacia la nave en lugar de velocidad del padre |
+| `617bbed` | Duplicar tamaño de asteroides (small, medium, large) manteniendo special igual |
+
+---
+
+### v1.0.9 - Sistema de Fragmentación
+
+| Commit | Descripción |
+|--------|-------------|
+| `33c0bfd` | Remove impulse/velocity inheritance - fragments now directly orbit |
+| `3c3a5fe` | Fix duplicate code in Enemy.js |
+| `957d0c8` | Fix: asteroid fragments now inherit orbital movement from parent |
+| `cbc4d06` | Fix: asteroid fragments inherit direction from parent - fragments continue in same direction before moving toward ship |
+| `ddb90f9` | Fix: fragments now move concentrically toward the ship, not orbit |
+| `50f4506` | Fix: asteroid fragments now maintain orbital movement, added _orbitTargetDirect method |
+| `d449f39` | Fix: asteroids inherit orbital movement after breaking - now uses smooth orbit blending with inherited velocity |
+| `86b6673` | Fix texture check in Enemy.js (use !== null instead of truthy check) |
+| `bac3302` | Fix extra closing brace in Enemy.js |
+| `f6d6a99` | Fix syntax error in Enemy.js (extra closing brace) |
+| `5ebd9f5` | Update title in index.html to 'Jugando en el Espacio' |
+
+---
+
+### v1.0.8 - Efectos Visuales
+
+| Commit | Descripción |
+|--------|-------------|
+| `2c27a5e` | Add burst visual effect when special asteroid is destroyed, and reset shoot speed on restart |
+| `17b1139` | Fix: increase shoot speed when special asteroid is destroyed |
+| `489f384` | Add asteroid damage percentages, special boss type, and updated SPEC.md |
+| `6b7a0fe` | Fix game over screen not clearing on restart |
+| `e7dffd6` | Update README with game name 'Jugando en el Espacio' and add prominent game link |
+| `ded0165` | Add restart button and better game over screen with click to restart |
+| `33c863c` | Add visual improvements: line projectiles, damage sphere effect, shield system, and expanding ring ulti effect |
+
+---
+
+### v1.0.7 - README y Descripción
+
+| Commit | Descripción |
+|--------|-------------|
+| `cc14462` | Update README with game description, controls and instructions |
+| `3a972f7` | Implement complete game with rotation controls, asteroids, projectiles and fullscreen support |
+| `1d69755` | Update team member and project requirements |
+| `2c4884a` | reame |
+
+---
+
+### v1.0.6 - Primer Commit Funcional
+
+| Commit | Descripción |
+|--------|-------------|
+| `f910fca` | Initial commit |
+
+---
+
+## 📊 Resumen de Versiones
+
+| Versión | Commits | Características Principales |
+|---------|---------|----------------------------|
+| v1.3.5 | 6 | UI mejorada, iconos de habilidades, efectos de escudo |
+| v1.3.4 | ~18 | Top 5 con Firebase, pausa, botones con imágenes |
+| v1.3.3 | ~14 | Sistema Top 5 (localStorage + Firebase) |
+| v1.3.2 | ~20 | Naves enemigas desde inicio, mejor sistema de escudos |
+| v1.3.1 | ~15 | Órbitas de asteroides, movimiento mejorado |
+| v1.3 | ~25 | Sistema de oleadas, ULTi, sobrecalentamiento |
+| v1.2 | ~25 | Refactor a español, spawn progresivo |
+| v1.1 | ~25 | Special enemies, power-ups, fragmentación |
+| v1.0.9 | ~15 | Fragmentos de asteroides con órbitas |
+| v1.0.8 | ~10 | Efectos visuales, efectos de partículas |
+| v1.0.7 | ~5 | README, controls, game description |
+| v1.0.6 | 1 | Initial commit |
+
+---
+
+## 🎯 Próxima Versión: v1.3.6
+
+**Objetivos planificados:**
+- Barra de escudos visual (reemplazar iconos por barra horizontal)
+- Nuevas habilidades: Escudo Temporal (Q), Teleport (R), Ralentizar (E)
+
+---
+
+**Última actualización:** 02/05/2026
