@@ -1,61 +1,104 @@
 # Pendientes - Jugando en el Espacio
 
-**Última actualización:** 02/05/2026  
-**Versión:** v1.3.5
+**Última actualización:** 04/05/2026  
+**Versión:** v1.3.7 (COMPLETADO)
 
 ---
 
-## 🎯 Tareas Pendientes
+## ✅ Completado v1.3.7
 
-### Alta Prioridad
+### Sistema de Habilidades Activas
 
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 1 | **Barra de escudos visual** | Reemplazar iconos por barra horizontal con porcentaje | ⬜ |
-| 2 | **Habilidades nuevas** | Escudo Temporal (Q), Teleport (R), Ralentizar (E) | ⬜ |
+| Habilidad | Tecla | Cooldown | Descripción |
+|-----------|-------|----------|--------------|
+| **Cohetes** | Q | 5 seg | Lanza 2 cohetes hacia los 2 enemigos más cercanos (asteroides y naves) |
+| **Propulsor** | R | 15 seg | Dash: avanza 300px en 0.2s en la dirección de la nave (no puede girar) |
+| **Devorador** | E | 5 seg | Atrae partículas Boid dentro de 200px hacia la nave |
 
-### Media Prioridad
+### Habilidad Pasiva - Tiempo Fuera
 
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 3 | **Object Pooling** | Reutilizar proyectiles para mejorar rendimiento (+10-15 FPS) | ⬜ |
-| 4 | **Dividir Game.js** | El archivo tiene 2800+ líneas, separar en módulos | ⬜ |
+- **Activación**: Se activa automáticamente cuando el jugador está en sobrecalentamiento durante 10 segundos
+- **Efecto**: Regenera 10% de escudos (sale del sobrecalentamiento)
+- **Animación del reloj**:
+  - Imágenes: relog1.png → relog2.png → relog3.png → relog4.png → relog5.png → relog6.png → relog6(girado 360°) → repetir
+  - Velocidad: 0.3 segundos por frame
+  - Aparece desde que empieza el sobrecalentamiento hasta que se desactiva
+- **Cambio de color del marco**:
+  - Durante sobrecalentamiento (antes de 10s): parpadeo blanco/azul
+  - Después de activarse: azul fijo
 
-### Baja Prioridad / Versión Futura
+### Partículas Boid (PBOids)
 
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 5 | **Boids** | Algoritmo de comportamiento grupal para naves enemigas | ⬜ (documentado) |
-| 6 | **Audio** | Música de fondo y efectos de sonido | ⬜ |
-| 7 | **Quadtree** | Optimización de colisiones para 50+ agentes | ⬜ |
-| 8 | **Boss fights** | Jefe cada 10 oleadas | ⬜ |
-| 9 | **Power-ups** | Items coleccionables durante el juego | ⬜ |
+- **Texturas**: Pboids1.png a Pboids4.png (animación 1,2,3,4,3,2,1 en bucle)
+- **Tamaño**: 15x15 píxeles
+- **Comportamiento**: huyen del jugador, rebotan en asteroides, se agrupan con el algoritmo Boid
+- **Contador**: Muestra cantidad de partículas capturadas por el Devorador
+
+### Asteroides Especiales (SpecialEnemy)
+
+- **HP**: 100 (reducido de 200)
+- **Comportamiento**: Va hacia la posición inicial del jugador cuando fue generado (no persigue)
+- **Al destruirlo**: Se convierte en mini y orbita alrededor de la nave (como power-up)
+- **Al colisionar con jugador**: Se transforma en mini y orbita
+- **Puntos**: 100
+- **YA NO da bonus** de escudos ni velocidad de disparo al destruirlo
+
+### Cambios Técnicos
+
+- **InputManager.js**:
+  - Agregada tecla Q para cohetes (cooldown 5s)
+  - Agregada tecla R para propulsor (cooldown 15s)
+  - Reseteo de cooldowns al reiniciar el juego
+
+- **Player.js**:
+  - Sistema de propulsor (dash): 300px en 0.2s, no puede rotar durante el dash
+  - Variables: `enPropulsor`, `duracionPropulsor: 0.2`, `velocidadPropulsor: 1500`
+
+- **SpecialEnemy.js**:
+  - Dirección inicial guardada (`direccionInicialX`, `direccionInicialY`) - dato que NO cambia
+  - 100 HP siempre
+  - Se convierte en mini al destruirlo (no desaparece)
+
+- **UIManager.js**:
+  - Iconos para todas las habilidades
+  - Marcos con cambios de color según estado (rojo=cooldown, azul=listo)
+  - Animación del reloj para Tiempo Fuera
+  - Contador de partículas Boias capturadas
+  - Tutorial con todas las teclas (W, ESPACIO, A/D, S, Q, E, R)
+  - Créditos con "Asistencia IA: OpenCode"
+
+- **CSS UIManager.js**:
+  - Marco de ULTI con un solo borde (arreglado doble borde)
 
 ---
 
-## ✅ Historial de Completados (v1.3.5)
+## ✅ Historial de Completados (v1.3.6)
 
-### v1.3.5
-- Pantalla de carga con nave girando desde el centro
-- Top 5 desde menú con pantalla de carga + polling
-- Top 5 desde Game Over con fondo gameOver.jpg
-- Fondo oscuro en Tutorial, Top 5, Créditos
-- Preservar textos Game Over al volver del Top 5
-- **Nueva clase UIManager.js** - Gestión de UI centralizada
-- **Iconos de habilidades en HUD**: cohetes, escudo, ulti, tiempo fuera, propulsor, deborador
-- **Efectos de escudo**: flash blanco al recibir impacto, marco rojo al sobrecalentarse
-- **GDD.md** creado con historial completo de commits
+### v1.3.6
+
+#### Partículas Boid
+- Sistema de partículas con comportamiento de enjambre
+- Tamaño: 15x15 píxeles
+- Comportamiento: Separación, Cohesión, Alineación, Fuga del jugador
+- Huyen de la nave (fuerza: 0.6, rango: 200px)
+- 10 iniciales, máximo 100, aparecen en grupos de 10 cada 3 segundos
+
+#### Habilidad Devorador (Tecla E)
+- Cooldown: 5 segundos
+- Atrae partículas dentro de 200px hacia la nave
+- Contador de partículas capturadas
 
 ---
 
 ## 📝 Notas
 
-- **Object Pooling** pedido para más adelante (no es urgente)
-- **Boids** documentado en GDD.md para v1.5.0+
-- El proyecto funciona bien, los pendientes son mejoras opcionales
+- Todas las habilidades (Q, E, R) están operativas y se resetean al morir
+- La animación del reloj muestra el estado de Tiempo Fuera
+- Los especiales ya no dan bonus al destroyar
+- Los especiales se convierten en mini al recibir el daño justo
 
 ---
 
-**Desarrollador:** Braian Zapater  
-**Curso:** Programación de Videojuegos 1 - UNAHUR  
+**Desarrollador:** Braian Zapater
+**Curso:** Programación de Videojuegos 1 - UNAHUR
 **Profesor:** Facundo Saiegh

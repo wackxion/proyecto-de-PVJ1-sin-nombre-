@@ -87,6 +87,16 @@ this.rotacion = 0;
         // escudosPreEnfriamiento: Guarda los escudos que tenía al entrar en sobrecalentamiento
         this.escudosPreEnfriamiento = 0;
         
+        // PROPULSOR (DASH)
+        // enPropulsor: Flag que indica si el propulsor está activo
+        this.enPropulsor = false;
+        // duracionPropulsor: Duración del dash (0.2 segundos)
+        this.duracionPropulsor = 0.2;
+        // temporizadorPropulsor: Timer para el dash
+        this.temporizadorPropulsor = 0;
+        // velocidadPropulsor: Velocidad del dash (300px en 0.2s = 1500px/s)
+        this.velocidadPropulsor = 1500;
+        
         // SPRITE (IMAGEN)
         // Sprite = Imagen del objeto en el juego
         // Se crea usando la textura proporcionada (assets/nave.png)
@@ -197,6 +207,25 @@ this.rotacion = 0;
         // Si el jugador no está activo, salir inmediatamente
         if (!this.active) return;
         
+// PROPULSOR (DASH) - 300px en 1 segundo
+        if (this.enPropulsor) {
+            // Reducir temporizador
+            this.temporizadorPropulsor -= delta;
+            
+            // Mover en la dirección que está mirando (no puede girar)
+            const direccion = this.getDirection();
+            this.x += direccion.x * this.velocidadPropulsor * delta;
+            this.y += direccion.y * this.velocidadPropulsor * delta;
+            this.imagen.x = this.x;
+            this.imagen.y = this.y;
+            
+            // Si terminó el dash, desactivarlo
+            if (this.temporizadorPropulsor <= 0) {
+                this.enPropulsor = false;
+                this.temporizadorPropulsor = 0;
+            }
+        }
+        
 // INERCIA - Movimiento tipo tanque con inercia
         const estaPresionandoW = input.debeAvanzar(delta);
         const estabaAvanzando = this.velocidad > 0;
@@ -249,10 +278,11 @@ this.rotacion = 0;
             this.imagen.y = this.y;
         }
         
-        // ROTACIÓN - Puedo girar en cualquier momento
+        // ROTACIÓN - Puedo girar en cualquier momento (pero NO durante el propulsor)
         const direccionRotacion = input.obtenerRotacion();
         
-        if (direccionRotacion !== 0) {
+        // Solo rotar si no está en propulsor (dash)
+        if (direccionRotacion !== 0 && !this.enPropulsor) {
             this.rotacion += direccionRotacion * this.velocidadRotacion * delta;
             this.imagen.rotation = this.rotacion;
         }
@@ -619,6 +649,19 @@ this.rotacion = 0;
             x: Math.cos(this.rotacion),
             y: Math.sin(this.rotacion)
         };
+    }
+    
+    /**
+     * Activa el propulsor (dash)
+     * La nave avanza 300px en 1 segundo en la dirección que está mirando
+     * No puede girar durante el dash
+     */
+    activarPropulsor() {
+        if (!this.active) return;
+        
+        // Activar el propulsor
+        this.enPropulsor = true;
+        this.temporizadorPropulsor = this.duracionPropulsor;
     }
     
     /**

@@ -1,0 +1,411 @@
+/**
+ * BoidParticle - Partícula con comportamiento Boid
+ * 
+ * Partículas de 10x10px que siguen el algoritmo de Boids:
+ * - Cohesión: moverse hacia el centro de masa de los vecinos
+ * - Alineación: sincronizar dirección con vecinos
+ * - Separación: evitar colisiones con vecinos
+ * - Fuga: huir de la nave del jugador y las verdes enemigas
+ * - Rebote: rebotar al colisionar con asteroides
+ */
+import { GameObject } from './GameObject.js';
+
+export class BoidParticle extends GameObject {
+    /**
+     * Constructor de BoidParticle
+     * @param {number} x - Posición X inicial
+     * @param {number} y - Posición Y inicial
+     * @param {PIXI.Texture} textura - Textura de la partícula (10x10px)
+     * @param {Array} texturasAnimacion - Array de texturas para animación Pboids
+     */
+    constructor(x, y, textura, texturasAnimacion = []) {
+        super(x, y);
+        
+        // Texturas de animación
+        this.texturasAnimacion = texturasAnimacion;
+        
+        // Tamaño de la partícula (15px x 15px)
+        this.width = 15;
+        this.height = 15;
+        
+        // Radio de colisión (7.5px = la mitad del tamaño)
+        this.radio = 7.5;
+        
+        // Velocidad de la partícula
+        this.velX = (Math.random() - 0.5) * 150;
+        this.velY = (Math.random() - 0.5) * 150;
+        
+        // Velocidad máxima
+        this.velocidadMax = 180;
+        
+        // Crear sprite
+        this.imagen = new PIXI.Sprite(textura);
+        this.imagen.width = this.width;
+        this.imagen.height = this.height;
+        this.imagen.anchor.set(0.5);
+        this.imagen.x = x;
+        this.imagen.y = y;
+        
+        // Color de la partícula (blanco)
+        this.imagen.tint = 0xFFFFFF;
+        
+        // Sin animación - usar solo la primera textura (Pboids1)
+        this.frameActual = 0;
+        this.timerAnimacion = 0;
+        this.intervaloAnimacion = 0.2;
+        // Solo usar la primera textura
+        this.secuenciaAnimacion = [0];
+        
+        // Efecto de brillar (timer para cambiar color)
+        this.timerBrillo = Math.random() * Math.PI * 2; // Phase aleatoria
+        this.velocidadBrillo = 3 + Math.random() * 2; // Velocidad de parpadeo
+        
+        // Flag para saber si está siendo atraída por el devorador
+        this.siendoAtraida = false;
+        
+        // Parámetros de Boids - FUERZAS
+        this.fuerzaSeparacion = 0.03;
+        this.fuerzaCohesion = 0.005;
+        this.fuerzaAlineacion = 0.01;
+        this.fuerzaFuga = 0.6;  // DUPLICADO - huye el doble de rápido
+        this.rangoVision = 50;
+        this.rangoFuga = 200;  // DUPLICADO - detecta la nave desde el doble de lejos
+    }
+    
+    /**
+     * Actualizar el comportamiento Boid
+     * @param {number} delta - Tiempo transcurrido
+     * @param {Array} vecinos - Array de partículas vecinas
+     * @param {Object} jugador - Nave del jugador para huir
+     * @param {Array} enemigos - Naves enemigas para huir
+     * @param {Array} asteroides - Asteroides para rebotar
+     * @param {number} anchoJuego - Ancho del juego
+     * @param {number} altoJuego - Alto del juego
+     */
+    actualizar(delta, vecinos, jugador = null, enemigos = [], asteroides = [], anchoJuego = 800, altoJuego = 600) {
+        if (!this.active) return;
+        
+        // Animación: 1,2,3,4,3,2,1 en bucle
+        if (this.texturasAnimacion && this.texturasAnimacion.length > 0) {
+            this.timerAnimacion += delta;
+            if (this.timerAnimacion >= this.intervaloAnimacion) {
+                this.timerAnimacion = 0;
+                
+                // Avanzar en la secuencia
+                this.frameActual++;
+                if (this.frameActual >= this.secuenciaAnimacion.length) {
+                    this.frameActual = 0;
+                }
+                
+                // Obtener el índice de la textura
+                const indiceTextura = this.secuenciaAnimacion[this.frameActual];
+                this.imagen.texture = this.texturasAnimacion[indiceTextura];
+            }
+        }
+        
+        // Si está siendo atraída por el devorador, ignorar todo y solo mover hacia la nave
+        if (this.siendoAtraida) {
+            // Ya tiene la velocidad configurada en Game.js, solo actualizar posición
+            this.x += this.velX * delta;
+            this.y += this.velY * delta;
+            
+            // Actualizar sprite
+            if (this.imagen) {
+                this.imagen.x = this.x;
+                this.imagen.y = this.y;
+            }
+            
+            // Mantener dentro de los límites
+            this.mantenerEnPantalla(anchoJuego, altoJuego);
+            return;
+        }
+        
+        // Calcular fuerzas Boids
+        const fuerzaSeparacion = this.calcularSeparacion(vecinos);
+        const fuerzaCohesion = this.calcularCohesion(vecinos);
+        const fuerzaAlineacion = this.calcularAlineacion(vecinos);
+        
+        // Fuerza de huir de la nave (jugador)
+        let fuerzaFugaNave = { x: 0, y: 0 };
+        if (jugador && jugador.active) {
+            fuerzaFugaNave = this.calcularFuga(jugador);
+        }
+        
+        // Fuerza de huir de las naves enemigas
+        let fuerzaFugaEnemiga = { x: 0, y: 0 };
+        for (const enemigo of enemigos) {
+            if (enemigo && enemigo.active) {
+                const fuga = this.calcularFuga(enemigo, 80);
+                fuerzaFugaEnemiga.x += fuga.x;
+                fuerzaFugaEnemiga.y += fuga.y;
+            }
+        }
+        
+        // Aplicar fuerzas a la velocidad
+        this.velX += fuerzaSeparacion.x * this.fuerzaSeparacion;
+        this.velY += fuerzaSeparacion.y * this.fuerzaSeparacion;
+        
+        this.velX += fuerzaCohesion.x * this.fuerzaCohesion;
+        this.velY += fuerzaCohesion.y * this.fuerzaCohesion;
+        
+        this.velX += fuerzaAlineacion.x * this.fuerzaAlineacion;
+        this.velY += fuerzaAlineacion.y * this.fuerzaAlineacion;
+        
+        // Aplicar fuerza de fuga
+        this.velX += fuerzaFugaNave.x * this.fuerzaFuga;
+        this.velY += fuerzaFugaNave.y * this.fuerzaFuga;
+        
+        this.velX += fuerzaFugaEnemiga.x * this.fuerzaFuga;
+        this.velY += fuerzaFugaEnemiga.y * this.fuerzaFuga;
+        
+        // Limitar velocidad máxima
+        const velocidad = Math.sqrt(this.velX * this.velX + this.velY * this.velY);
+        if (velocidad > this.velocidadMax) {
+            this.velX = (this.velX / velocidad) * this.velocidadMax;
+            this.velY = (this.velY / velocidad) * this.velocidadMax;
+        }
+        
+        // Guardar posición anterior para detectar colisiones
+        const prevX = this.x;
+        const prevY = this.y;
+        
+        // Actualizar posición
+        this.x += this.velX * delta;
+        this.y += this.velY * delta;
+        
+        // Verificar colisiones con asteroides y rebotar
+        this.verificarReboteAsteroides(asteroides, prevX, prevY);
+        
+        // Actualizar sprite
+        if (this.imagen) {
+            this.imagen.x = this.x;
+            this.imagen.y = this.y;
+            
+            // Sin brillo - mantener color original
+            // this.imagen.tint = 0xFFFFFF; // Por defecto ya es blanco
+        }
+        
+        // Mantener dentro de los límites del juego (dinámico)
+        this.mantenerEnPantalla(anchoJuego, altoJuego);
+    }
+    
+    /**
+     * Calcular fuerza de separación (evitar colisiones)
+     * @param {Array} vecinos - Partículas vecinas
+     * @returns {Object} Vector de fuerza
+     */
+    calcularSeparacion(vecinos) {
+        let fuerzaX = 0;
+        let fuerzaY = 0;
+        let conteo = 0;
+        
+        for (const otro of vecinos) {
+            if (otro === this || !otro.active) continue;
+            
+            const distancia = this.calcularDistancia(otro);
+            
+            if (distancia > 0 && distancia < this.rangoVision * 0.5) {
+                const diffX = this.x - otro.x;
+                const diffY = this.y - otro.y;
+                
+                fuerzaX += diffX / (distancia * distancia);
+                fuerzaY += diffY / (distancia * distancia);
+                
+                conteo++;
+            }
+        }
+        
+        if (conteo > 0) {
+            fuerzaX /= conteo;
+            fuerzaY /= conteo;
+        }
+        
+        return { x: fuerzaX, y: fuerzaY };
+    }
+    
+    /**
+     * Calcular fuerza de cohesión (ir hacia el centro del grupo)
+     * @param {Array} vecinos - Partículas vecinas
+     * @returns {Object} Vector de fuerza
+     */
+    calcularCohesion(vecinos) {
+        let centroX = 0;
+        let centroY = 0;
+        let conteo = 0;
+        
+        for (const otro of vecinos) {
+            if (otro === this || !otro.active) continue;
+            
+            const distancia = this.calcularDistancia(otro);
+            
+            if (distancia > 0 && distancia < this.rangoVision) {
+                centroX += otro.x;
+                centroY += otro.y;
+                conteo++;
+            }
+        }
+        
+        if (conteo > 0) {
+            centroX /= conteo;
+            centroY /= conteo;
+            
+            return { x: centroX - this.x, y: centroY - this.y };
+        }
+        
+        return { x: 0, y: 0 };
+    }
+    
+    /**
+     * Calcular fuerza de alineación (sincronizar dirección)
+     * @param {Array} vecinos - Partículas vecinas
+     * @returns {Object} Vector de fuerza
+     */
+    calcularAlineacion(vecinos) {
+        let promedioVelX = 0;
+        let promedioVelY = 0;
+        let conteo = 0;
+        
+        for (const otro of vecinos) {
+            if (otro === this || !otro.active) continue;
+            
+            const distancia = this.calcularDistancia(otro);
+            
+            if (distancia > 0 && distancia < this.rangoVision) {
+                promedioVelX += otro.velX;
+                promedioVelY += otro.velY;
+                conteo++;
+            }
+        }
+        
+        if (conteo > 0) {
+            promedioVelX /= conteo;
+            promedioVelY /= conteo;
+            
+            return { x: promedioVelX - this.velX, y: promedioVelY - this.velY };
+        }
+        
+        return { x: 0, y: 0 };
+    }
+    
+    /**
+     * Calcular fuerza de fuga (huir de un objeto)
+     * @param {Object} objetivo - Objetivo del que huir
+     * @param {number} rango - Rango de detección
+     * @returns {Object} Vector de fuerza
+     */
+    calcularFuga(objetivo, rango = null) {
+        const rangoFuga = rango || this.rangoFuga;
+        
+        const dx = this.x - objetivo.x;
+        const dy = this.y - objetivo.y;
+        const distancia = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distancia > 0 && distancia < rangoFuga) {
+            const intensidad = (rangoFuga - distancia) / rangoFuga;
+            return {
+                x: (dx / distancia) * intensidad * 2,
+                y: (dy / distancia) * intensidad * 2
+            };
+        }
+        
+        return { x: 0, y: 0 };
+    }
+    
+    /**
+     * Verificar colisión con asteroides y rebotar
+     * @param {Array} asteroides - Lista de asteroides
+     * @param {number} prevX - Posición X anterior
+     * @param {number} prevY - Posición Y anterior
+     */
+    verificarReboteAsteroides(asteroides, prevX, prevY) {
+        for (const ast of asteroides) {
+            if (!ast || !ast.active) continue;
+            
+            const dx = this.x - ast.x;
+            const dy = this.y - ast.y;
+            const distancia = Math.sqrt(dx * dx + dy * dy);
+            
+            const radioAst = ast.radio || 32;
+            
+            if (distancia < this.radio + radioAst) {
+                const normalX = dx / distancia;
+                const normalY = dy / distancia;
+                
+                const productoPunto = this.velX * normalX + this.velY * normalY;
+                
+                this.velX = this.velX - 2 * productoPunto * normalX;
+                this.velY = this.velY - 2 * productoPunto * normalY;
+                
+                this.velX *= 1.2;
+                this.velY *= 1.2;
+                
+                const nuevoDistancia = this.radio + radioAst + 2;
+                this.x = ast.x + normalX * nuevoDistancia;
+                this.y = ast.y + normalY * nuevoDistancia;
+                
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Calcular distancia a otra partícula
+     * @param {BoidParticle} otro - Otra partícula
+     * @returns {number} Distancia
+     */
+    calcularDistancia(otro) {
+        const dx = this.x - otro.x;
+        const dy = this.y - otro.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    /**
+     * Mantener la partícula dentro de los límites de la pantalla (dinámico)
+     * @param {number} anchoJuego - Ancho del juego
+     * @param {number} altoJuego - Alto del juego
+     */
+    mantenerEnPantalla(anchoJuego, altoJuego) {
+        const margen = 10;
+        
+        // Rebotar en los bordes usando los límites dinámicos
+        if (this.x < margen) {
+            this.x = margen;
+            this.velX = Math.abs(this.velX);
+        } else if (this.x > anchoJuego - margen) {
+            this.x = anchoJuego - margen;
+            this.velX = -Math.abs(this.velX);
+        }
+        
+        if (this.y < margen) {
+            this.y = margen;
+            this.velY = Math.abs(this.velY);
+        } else if (this.y > altoJuego - margen) {
+            this.y = altoJuego - margen;
+            this.velY = -Math.abs(this.velY);
+        }
+    }
+    
+    /**
+     * Verificar si la nave puede capturar esta partícula
+     * @param {Object} nave - El jugador (nave)
+     * @returns {boolean} true si la nave captura la partícula
+     */
+    puedeSerCapturada(nave) {
+        if (!nave || !nave.x || !nave.y) return false;
+        
+        const dx = this.x - nave.x;
+        const dy = this.y - nave.y;
+        const distancia = Math.sqrt(dx * dx + dy * dy);
+        
+        const radioCaptura = nave.radio + 15;
+        
+        return distancia < radioCaptura;
+    }
+    
+    /**
+     * Actualizar posición del sprite (compatibilidad)
+     */
+    update(delta) {
+        // La actualización principal se hace desde Game.js
+    }
+}

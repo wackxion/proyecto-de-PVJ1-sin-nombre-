@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.3.5 (EN DESARROLLO)
+- **Versión:** v1.3.8 (COMPLETADO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -17,7 +17,7 @@
 
 **Concepto:** Juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides de diferentes tamaños y naves enemigas.
 
-**Mecánicas Principales (v1.3.5):**
+**Mecánicas Principales (v1.3.6):**
 - Nave puede **rotar** hacia la izquierda (A) o derecha (D)
 - **Avanzar** con inercia (W) - sistema de aceleración con sobrecalentamiento
 - **Disparar** proyectiles (Espacio) hacia la dirección que apunta la nave
@@ -253,7 +253,101 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-## 5. Changelog v1.3.5 (ACTUAL - EN DESARROLLO)
+## 5. Changelog v1.3.8 (COMPLETADO)
+
+### Modificado
+
+#### Asteroides Especiales (SpecialEnemy.js)
+- **HP**: Reducido de 200 a 100
+- **Dirección**: Ahora va hacia la posición inicial del jugador cuando fue generado (NO persigue)
+- **Al destruirlo**: Se convierte en mini y orbita alrededor de la nave
+- **YA NO da bonus**: Al destruirlo ya no otorga +20% escudos ni +20% velocidad de disparo
+- **Dato importante**: `direccionInicialX` e `direccionInicialY` son datos que NO cambian
+
+#### Partículas Boid
+- **Texturas**: Pboids1.png a Pboids4.png (animación 1,2,3,4,3,2,1)
+- **Tamaño**: 15x15 píxeles
+- **Sin brillo**: Eliminado el efecto de parpadeo
+
+#### UI/UX
+- **Contador de PBOids**: bottom 3.2vmin, left 71.5%
+- **Tutorial**: Actualizado con todas las teclas (W, ESPACIO, A/D, S, Q, E, R)
+- **Créditos**: Agregado "Asistencia IA: OpenCode"
+- **Marco ULTI**: Corregido doble borde
+- **Reinicio**: Los cooldowns se resetean al morir y reiniciar
+
+---
+
+## 6. Changelog v1.3.7 (COMPLETADO)
+
+### Agregado
+
+#### Sistema de Habilidades Activas
+
+| Habilidad | Tecla | Cooldown | Descripción |
+|-----------|-------|----------|--------------|
+| **Cohetes** | Q | 5 segundos | Lanza 2 cohetes teledirigidos hacia los 2 enemigos más cercanos |
+| **Propulsor** | R | 15 segundos | Dash: avanza 300px en 0.2s (no puede girar durante el dash) |
+
+#### Habilidad Pasiva - Tiempo Fuera
+- **Activación**: Automáticamente después de 10 segundos en sobrecalentamiento
+- **Efecto**: Regenera 10% de escudos y sale del sobrecalentamiento
+- **Animación del reloj**: relog1→2→3→4→5→6→6(girado360°)→repetir (0.3s por frame)
+- Cambios visuales: parpadeo blanco/azul durante sobrecalentamiento, azul fijo después de activar
+
+#### Archivos Nuevos
+- **Cohete.js**: Cohetes teledirigidos con追踪 hacia objetivos
+
+### Modificado
+
+#### InputManager.js
+- Agregada tecla Q → 'cohetes' (cooldown 5s)
+- Agregada tecla R → 'propulsor' (cooldown 15s)
+- Funciones: `debeUsarCohetes()`, `debeUsarPropulsor()`, `obtenerCooldownCohetes()`, `obtenerCooldownPropulsor()`
+
+#### Player.js
+- Agregado sistema de propulsor (dash)
+- Variables: `enPropulsor`, `duracionPropulsor: 0.2`, `velocidadPropulsor: 1500`
+- Método `activarPropulsor()`, no se puede rotar durante el dash
+
+#### UIManager.js
+- Iconos de Cohetes y Propulsor con marcos que cambian de color
+- Icono de Tiempo Fuera con animación del reloj
+
+#### Game.js
+- Lógica de cohetes, propulsor y animación del reloj
+
+### Assets Agregados
+- `relog1-6.png`, `propulsor.png`, `cohetes.png`
+
+---
+
+## 6. Changelog v1.3.6 (COMPLETADO)
+
+### Agregado
+- **Partículas Boid** - Sistema de partículas con comportamiento de enjambre
+  - Tamaño: 5x5 píxeles
+  - Comportamiento: Separación, Cohesión, Alineación
+  - Huyen de la nave (fuerza: 0.6, rango: 200px)
+  - 10 iniciales, máximo 100, aparecen en grupos de 10 cada 3s
+  - Efecto de brillar (blanco ↔ cyan)
+  - Contador en barra superior (PBOids: X)
+  
+- **Habilidad Devorador (Tecla E)**
+  - Cooldown: 5 segundos
+  - Atrae partículas dentro de 200px hacia la nave
+  - Partículas ignoran todo y van directo a la nave
+  - Efecto visual de succión (SuccionEffect.js)
+  - Marco cambia de color: rojo activo, rojo oscuro cooldown, azul listo
+  - Contador de partículas capturadas al lado del icono
+
+### Modificado
+- **Partículas**: Ahora spawn desde los 4 bordes, no todas juntas
+- **InputManager**: Agregada tecla E para devorador
+
+---
+
+## 6. Changelog v1.3.5
 
 ### Agregado
 - **Rediseño de UI** - Nueva interfaz inferior con imagen UX Experimental
@@ -268,14 +362,9 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 - **HTML/CSS** - Estructura reorganizada para nueva UI
 - **Indicador de oleada** - Muestra intervalos de spawn
 
-### Pendiente (por terminar)
-- Testing de nueva UI
-- Verificar cambios de iconos
-- Subir a producción
-
 ---
 
-## 6. Changelog v1.3.3
+## 7. Changelog v1.3.3
 
 ### Agregado
 - Campo gravitatorio de la nave (100px)

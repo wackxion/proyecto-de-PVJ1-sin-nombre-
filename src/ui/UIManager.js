@@ -456,30 +456,27 @@ export class UIManager {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
-        `;
-        
-        const imagen = document.createElement('div');
-        imagen.style.cssText = `
-            background: url('assets/tutorial.png') no-repeat center center;
+            justify-content: center;
+            background: url('assets/gameOver.jpg') no-repeat center center;
             background-size: contain;
-            width: ${Math.min(800, this.width * 0.8)}px;
-            height: 150px;
+            width: ${Math.min(850, this.width * 0.95)}px;
+            height: 1100px;
+            padding: 60px 40px;
         `;
         
         const texto = document.createElement('div');
-        texto.innerHTML = 'W: Avanzar | ESPACIO: Disparar | A/D: Rotar | S: ULTi';
+        texto.innerHTML = 'W: Avanzar | ESPACIO: Disparar | A/D: Rotar | S: ULTi | Q: Cohetes | E: Devorador | R: Propulsor';
         texto.style.cssText = `
             color: #0044CC;
             font-family: 'Segoe Script', cursive;
-            font-size: 14px;
+            font-size: 18px;
             font-weight: bold;
             text-shadow: 0 0 10px #0044CC;
             text-align: center;
-            margin-top: -80px;
+            margin-bottom: 20px;
+            max-width: 600px;
         `;
         
-        container.appendChild(imagen);
         container.appendChild(texto);
         container.appendChild(this.crearBotonVolver(() => modal.remove()));
         modal.appendChild(container);
@@ -702,8 +699,8 @@ export class UIManager {
         exterior.style.cssText = `
             background: url('assets/gameOver.jpg') no-repeat center center;
             background-size: contain;
-            width: ${Math.min(750, this.width * 0.9)}px;
-            height: 1000px;
+            width: ${Math.min(850, this.width * 0.95)}px;
+            height: 1100px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -736,21 +733,22 @@ export class UIManager {
             color: #0044CC;
             font-family: 'Segoe Script', cursive;
             font-size: 18px;
-            font-weight: bold;
             text-align: center;
             line-height: 1.2;
         `;
         contenido.innerHTML = `
-            <div style="margin-bottom: 20px;">JUGANDO EN EL ESPACIO</div>
-            <div>Desarrollado por:</div>
+            <div style="margin-bottom: 20px; font-weight: bold;">JUGANDO EN EL ESPACIO</div>
+            <div style="font-weight: bold;">Desarrollado por:</div>
             <div>Braian Zapater</div>
-            <div style="margin-top: 20px;">Curso:</div>
+            <div style="margin-top: 20px; font-weight: bold;">Curso:</div>
             <div>Programación de Videojuegos 1</div>
             <div>UNAHUR 2026</div>
-            <div style="margin-top: 20px;">Profesor:</div>
+            <div style="margin-top: 20px; font-weight: bold;">Profesor:</div>
             <div>Facundo Saiegh</div>
-            <div style="margin-top: 20px;">Tecnologías:</div>
+            <div style="margin-top: 20px; font-weight: bold;">Tecnologías:</div>
             <div>PixiJS v8 | Firebase Firestore</div>
+            <div style="margin-top: 10px; font-weight: bold;">Asistencia IA:</div>
+            <div>OpenCode</div>
         `;
         container.appendChild(contenido);
         container.appendChild(this.crearBotonVolver(() => modal.remove()));
@@ -877,7 +875,7 @@ export class UIManager {
         cohetesFrame.style.cssText = `
             position: absolute;
             bottom: 2.3vmin;
-            left: 48.7%;
+            left: 48.9%;
             transform: translateX(-200%);
             border: 4px solid #0044CC !important;
             border-radius: 8px;
@@ -915,6 +913,7 @@ export class UIManager {
         this.container.appendChild(cohetesFrame);
         elementos.iconoCohetesUX = cohetesIcon;
         elementos.marcoCohetesUX = cohetesFrame;
+        elementos.fondoCohetesUX = cohetesBg;
         
         // =====================================================
         // ICONO DE TIEMPO FUERA (habilidades - izquierda del cohete)
@@ -922,8 +921,8 @@ export class UIManager {
         tiempoFrame.id = 'tiempo-ux-frame';
         tiempoFrame.style.cssText = `
             position: absolute;
-            bottom: 1.7vmin;
-            left: 47.4%;
+            bottom: 1.8vmin;
+            left: 45.2%;
             transform: translateX(-300%);
             border: 5px solid #0044CC !important;
             border-radius: 0px;
@@ -951,16 +950,21 @@ export class UIManager {
         tiempoIcon.id = 'tiempo-ux-icon';
         tiempoIcon.src = 'assets/tiempo fuera.png';
         tiempoIcon.style.cssText = `
-            width: 8vmin;
+            width: 5vmin;
             height: auto;
             position: relative;
             z-index: 1;
+            display: block;
+            margin: auto;
+            top: 0;
+            left: 0;
         `;
         tiempoFrame.appendChild(tiempoBg);
         tiempoFrame.appendChild(tiempoIcon);
         this.container.appendChild(tiempoFrame);
         elementos.iconoTiempoUX = tiempoIcon;
         elementos.marcoTiempoUX = tiempoFrame;
+        elementos.fondoTiempoUX = tiempoBg;
         
         // =====================================================
         // ICONO DE ESCUDO (centro - derecha)
@@ -969,7 +973,7 @@ export class UIManager {
         escudoFrame.style.cssText = `
             position: absolute;
             bottom: 5.1vmin;
-            left: 48.9%;
+            left: 49%;
             transform: translateX(-200%);
             border: 5px solid #0044CC;
             border-radius: 0px;
@@ -1032,7 +1036,7 @@ export class UIManager {
         ultiFrame.id = 'ulti-ux-frame';
         ultiFrame.style.cssText = `
             position: absolute;
-            bottom: 1.6vmin;
+            bottom: 1.7vmin;
             left: 46.8%;
             transform: translateX(100%);
             width: 9.9vmin;
@@ -1046,12 +1050,12 @@ export class UIManager {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 9.5vmin;
-            height: 7.8vmin;
+            width: 9vmin;
+            height: 7vmin;
             background-color: white;
-            border: 5px solid #0044CC;
+            border: none;
             border-radius: 0px;
-            box-shadow: 0 0 10px #0044CC;
+            box-shadow: none;
             z-index: 0;
         `;
         
@@ -1059,8 +1063,8 @@ export class UIManager {
         ultiIcon.id = 'ulti-ux-icon';
         ultiIcon.src = 'assets/ultiicon1.png';
         ultiIcon.style.cssText = `
-            width: 8vmin;
-            height: 9.5vmin;
+            width: 6vmin;
+            height: 7vmin;
             position: center;
             z-index: 1;
             bottom: 1vmin;
@@ -1077,8 +1081,8 @@ export class UIManager {
         propulFrame.id = 'propul-ux-frame';
         propulFrame.style.cssText = `
             position: absolute;
-            bottom: 2.3vmin;
-            left: 49%;
+            bottom: 2vmin;
+            left: 48.9%;
             transform: translateX(200%);
             border: 4px solid #0044CC !important;
             border-radius: 0px;
@@ -1116,15 +1120,15 @@ export class UIManager {
         this.container.appendChild(propulFrame);
         elementos.iconoPropulUX = propulIcon;
         elementos.marcoPropulUX = propulFrame;
+        elementos.fondoPropulUX = propulBg;
         
-        // =====================================================
         // ICONO DE DEBORADOR (habilidades - derecha de propul)
         const deboradorFrame = document.createElement('div');
         deboradorFrame.id = 'deborador-ux-frame';
         deboradorFrame.style.cssText = `
             position: absolute;
-            bottom: 2.1vmin;
-            left: 50.5%;
+            bottom: 1.9vmin;
+            left: 50%;
             transform: translateX(300%);
             border: 4px solid #0044CC !important;
             border-radius: 0px;
@@ -1162,6 +1166,25 @@ export class UIManager {
         this.container.appendChild(deboradorFrame);
         elementos.iconoDeboradorUX = deboradorIcon;
         elementos.marcoDeboradorUX = deboradorFrame;
+        elementos.fondoDeboradorUX = deboradorBg;
+        
+        // Contador de partículas capturadas (a la derecha del devorador)
+        const contadorDevorador = document.createElement('div');
+        contadorDevorador.id = 'contador-devorador';
+        contadorDevorador.style.cssText = `
+            position: absolute;
+            bottom: 3.2vmin;
+            left: 70.5%;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 2.5vmin;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000000;
+            z-index: 100;
+        `;
+        contadorDevorador.textContent = '0';
+        this.container.appendChild(contadorDevorador);
+        elementos.contadorDevorador = contadorDevorador;
         
 // =====================================================
         // 4. IMAGEN UX EXPERIMENTAL (centro - base de la interfaz)
@@ -1220,7 +1243,7 @@ const uxImage = document.createElement('img');
         aceleracionContainer.id = 'aceleracion-ux-container';
         aceleracionContainer.style.cssText = `
             position: absolute;
-            bottom: 12vmin;
+            bottom: 11.9vmin;
             left: 50%;
             transform: translateX(-50%);
             width: ${Math.min(190, this.width * 0.3)}px;
@@ -1230,7 +1253,7 @@ const uxImage = document.createElement('img');
         aceleracionBg.id = 'aceleracion-ux-bar-bg';
         aceleracionBg.style.cssText = `
             width: 100%;
-            height: 2.3vmin;
+            height: 2.5vmin;
             background: white;
             border: 2px solid #0044CC;
             border-radius: 0vmin;

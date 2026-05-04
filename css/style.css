@@ -124,3 +124,51 @@ body {
  * Este archivo solo contiene estilos generales que no necesitan 
  * ser regenerados dinámicamente
  */
+
+/* -----------------------------------------------------------------------------
+ * CLASES PARA HABILIDADES - DEVORADOR
+ * -----------------------------------------------------------------------------
+ */
+
+/* Marco del devorador - Listo para usar (azul) */
+#deborador-ux-frame.devorador-listo {
+    border: 4px solid #0044CC !important;
+    box-shadow: 0 0 10px #0044CC !important;
+}
+
+/* Marco del devorador - En cooldown (rojo oscuro) */
+#deborador-ux-frame.devorador-cooldown {
+    border: 4px solid #CC0000 !important;
+    box-shadow: 0 0 15px #CC0000 !important;
+}
+
+/* Marco del devorador - Activo (rojo brillante) */
+#deborador-ux-frame.devorador-activo {
+    border: 4px solid #FF0000 !important;
+    box-shadow: 0 0 20px #FF0000 !important;
+}
+
+/* -----------------------------------------------------------------------------
+ * CLASES PARA HABILIDADES - TIEMPO FUERA
+ * -----------------------------------------------------------------------------
+ */
+
+/* Marco de Tiempo Fuera - Palpitando cuando activo */
+@keyframes palpitar-tiempo {
+    0%, 100% { border-color: #FF0000 !important; box-shadow: 0 0 20px #FF0000 !important; }
+    50% { border-color: #0044CC !important; box-shadow: 0 0 10px #0044CC !important; }
+}
+
+#tiempo-ux-frame.tiempo-activo {
+    animation: palpitar-tiempo 0.6s infinite;
+}
+
+/* Marco de Tiempo Fuera - Verde cuando ya regeneró */
+@keyframes palpitar-regenerado {
+    0%, 100% { border-color: #00FF00 !important; box-shadow: 0 0 25px #00FF00 !important; }
+    50% { border-color: #004400 !important; box-shadow: 0 0 15px #004400 !important; }
+}
+
+#tiempo-ux-frame.tiempo-regenerado {
+    animation: palpitar-regenerado 0.6s infinite;
+}

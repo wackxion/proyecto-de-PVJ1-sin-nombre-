@@ -42,8 +42,8 @@ export class SpecialEnemy extends GameObject {
         this.esMini = esMini;
         
         // Salud
-        this.salud = esMini ? 100 : 200;  // Mini: 100 HP, Normal: 200 HP
-        this.saludMax = esMini ? 100 : 200;
+        this.salud = esMini ? 100 : 100;  // 100 HP siempre
+        this.saludMax = 100;
         
         // Puntos que da al destruirse
         this.puntos = 100;
@@ -51,15 +51,16 @@ export class SpecialEnemy extends GameObject {
         // Carga de ULTi que da
         this.cargaUlti = 0;
         
-        // Velocidad
-        this.velocidad = 100;
-        
         // Radio de colisión
         this.radio = esMini ? 20 : 40;
         
-        // Ultima posicionconocida del jugador (para no ir directo)
-        this.ultimaX = jugador.x;
-        this.ultimaY = jugador.y;
+        // Guardar la posición inicial del jugador cuando se genera (el especial va hacia ahí)
+        // Este dato NO cambia - se usa solo para la dirección inicial
+        this.direccionInicialX = jugador.x;
+        this.direccionInicialY = jugador.y;
+        
+        // Velocidad de desplazamiento inicial
+        this.velocidad = 80;
         
         // Modo órbita (cuando es mini y orbita al jugador)
         this.enOrbita = esMini;
@@ -131,22 +132,14 @@ export class SpecialEnemy extends GameObject {
             this.x = centroX + Math.cos(this.anguloOrbita) * radioActual;
             this.y = centroY + Math.sin(this.anguloOrbita) * radioActual;
         } else {
-            // === MODO NORMAL: MOVIMIENTO HACIA ÚLTIMA POSICIÓN CONOCIDA ===
-            // Actualizar la última posición conocida del jugador cada 0.5 segundos
-            this.tiempoActualizacion += delta;
-            if (this.tiempoActualizacion >= 0.5 && this.jugador && this.jugador.active) {
-                this.tiempoActualizacion = 0;
-                this.ultimaX = this.jugador.x;
-                this.ultimaY = this.jugador.y;
-            }
-            
-            // Calcular dirección hacia la última posición conocida del jugador
-            const dirX = this.ultimaX - this.x;
-            const dirY = this.ultimaY - this.y;
+            // === MODO NORMAL: MOVIMIENTO HACIA POSICIÓN INICIAL GUARDADA ===
+            // Se dirige hacia donde estaba el jugador cuando fue generado
+            const dirX = this.direccionInicialX - this.x;
+            const dirY = this.direccionInicialY - this.y;
             const dist = Math.sqrt(dirX * dirX + dirY * dirY);
             
             if (dist > 0) {
-                // Moverse hacia la última posición conocida del jugador
+                // Moverse hacia la posición inicial guardada
                 this.x += (dirX / dist) * this.velocidad * delta;
                 this.y += (dirY / dist) * this.velocidad * delta;
             }

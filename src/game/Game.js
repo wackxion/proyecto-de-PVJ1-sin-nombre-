@@ -17,11 +17,14 @@ import { Enemigo } from './Enemy.js';
 import { EnemyShip } from './EnemyShip.js';
 import { SpecialEnemy } from './SpecialEnemy.js';
 import { UltiEffect } from './UltiEffect.js';
+import { SuccionEffect } from './SuccionEffect.js';
 import { BurstEffect } from './BurstEffect.js';
 import { HitEffect } from './HitEffect.js';
 import { ProyectilExplosion } from './ProyectilExplosion.js';
 import { AsteroidExplosion } from './AsteroidExplosion.js';
 import { Top5 } from './Top5.js';
+import { BoidParticle } from './BoidParticle.js';
+import { Cohete } from './Cohete.js';
 import { UIManager } from '../ui/UIManager.js';
 import { GestorEntrada } from '../systems/InputManager.js';
 
@@ -69,8 +72,14 @@ export class Game {
         // EfectosImpacto = efectos visuales de impacto al golpear asteroides
         this.efectosImpacto = [];
         
+        // Partículas Boid = partículas con comportamiento de enjambre
+        this.particulasBoid = [];
+        
         // EfectoUlti = el ataque especial (aro expansivo)
         this.efectoUlti = null;
+        
+        // EfectoSuccion = efecto de succión del devorador (aro contractivo)
+        this.efectoSuccion = null;
         
         // Ejecutando = flag que indica si el juego está activo
         // true = el bucle del juego se está ejecutando
@@ -249,6 +258,33 @@ export class Game {
         // Crear el jugador (nave)
         this._crearJugador();
         
+        // Cargar texturas de animación Pboids
+        const texturasPboids = [];
+        for (let i = 1; i <= 4; i++) {
+            const textura = await PIXI.Assets.load(`assets/Pboids${i}.png`);
+            texturasPboids.push(textura);
+        }
+        
+        // Crear textura de partícula Boid (cuadrado blanco 10x10px) como fallback
+        const graphics = new PIXI.Graphics();
+        graphics.beginFill(0xFFFFFF);
+        graphics.drawRect(0, 0, 10, 10);
+        graphics.endFill();
+        
+        // Renderizar a textura
+        this.texturaParticulaBoid = this.aplicacion.renderer.generateTexture(graphics);
+        this.texturasPboids = texturasPboids;
+        
+        // Crear textura de cohete (rectángulo rojo)
+        const graphicsCohete = new PIXI.Graphics();
+        graphicsCohete.beginFill(0xFF4400); // Naranja/rojo
+        graphicsCohete.drawRect(0, 0, 16, 8);
+        graphicsCohete.endFill();
+        this.texturaCohete = this.aplicacion.renderer.generateTexture(graphicsCohete);
+        
+        // Crear 10 partículas Boid iniciales
+        this._crearParticulasBoid(10);
+        
         // console.log('Jugador creado y renderizado');
         
         // Configurar la interfaz de usuario (UI)
@@ -301,6 +337,10 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             this.texturaExplosion = [explocion1, explocion2, explocion3, explocion4, explocion5];
             this.texturaAsteroidExplosion = [astroExplosion1, astroExplosion2, astroExplosion3, astroExplosion4, astroExplosion5];
             this.texturaNaveEnemiga = enimigoTexture;
+            
+            // Crear textura de partícula Boid (2x2px) programáticamente
+            // Usar un Graphics directamente como fallback
+            this.texturaParticulaBoid = PIXI.Texture.WHITE;
             
             // Verificar que la textura se cargó correctamente
             if (!this.texturaNaveEnemiga) {
@@ -455,6 +495,187 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
     }
     
     /**
+     * Crear partículas Boid iniciales
+     * @param {number} cantidad - Número de partículas a crear
+     */
+    _crearParticulasBoid(cantidad) {
+        // Crear solo 10 partículas iniciales (las demás aparecen en grupos de 10)
+        const inicial = 10;
+        for (let i = 0; i < inicial; i++) {
+            const nuevaParticula = this._crearParticulaBoidFuera();
+            this.particulasBoid.push(nuevaParticula);
+            nuevaParticula.render(this.aplicacion.stage);
+        }
+        
+        // Inicializar timer para crear más partículas en grupos de 10
+        this.timerParticulasBoid = 0;
+    }
+    
+    /**
+     * Capturar partícula Boid cuando la nave se acerca
+     * @param {BoidParticle} particula - Partícula a capturar
+     * @param {number} indice - Índice en el array
+     */
+    _capturarParticulaBoid(particula, indice) {
+        // Eliminar la partícula (NO se crea otra automáticamente)
+        particula.destroy();
+        this.particulasBoid.splice(indice, 1);
+        
+        // Incrementar contador de partículas capturadas
+        this.particulasCapturadas++;
+        
+        // Actualizar contador visual
+        if (this.contadorDevoradorUX) {
+            this.contadorDevoradorUX.textContent = this.particulasCapturadas.toString();
+        }
+        
+        
+    }
+    
+    /**
+     * Crear partícula en posición aleatoria (FUERA de la pantalla)
+     * @returns {BoidParticle} Nueva partícula
+     */
+_crearParticulaBoidFuera() {
+        // Elegir un lado aleatorio: 0=arriba, 1=derecha, 2=abajo, 3=izquierda
+        const lado = Math.floor(Math.random() * 4);
+        let x, y;
+        let vx, vy;
+        
+        // Margen proporcional al tamaño del juego (5% del tamaño)
+        const margenX = this.anchoJuego;
+        const margenY = this.altoJuego;
+        
+        // Velocidad proporcional al tamaño
+        const velocidadBase = this.anchoJuego ;
+        const velocidadLateral = this.anchoJuego ;
+        
+        switch(lado) {
+            case 0: // Arriba - aparecen en toda la parte superior
+                x = Math.random() * this.anchoJuego;
+                y = -margenY;
+                // Velocidad hacia abajo (con componente lateral aleatorio)
+                vx = (Math.random() - 0.5) * velocidadLateral;
+                vy = velocidadBase + Math.random() * (velocidadBase * 0.5);
+                break;
+            case 1: // Derecha - aparecen en toda la parte derecha
+                x = this.anchoJuego + margenX;
+                y = Math.random() * this.altoJuego;
+                // Velocidad hacia la izquierda
+                vx = -(velocidadBase + Math.random() * (velocidadBase * 0.5));
+                vy = (Math.random() - 0.5) * velocidadLateral;
+                break;
+            case 2: // Abajo - aparecen en toda la parte inferior
+                x = Math.random() * this.anchoJuego;
+                y = this.altoJuego + margenY;
+                // Velocidad hacia arriba
+                vx = (Math.random() - 0.5) * velocidadLateral;
+                vy = -(velocidadBase + Math.random() * (velocidadBase * 0.5));
+                break;
+            case 3: // Izquierda - aparecen en toda la parte izquierda
+                x = -margenX;
+                y = Math.random() * this.altoJuego;
+                // Velocidad hacia la derecha
+                vx = velocidadBase + Math.random() * (velocidadBase * 0.5);
+                vy = (Math.random() - 0.5) * velocidadLateral;
+                break;
+        }
+        
+        const particula = new BoidParticle(x, y, this.texturaParticulaBoid, this.texturasPboids);
+        particula.velX = vx;
+        particula.velY = vy;
+        
+        return particula;
+    }
+    
+    /**
+     * Encontrar los N enemigos más cercanos a la nave del jugador
+     * @param {number} cantidad - Número de enemigos a encontrar
+     * @returns {Array} Array con los enemigos más cercanos
+     */
+    _encontrarEnemigosCercanos(cantidad) {
+        if (!this.jugador || !this.jugador.active) return [];
+        
+        // Crear lista de enemigos con su distancia
+        const enemigosConDistancia = [];
+        
+        for (const enemigo of this.enemigos) {
+            if (!enemigo.active) continue;
+            
+            const dx = enemigo.x - this.jugador.x;
+            const dy = enemigo.y - this.jugador.y;
+            const distancia = Math.sqrt(dx * dx + dy * dy);
+            
+            enemigosConDistancia.push({ enemigo, distancia });
+        }
+        
+        // Ordenar por distancia
+        enemigosConDistancia.sort((a, b) => a.distancia - b.distancia);
+        
+        // Devolver los primeros N
+        return enemigosConDistancia.slice(0, cantidad).map(e => e.enemigo);
+    }
+    
+    /**
+     * Verificar colisiones de la partícula con otros objetos (sin efecto)
+     * @param {BoidParticle} particula - Partícula a verificar
+     */
+    _verificarColisionesParticula(particula) {
+        // Colisiones con asteroides
+        for (const enemigo of this.enemigos) {
+            if (!enemigo.active) continue;
+            if (particula.verificarColision(enemigo)) {
+                // Colisión detectada pero no hace nada
+            }
+        }
+        
+        // Colisiones con naves enemigas
+        for (const nave of this.enemigosNaves) {
+            if (!nave.active) continue;
+            if (particula.verificarColision(nave)) {
+                // Colisión detectada pero no hace nada
+            }
+        }
+        
+        // Colisiones con proyectiles
+        for (const proj of this.proyectiles) {
+            if (!proj.active) continue;
+            if (particula.verificarColision(proj)) {
+                // Colisión detectada pero no hace nada
+            }
+        }
+        
+        // Colisiones con proyectiles enemigos
+        for (const proj of this.proyectilesEnemigos) {
+            if (!proj.active) continue;
+            if (particula.verificarColision(proj)) {
+                // Colisión detectada pero no hace nada
+            }
+        }
+    }
+    
+    /**
+     * Mantener partícula dentro de la pantalla (wrap-around)
+     * @param {BoidParticle} particula - Partícula a verificar
+     */
+    _mantenerParticulaEnPantalla(particula) {
+        const margen = 5;
+        
+        // Si sale por un lado, aparece por el otro
+        if (particula.x < -margen) {
+            particula.x = this.anchoJuego + margen;
+        } else if (particula.x > this.anchoJuego + margen) {
+            particula.x = -margen;
+        }
+        
+        if (particula.y < -margen) {
+            particula.y = this.altoJuego + margen;
+        } else if (particula.y > this.altoJuego + margen) {
+            particula.y = -margen;
+        }
+    }
+    
+    /**
      * Configura la interfaz de usuario usando UIManager
      * Crea los elementos HTML dinámicamente
      */
@@ -482,19 +703,58 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             this.iconoUltiUX = hud.iconoUltiUX;
             this.marcoUltiUX = hud.marcoUltiUX;
             
+            // Icono y marco del devorador
+            this.iconoDeboradorUX = hud.iconoDeboradorUX;
+            this.marcoDeboradorUX = hud.marcoDeboradorUX;
+            this.fondoDeboradorUX = hud.fondoDeboradorUX;
+            this.contadorDevoradorUX = hud.contadorDevorador;
+            this.particulasCapturadas = 0;
+            
+            // Icono y marco de Tiempo Fuera
+            this.iconoTiempoUX = hud.iconoTiempoUX;
+            this.marcoTiempoUX = hud.marcoTiempoUX;
+            this.fondoTiempoUX = hud.fondoTiempoUX;
+            this.imagenOriginalTiempoUX = 'assets/tiempo fuera.png'; // Guardar imagen original
+            
+            // Icono y marco de Cohetes
+            this.iconoCohetesUX = hud.iconoCohetesUX;
+            this.marcoCohetesUX = hud.marcoCohetesUX;
+            this.fondoCohetesUX = hud.fondoCohetesUX;
+            
+            // Icono y marco de Propulsor
+            this.iconoPropulUX = hud.iconoPropulUX;
+            this.marcoPropulUX = hud.marcoPropulUX;
+            this.fondoPropulUX = hud.fondoPropulUX;
+            
+            // Habilidad Tiempo Fuera (pasiva)
+            this.tiempoFueroActivo = false;
+            this.timerTiempoFuera = 0;
+            this.duracionTiempoFuera = 10;
+            
+            // Animación del reloj (Tiempo Fuero activo)
+            this.relojFrameActual = 1;
+            this.timerAnimacionReloj = 0;
+            this.intervaloAnimacionReloj = 0.3; // 0.3 segundos por frame (más lento)
+            this.relojGirado180 = false;
+            this.animacionRelojActiva = false;
+            
+            // Cohetes
+            this.cohetes = []; // Array de cohetes activos
+            
             // Actualizar UI por primera vez
             this._actualizarUI();
         }
     }
     
-    /**
-    
+/**
+     
     /**
      * Actualiza la interfaz de usuario
      * Muestra la puntuación actual, los escudos y si el ulti está listo
      * Si está en sobrecalentamiento, muestra en rojo
+     * @param {number} delta - Tiempo transcurrido
      */
-    _actualizarUI() {
+_actualizarUI(delta = 0) {
         // Actualizar el panel de puntuación acumulada
         if (this.elementoPuntuacionAcumulada) {
             this.elementoPuntuacionAcumulada.textContent = this.puntuacion.toString();
@@ -503,7 +763,8 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
         // Actualizar display de oleada
         if (this.elementoOleada) {
             const faltantes = this.objetivoOleada - this.asteroidesDestruidos;
-            this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Faltan: ${faltantes} | Ast: ${this.intervaloSpawn.toFixed(1)}s | Naves: ${this.intervaloNaveEnemiga.toFixed(1)}s`;
+            const cantidadPBOids = this.particulasBoid ? this.particulasBoid.length : 0;
+            this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Faltan: ${faltantes} | Ast: ${this.intervaloSpawn.toFixed(1)}s | Naves: ${this.intervaloNaveEnemiga.toFixed(1)}s | PBOids: ${cantidadPBOids}`;
         }
         
         // Actualizar icono de escudo y marco en UX según el estado
@@ -837,6 +1098,10 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
             // Renderizar y agregar a la lista
             enemigo.render(this.aplicacion.stage);
             this.enemigos.push(enemigo);
+            
+            // Crear partícula Boid a 10px del enemigo
+            this._crearParticulaBoidCercaDe(enemigo);
+            
             return;
         } else {
             // Asteroides normales aparecen desde cualquier borde
@@ -896,6 +1161,37 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
         // console.log('Enemigo renderizado, parent:', enemigo.imagen?.parent);
         
         this.enemigos.push(enemigo);
+        
+        // Crear partícula Boid a 10px del enemigo
+        this._crearParticulaBoidCercaDe(enemigo);
+    }
+    
+    /**
+     * Crear partícula Boid a 10px de un enemigo
+     * @param {Enemigo} enemigo - Enemy near which to create the particle
+     */
+    _crearParticulaBoidCercaDe(enemigo) {
+        if (!enemigo || !enemigo.x || !enemigo.y) return;
+        
+        // Posición aleatoria a 10px del enemigo
+        const angulo = Math.random() * Math.PI * 2;
+        const distancia = 10;
+        const x = enemigo.x + Math.cos(angulo) * distancia;
+        const y = enemigo.y + Math.sin(angulo) * distancia;
+        
+        const particula = new BoidParticle(x, y, this.texturaParticulaBoid, this.texturasPboids);
+        
+        // Velocidad aleatoria hacia el centro
+        const centroX = this.anchoJuego / 2;
+        const centroY = this.altoJuego / 2;
+        const dx = centroX - x;
+        const dy = centroY - y;
+        const mag = Math.sqrt(dx * dx + dy * dy);
+        particula.velX = (dx / mag) * 50 + (Math.random() - 0.5) * 30;
+        particula.velY = (dy / mag) * 50 + (Math.random() - 0.5) * 30;
+        
+        this.particulasBoid.push(particula);
+        particula.render(this.aplicacion.stage);
     }
     
     /**
@@ -1251,34 +1547,56 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
                         // El proyectil hace daño
                         especial.salud -= projectile.dano;
                         
-                        // Si fue destruido
+                        // Si fue destruido, convertir en mini y orbitar (como cuando el jugador colisiona)
+                        let seConvirtioEnMini = false;
                         if (especial.salud <= 0) {
-                            // Animación de destrucción del Special Enemy (AZUL)
+                            // Contar cuántos especiales ya están en órbita
+                            let indiceOrbita = 0;
+                            for (const esp of this.enemigosSpeciales) {
+                                if (esp !== especial && esp.active && esp.enOrbita) {
+                                    indiceOrbita++;
+                                }
+                            }
+                            
+                            // Calcular primera posición en la órbita para la animación
+                            const velocidadBase = 1.5;
+                            const radioBase = 130;
+                            const variacionVelocidad = (indiceOrbita % 3) * 0.3;
+                            const variacionRadio = (indiceOrbita % 4) * 15;
+                            const velocidadActual = velocidadBase + variacionVelocidad;
+                            const radioActual = radioBase + variacionRadio;
+                            
+                            // Calcular posición inicial en la órbita
+                            const posX = this.jugador.x + Math.cos(especial.anguloOrbita) * radioActual;
+                            const posY = this.jugador.y + Math.sin(especial.anguloOrbita) * radioActual;
+                            
+                            // Animación de transformación (AZUL) en la posición de órbita
                             const astroExplosion = new AsteroidExplosion(
-                                especial.x, especial.y,
+                                posX, posY,
                                 this.texturaAsteroidExplosion,
-                                0.84,  // Escala LARGE
+                                0.5,  // Escala mediana
                                 0x0000FF  // Color AZUL
                             );
                             astroExplosion.render(this.aplicacion.stage);
                             this.efectosImpacto.push(astroExplosion);
                             
-                            // Dar power-up al jugador: velocidad de disparo + 20% escudos
-                            this.jugador.aumentarVelocidadDisparo();
+                            // Convertir en mini y orbitar
+                            especial.convertirEnOrbita();
+                            especial.active = true;
+                            seConvirtioEnMini = true;
                             
-                            // Agregar 20% de escudos (también sale del sobrecalentamiento si estaba)
-                            this.jugador.agregarEscudos(20);
+                            especial.indiceOrbita = indiceOrbita;
                             
                             // Puntos
                             this.puntuacion += especial.puntos;
-                            
-                            especial.destroy();
-                            this.enemigosSpeciales.splice(k, 1);
                         }
                         
-                        projectile.destroy();
-                        this.proyectiles.splice(i, 1);
-                        this._actualizarUI();
+                        // Solo destruir el proyectil si NO se convirtió en mini
+                        if (!seConvirtioEnMini) {
+                            projectile.destroy();
+                            this.proyectiles.splice(i, 1);
+                            this._actualizarUI();
+                        }
                     }
                     break;
                 }
@@ -2181,6 +2499,25 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         this.proyectilesEnemigos = []; // Limpiar proyectiles enemigos
         this.efectosExplosion = [];
         this.efectoUlti = null;
+        this.efectoSuccion = null;
+        this.particulasBoid = [];
+        this.timerParticulasBoid = 0;
+        this.particulasCapturadas = 0;
+        
+        // Resetear habilidad Tiempo Fuera
+        this.tiempoFueroActivo = false;
+        this.timerTiempoFuera = 0;
+        
+        // Resetear contador visual
+        if (this.contadorDevoradorUX) {
+            this.contadorDevoradorUX.textContent = '0';
+        }
+        
+        // Restaurar colores del icono Tiempo Fuera
+        if (this.marcoTiempoUX && this.fondoTiempoUX) {
+            this.marcoTiempoUX.style.border = '5px solid #0044CC !important';
+            this.marcoTiempoUX.style.boxShadow = '0 0 10px #0044CC !important';
+        }
         
         // Reiniciar flag de nombre
         this.nombreIngresado = false;
@@ -2203,8 +2540,11 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         // Recrear el jugador
         this._crearJugador();
         
+        // Recrear partículas Boid iniciales (10)
+        this._crearParticulasBoid(10);
+        
         // Actualizar la UI
-        this._actualizarUI();
+        this._actualizarUI(0);
         
         // Marcar el juego como corriendo
         this.ejecutando = true;
@@ -2242,6 +2582,436 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         // === ACTUALIZAR JUGADOR ===
         if (this.jugador && this.jugador.active) {
             this.jugador.update(delta, this.gestorEntrada);
+        }
+        
+        // === DEVORADOR DE PARTÍCULAS BOID (Tecla E) ===
+        // Verificar si se activa el devorador
+        let devoradorActivadoAhora = false;
+        if (this.gestorEntrada) {
+            devoradorActivadoAhora = this.gestorEntrada.debeUsarDevorar(delta);
+        }
+        
+        if (devoradorActivadoAhora && this.jugador && this.jugador.active) {
+            // Crear efecto de succión (visual)
+            this.efectoSuccion = new SuccionEffect(
+                this.jugador.x,
+                this.jugador.y,
+                this.anchoJuego,
+                this.altoJuego
+            );
+            this.efectoSuccion.render(this.aplicacion.stage);
+            
+            // Atraer partículas dentro de 200px hacia la nave (ignoran todo)
+            const radioDevorar = 200;
+            for (const particula of this.particulasBoid) {
+                if (!particula.active) continue;
+                
+                const dx = this.jugador.x - particula.x;
+                const dy = this.jugador.y - particula.y;
+                const distancia = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distancia < radioDevorar && distancia > 0) {
+                    // Forzar a la partícula a ir directamente a la nave (ignora todo)
+                    particula.velX = (dx / distancia) * 400;
+                    particula.velY = (dy / distancia) * 400;
+                    particula.siendoAtraida = true;
+                }
+            }
+            
+        }
+        
+        // Actualizar efecto de succión
+        if (this.efectoSuccion && this.efectoSuccion.active) {
+            // Mantener el efecto en la posición del jugador
+            if (this.jugador && this.jugador.active) {
+                this.efectoSuccion.x = this.jugador.x;
+                this.efectoSuccion.y = this.jugador.y;
+            }
+            this.efectoSuccion.update(delta);
+        } else if (this.efectoSuccion) {
+            // Efecto terminado, destruirlo
+            this.efectoSuccion.destroy();
+            this.efectoSuccion = null;
+        }
+        
+        // Actualizar el marco del devorador según el cooldown (cambiar ambos: marco y fondo)
+        const cooldownActual = this.gestorEntrada ? this.gestorEntrada.obtenerCooldownDevorar() : 0;
+        
+        if (this.marcoDeboradorUX && this.fondoDeboradorUX) {
+            if (devoradorActivadoAhora || cooldownActual > 4.5) {
+                // Activo o reciente - ROJO BRILLANTE
+                this.marcoDeboradorUX.style.borderColor = '#FF0000';
+                this.marcoDeboradorUX.style.boxShadow = '0 0 20px #FF0000';
+                this.fondoDeboradorUX.style.borderColor = '#FF0000';
+                this.fondoDeboradorUX.style.boxShadow = '0 0 20px #FF0000';
+            } else if (cooldownActual > 0) {
+                // En cooldown - ROJO OSCURO
+                this.marcoDeboradorUX.style.borderColor = '#CC0000';
+                this.marcoDeboradorUX.style.boxShadow = '0 0 15px #CC0000';
+                this.fondoDeboradorUX.style.borderColor = '#CC0000';
+                this.fondoDeboradorUX.style.boxShadow = '0 0 15px #CC0000';
+            } else {
+                // Listo - AZUL
+                this.marcoDeboradorUX.style.borderColor = '#0044CC';
+                this.marcoDeboradorUX.style.boxShadow = '0 0 10px #0044CC';
+                this.fondoDeboradorUX.style.borderColor = '#0044CC';
+                this.fondoDeboradorUX.style.boxShadow = '0 0 10px #0044CC';
+            }
+        }
+        
+        // === HABILIDAD TIEMPO FUERA (Pasiva) ===
+        // Se activa cuando los escudos están en sobrecalentamiento
+        if (this.marcoTiempoUX && this.fondoTiempoUX) {
+            if (this.jugador && this.jugador.sobrecalentado) {
+                const tiempo = Date.now();
+                const palpito = Math.floor(tiempo / 300) % 2 === 0;
+                
+                // === ANIMACIÓN DEL RELOJ (siempre durante sobrecalentamiento) ===
+                if (this.iconoTiempoUX) {
+                    this.timerAnimacionReloj += delta;
+                    
+                    if (this.timerAnimacionReloj >= this.intervaloAnimacionReloj) {
+                        this.timerAnimacionReloj = 0;
+                        
+                        // Secuencia: 1,2,3,4,5,6,6(girado),1,2,3...
+                        this.relojFrameActual++;
+                        
+                        // Si pasamos de 7, volver a 1
+                        if (this.relojFrameActual > 7) {
+                            this.relojFrameActual = 1;
+                        }
+                        
+                        // Determinar qué mostrar
+                        if (this.relojFrameActual === 7) {
+                            // Segundo 6 con giro 360°
+                            this.iconoTiempoUX.src = 'assets/relog6.png';
+                            this.iconoTiempoUX.style.transform = 'rotate(360deg)';
+                            this.iconoTiempoUX.style.position = 'relative';
+                            this.iconoTiempoUX.style.margin = 'auto';
+                        } else {
+                            // Frames 1-6 sin giro
+                            this.iconoTiempoUX.src = `assets/relog${this.relojFrameActual}.png`;
+                            this.iconoTiempoUX.style.transform = 'rotate(0deg)';
+                            this.iconoTiempoUX.style.position = 'relative';
+                            this.iconoTiempoUX.style.margin = 'auto';
+                        }
+                    }
+                }
+                
+                if (this.tiempoFueroActivo) {
+                    // Ya se activó - queda AZUL fijo (sin palpitar)
+                    this.marcoTiempoUX.style.borderColor = '#0044CC';
+                    this.marcoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
+                    this.fondoTiempoUX.style.borderColor = '#0044CC';
+                    this.fondoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
+                } else {
+                    // No activado aún - BLANCO/AZUL (parpadea)
+                    if (palpito) {
+                        this.marcoTiempoUX.style.borderColor = '#FFFFFF';
+                        this.marcoTiempoUX.style.boxShadow = '0 0 25px #FFFFFF';
+                        this.fondoTiempoUX.style.borderColor = '#FFFFFF';
+                        this.fondoTiempoUX.style.boxShadow = '0 0 25px #FFFFFF';
+                    } else {
+                        this.marcoTiempoUX.style.borderColor = '#0044CC';
+                        this.marcoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
+                        this.fondoTiempoUX.style.borderColor = '#0044CC';
+                        this.fondoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
+                    }
+                    
+                    // Timer para activar la habilidad (10 segundos)
+                    this.timerTiempoFuera += delta;
+                    
+                    if (this.timerTiempoFuera >= this.duracionTiempoFuera) {
+                        this.tiempoFueroActivo = true;
+                        this.jugador.agregarEscudos(10); // Usa el método para salir del sobrecalentamiento
+                    }
+                }
+            } else {
+                // No está en sobrecalentamiento - restaurar imagen original
+                if (this.marcoTiempoUX) {
+                    this.marcoTiempoUX.style.borderColor = '#0044CC';
+                    this.marcoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
+                }
+                if (this.fondoTiempoUX) {
+                    this.fondoTiempoUX.style.borderColor = '#0044CC';
+                    this.fondoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
+                }
+                if (this.iconoTiempoUX) {
+                    this.iconoTiempoUX.src = 'assets/tiempo fuera.png';
+                    this.iconoTiempoUX.style.transform = 'rotate(0deg)';
+                    this.iconoTiempoUX.style.width = '6vmin'; // Restaurar tamaño original
+                    this.iconoTiempoUX.style.position = 'relative';
+                    this.iconoTiempoUX.style.margin = 'auto';
+                }
+                this.timerTiempoFuera = 0;
+                this.tiempoFueroActivo = false;
+            }
+        }
+        
+        // === HABILIDAD COHETES (Tecla Q) ===
+        // Lanzar 2 cohetes hacia los enemigos más cercanos
+        if (this.gestorEntrada && this.gestorEntrada.debeUsarCohetes(delta)) {
+            if (this.jugador && this.jugador.active && this.texturaCohete) {
+                // Encontrar los 2 enemigos más cercanos
+                const enemigosCercanos = this._encontrarEnemigosCercanos(2);
+                
+                for (const enemigo of enemigosCercanos) {
+                    if (enemigo && enemigo.active) {
+                        const cohete = new Cohete(
+                            this.jugador.x,
+                            this.jugador.y,
+                            enemigo,
+                            this.texturaCohete
+                        );
+                        cohete.render(this.aplicacion.stage);
+                        this.cohetes.push(cohete);
+                    }
+                }
+            }
+        }
+        
+        // Actualizar cohetes y cambiar color del marco
+        if (this.marcoCohetesUX && this.fondoCohetesUX) {
+            const cooldownCohetes = this.gestorEntrada ? this.gestorEntrada.obtenerCooldownCohetes() : 0;
+            
+            if (cooldownCohetes > 0) {
+                // En cooldown - ROJO
+                this.marcoCohetesUX.style.borderColor = '#CC0000';
+                this.marcoCohetesUX.style.boxShadow = '0 0 15px #CC0000';
+                this.fondoCohetesUX.style.borderColor = '#CC0000';
+                this.fondoCohetesUX.style.boxShadow = '0 0 15px #CC0000';
+            } else {
+                // Listo - AZUL
+                this.marcoCohetesUX.style.borderColor = '#0044CC';
+                this.marcoCohetesUX.style.boxShadow = '0 0 10px #0044CC';
+                this.fondoCohetesUX.style.borderColor = '#0044CC';
+                this.fondoCohetesUX.style.boxShadow = '0 0 10px #0044CC';
+            }
+        }
+        
+        // === HABILIDAD PROPULSOR (Tecla R) ===
+        // Dash: avanzar 300px en 1 segundo
+        if (this.gestorEntrada && this.gestorEntrada.debeUsarPropulsor(delta)) {
+            if (this.jugador && this.jugador.active) {
+                this.jugador.activarPropulsor();
+            }
+        }
+        
+        // Actualizar marco del propulsor
+        if (this.marcoPropulUX && this.fondoPropulUX) {
+            const cooldownPropulsor = this.gestorEntrada ? this.gestorEntrada.obtenerCooldownPropulsor() : 0;
+            
+            if (cooldownPropulsor > 0) {
+                // En cooldown - ROJO
+                this.marcoPropulUX.style.borderColor = '#CC0000';
+                this.marcoPropulUX.style.boxShadow = '0 0 15px #CC0000';
+                this.fondoPropulUX.style.borderColor = '#CC0000';
+                this.fondoPropulUX.style.boxShadow = '0 0 15px #CC0000';
+            } else {
+                // Listo - AZUL
+                this.marcoPropulUX.style.borderColor = '#0044CC';
+                this.marcoPropulUX.style.boxShadow = '0 0 10px #0044CC';
+                this.fondoPropulUX.style.borderColor = '#0044CC';
+                this.fondoPropulUX.style.boxShadow = '0 0 10px #0044CC';
+            }
+        }
+        
+        // Actualizar cohetes activos
+        for (let i = this.cohetes.length - 1; i >= 0; i--) {
+            const cohete = this.cohetes[i];
+            
+            if (!cohete.active) {
+                this.cohetes.splice(i, 1);
+                continue;
+            }
+            
+            // Actualizar movimiento
+            cohete.update(delta);
+            
+            let impacto = false;
+            
+            // Verificar colisión con objetivo actual
+            if (cohete.verificarColision()) {
+                impacto = true;
+            }
+            
+            // Si no hay colisión con el objetivo, verificar otros enemigos (asteroides y naves)
+            if (!impacto) {
+                // Verificar asteroides
+                for (const enemigo of this.enemigos) {
+                    if (!enemigo.active || !enemigo.x || !enemigo.y) continue;
+                    if (cohete.objetivo === enemigo) continue; // Ya verificado
+                    
+                    const dx = cohete.x - enemigo.x;
+                    const dy = cohete.y - enemigo.y;
+                    const distancia = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Radio de colisión más generoso para asteroides
+                    const radioAst = enemigo.radio || 32;
+                    if (distancia < (12 + radioAst)) {
+                        cohete.objetivo = enemigo; // Cambiar objetivo
+                        impacto = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!impacto) {
+                // Verificar naves enemigas
+                for (const nave of this.enemigosNaves) {
+                    if (!nave.active || !nave.x || !nave.y) continue;
+                    
+                    const dx = cohete.x - nave.x;
+                    const dy = cohete.y - nave.y;
+                    const distancia = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Radio de colisión más generoso para naves
+                    const radioNave = nave.radio || 20;
+                    if (distancia < (15 + radioNave)) {
+                        cohete.objetivo = nave;
+                        impacto = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Si hubo impacto, destruir objetivo y cohete
+            if (impacto && cohete.objetivo && cohete.objetivo.active) {
+                const objetivo = cohete.objetivo;
+                
+                // Crear explosión
+                const escala = (objetivo.radio || 32) / 64;
+                const explosion = new AsteroidExplosion(
+                    objetivo.x, objetivo.y,
+                    this.texturaAsteroidExplosion,
+                    escala * 0.5
+                );
+                explosion.render(this.aplicacion.stage);
+                this.efectosImpacto.push(explosion);
+                
+                // Agregar puntos y carga ULTi
+                this.puntuacion += objetivo.puntos || 10;
+                this.jugador.agregarCargaUlti(objetivo.cargaUlti || 10);
+                
+                // Destruir objetivo (marcar inactivo Y destruir sprite)
+                if (objetivo.destroy) {
+                    objetivo.destroy(); // Esto también elimina el sprite
+                } else {
+                    objetivo.active = false;
+                    if (objetivo.imagen) {
+                        objetivo.imagen.visible = false;
+                        objetivo.imagen.parent?.removeChild(objetivo.imagen);
+                    }
+                }
+                
+                // Destruir cohete
+                cohete.destroy();
+                this.cohetes.splice(i, 1);
+                continue;
+            }
+            
+            // Eliminar si está fuera de pantalla
+            if (cohete.x < -100 || cohete.x > this.anchoJuego + 100 ||
+                cohete.y < -100 || cohete.y > this.altoJuego + 100) {
+                cohete.destroy();
+                this.cohetes.splice(i, 1);
+            }
+        }
+        
+        // === ACTUALIZAR PARTÍCULAS BOID ===
+        // Timer para crear partículas en grupos de 10 (cada 3 segundos)
+        this.timerParticulasBoid = (this.timerParticulasBoid || 0) + delta;
+        if (this.timerParticulasBoid >= 3 && this.particulasBoid.length < 100) {
+            this.timerParticulasBoid = 0;
+            // Crear grupo de 10 partículas
+            for (let i = 0; i < 10; i++) {
+                const nuevaParticula = this._crearParticulaBoidFuera();
+                this.particulasBoid.push(nuevaParticula);
+                nuevaParticula.render(this.aplicacion.stage);
+            }
+            
+        }
+        
+        const maxParticulas = 100; // Máximo 100 partículas en pantalla
+        
+        for (let i = this.particulasBoid.length - 1; i >= 0; i--) {
+            const particula = this.particulasBoid[i];
+            
+            // Resetear flag de atracción si está muy lejos de la nave
+            if (this.jugador && this.jugador.active) {
+                const dx = this.jugador.x - particula.x;
+                const dy = this.jugador.y - particula.y;
+                const distancia = Math.sqrt(dx * dx + dy * dy);
+                if (distancia > 250) {
+                    particula.siendoAtraida = false;
+                }
+            }
+            
+            // Actualizar comportamiento Boid (fuga de nave y asteroides)
+            particula.actualizar(
+                delta, 
+                this.particulasBoid, 
+                this.jugador, 
+                this.enemigosNaves,
+                this.enemigos,
+                this.anchoJuego,
+                this.altoJuego
+            );
+            
+            // Si está muy lejos, eliminarla y crear nueva
+            if (particula.x < -200 || particula.x > this.anchoJuego + 200 ||
+                particula.y < -200 || particula.y > this.altoJuego + 200) {
+                particula.destroy();
+                this.particulasBoid.splice(i, 1);
+                // Crear nueva solo si hay menos del máximo
+                if (this.particulasBoid.length < maxParticulas) {
+                    const nueva = this._crearParticulaBoidFuera();
+                    this.particulasBoid.push(nueva);
+                    nueva.render(this.aplicacion.stage);
+                }
+                continue;
+            }
+            
+            // REBOTAR al intentar salir (NO pueden salir)
+            const margen = 5;
+            if (particula.x < margen) {
+                particula.x = margen;
+                particula.velX = Math.abs(particula.velX) * 0.8;
+            } else if (particula.x > this.anchoJuego - margen) {
+                particula.x = this.anchoJuego - margen;
+                particula.velX = -Math.abs(particula.velX) * 0.8;
+            }
+            
+            if (particula.y < margen) {
+                particula.y = margen;
+                particula.velY = Math.abs(particula.velY) * 0.8;
+            } else if (particula.y > this.altoJuego - margen) {
+                particula.y = this.altoJuego - margen;
+                particula.velY = -Math.abs(particula.velY) * 0.8;
+            }
+            
+            // Captura por la nave
+            if (this.jugador && this.jugador.active && particula.puedeSerCapturada(this.jugador)) {
+                this._capturarParticulaBoid(particula, i);
+                if (this.particulasBoid.length < maxParticulas) {
+                    const nueva = this._crearParticulaBoidFuera();
+                    this.particulasBoid.push(nueva);
+                    nueva.render(this.aplicacion.stage);
+                }
+                continue;
+            }
+        }
+        
+        // Crear nuevas si hay menos del máximo (solo 1 por frame para que sea gradual)
+        if (this.particulasBoid.length < maxParticulas && Math.random() < 0.1) {
+            const nueva = this._crearParticulaBoidFuera();
+            this.particulasBoid.push(nueva);
+            nueva.render(this.aplicacion.stage);
+        }
+        
+        // Actualizar contador
+        if (this.uiManager && this.uiManager.actualizarContadorParticulas) {
+            this.uiManager.actualizarContadorParticulas(this.particulasBoid.length);
         }
         
         // === ACTUALIZAR PROYECTILES ===
@@ -2776,24 +3546,22 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         
         // === BOTÓN VOLVER (HTML nativo) ===
         // Calcular posicion
-        const margenSeparacion = 40,
-            bordeIzq = (this.anchoJuego / 2) - (imagenAncho / 2) + margenSeparacion,
-            bordeInf = (this.altoJuego / 2) + (imagenAlto / 2) - margenSeparacion;
+        const margenSeparacion = 40;
+        const bordeIzq = (this.anchoJuego / 2) - (puntuacionSprite.width / 2) + margenSeparacion;
+        const bordeInf = (this.altoJuego / 2) + (puntuacionSprite.height / 2) - margenSeparacion;
         
         const btnVolver = document.createElement('img');
         btnVolver.src = 'assets/volver.png';
         btnVolver.id = 'btn-volver';
-        btnVolver.style.cssText = `
-            position: absolute;
-            left: ${bordeIzq + 80}px;
-            top: ${bordeInf - 40}px;
-            transform: translateY(-50%);
-            width: 156px;
-            height: auto;
-            cursor: pointer;
-            z-index: 1000;
-            transition: all 0.2s ease;
-        `;
+        btnVolver.style.position = 'absolute';
+        btnVolver.style.left = (bordeIzq + 80) + 'px';
+        btnVolver.style.top = (bordeInf - 40) + 'px';
+        btnVolver.style.transform = 'translateY(-50%)';
+        btnVolver.style.width = '156px';
+        btnVolver.style.height = 'auto';
+        btnVolver.style.cursor = 'pointer';
+        btnVolver.style.zIndex = '1000';
+        btnVolver.style.transition = 'all 0.2s ease';
         
         // Efecto hover para VOLVER
         btnVolver.addEventListener('mouseenter', () => {

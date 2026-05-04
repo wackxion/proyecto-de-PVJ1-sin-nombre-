@@ -46,6 +46,15 @@ export class GestorEntrada {
             'KeyD': 'rotarDerecha',     // D
             'ArrowRight': 'rotarDerecha', // Flecha derecha
             
+            // Teclas para devorar partículas Boid
+            'KeyE': 'devorar',          // E
+            
+            // Teclas para cohetes
+            'KeyQ': 'cohetes',          // Q
+            
+            // Teclas para propulsor
+            'KeyR': 'propulsor',        // R
+            
             // Teclas de control del juego
             'KeyP': 'pausa',               // P - Pausar el juego
             'KeyT': 'mostrarTop5'          // T - Mostrar Top 5 (solo cuando está pausado)
@@ -59,6 +68,18 @@ export class GestorEntrada {
         // EnfriamientoUlti = temporizador para el ataque especial
         this.enfriamientoUlti = 0;
         this.enfriamientoUltiMax = 0.5; // 0.5 segundos de cooldown
+        
+        // EnfriamientoDevorar = temporizador para el devorador de partículas
+        this.enfriamientoDevorar = 0;
+        this.enfriamientoDevorarMax = 5; // 5 segundos de cooldown
+        
+        // EnfriamientoCohetes = temporizador para los cohetes
+        this.enfriamientoCohetes = 0;
+        this.enfriamientoCohetesMax = 5; // 5 segundos de cooldown
+        
+        // EnfriamientoPropulsor = temporizador para el propulsor (dash)
+        this.enfriamientoPropulsor = 0;
+        this.enfriamientoPropulsorMax = 15; // 15 segundos de cooldown
         
         // Vincular los eventos del teclado
         this._vincularEventos();
@@ -199,14 +220,49 @@ export class GestorEntrada {
         return false;
     }
     
-    // === FUNCIÓN DE DESARROLLO ===
     /**
+     * Verifica si se debe usar el devorador (E)
+     * Considera el cooldown de 5 segundos
+     * 
+     * @param {number} delta - Tiempo transcurrido (segundos)
+     * @returns {boolean} - true si debe usar el devorador
+     */
+    debeUsarDevorar(delta) {
+        // PRIMERO verificar si se puede usar (si el cooldown está en 0)
+        if (this.estaPresionada('devorar') && this.enfriamientoDevorar <= 0) {
+            // Activar - establecer cooldown a 5 segundos
+            this.enfriamientoDevorar = this.enfriamientoDevorarMax;
+            return true;
+        }
+        
+        // LUEGO decrementar el cooldown si está activo
+        if (this.enfriamientoDevorar > 0) {
+            this.enfriamientoDevorar -= delta;
+            if (this.enfriamientoDevorar < 0) this.enfriamientoDevorar = 0;
+        }
+        
+        return false;
+    }
+    
     /**
-     * Limpia todas las teclas
+     * Obtiene el tiempo restante de cooldown del devorador
+     * @returns {number} Tiempo restante en segundos
+     */
+    obtenerCooldownDevorar() {
+        return Math.max(0, this.enfriamientoDevorar);
+    }
+    
+    /**
+     * Limpia todas las teclas y resetea cooldowns
      * Se llama al reiniciar el juego para evitar teclas "atascadas"
      */
     reiniciar() {
         this.teclas.clear();
+        
+        // Resetear cooldowns de habilidades
+        this.enfriamientoCohetes = 0;
+        this.enfriamientoDevorar = 0;
+        this.enfriamientoPropulsor = 0;
     }
     
     /**
@@ -240,5 +296,64 @@ export class GestorEntrada {
      */
     debeMostrarTop5() {
         return this.estaPresionada('mostrarTop5');
+    }
+    
+    /**
+     * Verifica si se deben lanzar cohetes (tecla Q)
+     * @param {number} delta - Tiempo transcurrido
+     * @returns {boolean} true si debe lanzar cohetes
+     */
+    debeUsarCohetes(delta) {
+        // Siempre decrementar el cooldown
+        if (this.enfriamientoCohetes > 0) {
+            this.enfriamientoCohetes -= delta;
+            if (this.enfriamientoCohetes < 0) this.enfriamientoCohetes = 0;
+        }
+        
+        // Si la tecla de cohetes está presionada Y el cooldown llegó a 0
+        if (this.estaPresionada('cohetes') && this.enfriamientoCohetes <= 0) {
+            // Reiniciar el enfriamiento
+            this.enfriamientoCohetes = this.enfriamientoCohetesMax;
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Obtiene el tiempo restante de cooldown de los cohetes
+     * @returns {number} Tiempo restante
+     */
+    obtenerCooldownCohetes() {
+        return Math.max(0, this.enfriamientoCohetes);
+    }
+    
+    /**
+     * Verifica si se debe usar el propulsor (tecla R)
+     * @param {number} delta - Tiempo transcurrido
+     * @returns {boolean} true si debe usar el propulsor
+     */
+    debeUsarPropulsor(delta) {
+        // Siempre decrementar el cooldown
+        if (this.enfriamientoPropulsor > 0) {
+            this.enfriamientoPropulsor -= delta;
+            if (this.enfriamientoPropulsor < 0) this.enfriamientoPropulsor = 0;
+        }
+        
+        // Si la tecla de propulsor está presionada Y el cooldown llegó a 0
+        if (this.estaPresionada('propulsor') && this.enfriamientoPropulsor <= 0) {
+            this.enfriamientoPropulsor = this.enfriamientoPropulsorMax;
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Obtiene el tiempo restante de cooldown del propulsor
+     * @returns {number} Tiempo restante
+     */
+    obtenerCooldownPropulsor() {
+        return Math.max(0, this.enfriamientoPropulsor);
     }
 }
