@@ -1,7 +1,7 @@
 # 📋 GDD - Historial de Versiones
 
 **Proyecto:** Jugando en el Espacio  
-**Versión actual:** v1.3.5  
+**Versión actual:** v1.3.8  
 **Curso:** Programación de Videojuegos 1 - UNAHUR  
 **Profesor:** Facundo Saiegh  
 **Desarrollador:** Braian Zapater
@@ -301,10 +301,50 @@
 
 ---
 
+## 📜 Registro de Commits por Versión
+
+### v1.3.8 (Actual)
+> **Sistema de habilidades, partículas Boid, SpecialEnemy perbaikan**
+
+| Commit | Descripción |
+|--------|-------------|
+| `0d97133` | v1.3.8: Sistema de habilidades (Q,E,R), partículas Boid con animaciones, SpecialEnemy perbaikan, UI actualizada |
+
+---
+
+### v1.3.7
+> **Habilidades actives (Cohetes, Propulsor, Devorador), Tiempo Fuera pasivo**
+
+| Commit | Descripción |
+|--------|-------------|
+| - | Sistema de Cohetes (Q): 2 cohetes teledirigidos, 5s cooldown |
+| - | Sistema de Propulsor (R): Dash 300px en 0.2s, 15s cooldown |
+| - | Sistema de Devorador (E): Atrae partículas Boid, 5s cooldown |
+| - | Habilidad pasiva Tiempo Fuera: Regenera 10% escudos después de 10s en sobrecalentamiento |
+| - | Animación del reloj para Tiempo Fuera (relog1-6.png) |
+| - | Cooldowns se resetean al morir y reiniciar |
+
+---
+
+### v1.3.6
+> **Partículas Boid y Habilidad Devorador**
+
+| Commit | Descripción |
+|--------|-------------|
+| - | Partículas Boid con comportamiento de enjambre |
+| - | Habilidad Devorador (E): Atrae partículas dentro de 200px |
+| - | Contador de partículas Boias capturadas |
+| - | Efecto visual de succión (SuccionEffect.js) |
+
+---
+
 ## 📊 Resumen de Versiones
 
 | Versión | Commits | Características Principales |
 |---------|---------|----------------------------|
+| v1.3.8 | 1 | Sistema de habilidades, partículas Boies, SpecialEnemy |
+| v1.3.7 | ~10 | Habilidades Q, E, R, Tiempo Fuera pasivo, animación reloj |
+| v1.3.6 | ~8 | Partículas Boies, Devorador, efectos visuales |
 | v1.3.5 | 6 | UI mejorada, iconos de habilidades, efectos de escudo |
 | v1.3.4 | ~18 | Top 5 con Firebase, pausa, botones con imágenes |
 | v1.3.3 | ~14 | Sistema Top 5 (localStorage + Firebase) |
@@ -320,11 +360,11 @@
 
 ---
 
-## 🎯 Próxima Versión: v1.3.6
+## 🎯 Versiones Completadas
 
-**Objetivos planificados:**
-- Barra de escudos visual (reemplazar iconos por barra horizontal)
-- Nuevas habilidades: Escudo Temporal (Q), Teleport (R), Ralentizar (E)
+**v1.3.8:** ✅ Sistema de habilidades, partículas Boies, SpecialEnemy
+**v1.3.7:** ✅ Habilidades Q, E, R, Tiempo Fuera pasivo
+**v1.3.6:** ✅ Partículas Boies, Devorador
 
 ---
 
