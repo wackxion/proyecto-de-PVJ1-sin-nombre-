@@ -816,15 +816,32 @@ export class UIManager {
      */
     crearHUD() {
         const elementos = {};
-        
+
+        // =====================================================
+        // CONTENEDOR PRINCIPAL DE HABILIDADES
+        // Agrupa todos los iconos de habilidades en un solo contenedor
+        // =====================================================
+        const habilidadesContainer = document.createElement('div');
+        habilidadesContainer.id = 'habilidades-container';
+        habilidadesContainer.style.cssText = `
+            position: absolute;
+            bottom: 1vmin;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: row;
+            gap: 1vmin;
+            z-index: 100;
+        `;
+
         // =====================================================
         // 1. PANEL DE OLEADA (esquina superior izquierda)
         // Muestra: numero de oleada, asteroides faltantes, intervalos
-        // 
+        //
         // --- PARAMETROS DE TAMAÑO ---
         // padding: espacio interno (0.5vmin recommended)
         // font-size: tamano de letra (1.2vmin recommended)
-        // 
+        //
         // --- PARAMETROS DE POSICION ---
         // top: distancia desde arriba (2vmin recommended)
         // left: distancia desde izquierda (2vmin recommended)
@@ -837,7 +854,7 @@ export class UIManager {
             left: 2vmin;
             padding: 0.5vmin;
         `;
-        
+
         const waveText = document.createElement('div');
         waveText.id = 'wave';
         waveText.style.cssText = `
@@ -848,26 +865,62 @@ export class UIManager {
         leftPanel.appendChild(waveText);
         this.container.appendChild(leftPanel);
         elementos.elementoOleada = waveText;
-        
+
         // =====================================================
-        // 2. ICONO DE ESCUDO (habilidades - izquierda del centro)
-        // Muestra estado del escudo:
-        // - icono 1 (100-60%): escudo lleno
-        // - icono 2 (60-30%): escudo medio
-        // - icono 3 (<30%): escudo bajo
-        // - icono 4-5 (sobrecalentado): escudo roto/animacion
-        // 
-        // --- PARAMETROS DE TAMAÑO ---
-        // width: tamano del icono (5vmin recommended)
-        // 
-        // --- PARAMETROS DE POSICION ---
-        // bottom: distancia desde abajo (5vmin recommended)
-        // translateX: posicion horizontal (-200% = izquierda)
-        // - -200% = bien a la izquierda
-        // - -150% = izquierda media
-        // - -100% = justo izq del centro
+        // CONTENEDOR DE CADA HABILIDAD
+        // Función helper para crear un contenedor de habilidad
         // =====================================================
-        
+        const crearContenedorHabilidad = (id, iconSrc, altText) => {
+            const contenedor = document.createElement('div');
+            contenedor.id = id + '-container';
+            contenedor.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                position: relative;
+            `;
+
+            // Marco/frame
+            const marco = document.createElement('div');
+            marco.id = id + '-ux-frame';
+            marco.style.cssText = `
+                width: 10vmin;
+                height: 8vmin;
+                border: 4px solid #0044CC;
+                border-radius: 8px;
+                box-shadow: 0 0 10px #0044CC;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: white;
+            `;
+
+            // Icono
+            const icono = document.createElement('img');
+            icono.id = id + '-ux-icon';
+            icono.src = iconSrc;
+            icono.alt = altText;
+            icono.style.cssText = `
+                width: 8vmin;
+                height: auto;
+                max-height: 7vmin;
+            `;
+
+            marco.appendChild(icono);
+            contenedor.appendChild(marco);
+
+            return { contenedor, marco, icono };
+        };
+
+        // =====================================================
+        // 2. ICONO DE COHETES (Q)
+        // =====================================================
+        const cohetes = crearContenedorHabilidad('cohetes', 'assets/cohetes.png', 'Cohetes');
+        habilidadesContainer.appendChild(cohetes.contenedor);
+        elementos.iconoCohetesUX = cohetes.icono;
+        elementos.marcoCohetesUX = cohetes.marco;
+
 // --- ICONO DE COHETES (habilidades - izquierda del escudo) ---
         // Indicador de habilidad de propulsión/aceleración
         const cohetesFrame = document.createElement('div');

@@ -1,26 +1,26 @@
 /**
  * SpecialEnemy - Asteroide especial con comportamiento propio
- * 
- * Este enemigo aparece raramente (5%) y tiene:
+ *
+ * Este enemigo aparece raramente (2-4%) y tiene:
  * - Imagen propia (asteroideESP.png)
  * - Se mueve hacia la posición del jugador
- * - 200 HP
+ * - 100 HP
  * - Da power-up al jugador al ser destruido por proyectil:
  *   - +20% velocidad de disparo
  *   - +20% escudos (si está por debajo de 100%, máximo 100%)
  *   - 100 puntos
  * - Si colisiona con el jugador, se transforma en mini y orbita la nave
- * 
- * Mini Asteroide en Órbita:
+ *
+ * Mini Asteroide en Órbita (al colisionar con jugador):
  * - radio = 20px (reducido de 40px)
- * - radio de órbita = 130px (aumentado 30% desde 100px)
+ * - radio de órbita = 130px
  * - velocidad de órbita = 1.5 rad/s
- * - 200 HP (mantiene la misma vida)
+ * - 100 HP
  * - Proyectiles aliados traspasan (no recibe daño)
  * - Proyectiles enemigos le hacen daño (-25 HP)
- * - Al colisionar con el jugador: -25 HP al mini asteroide
- * - Al colisionar con asteroides: -25 HP al mini asteroide (el asteroide se destruye)
- * 
+ * - Al colisionar con el jugador: -10 HP al SpecialEnemy
+ * - Al colisionar con otros asteroides: -10 HP al SpecialEnemy
+ *
  * @extends GameObject
  */
 import { GameObject } from './GameObject.js';
@@ -131,8 +131,8 @@ export class SpecialEnemy extends GameObject {
             
             this.x = centroX + Math.cos(this.anguloOrbita) * radioActual;
             this.y = centroY + Math.sin(this.anguloOrbita) * radioActual;
-        } else {
-            // === MODO NORMAL: MOVIMIENTO HACIA POSICIÓN INICIAL GUARDADA ===
+} else {
+            // === MODO NORMAL: MOVIMIENTO HACIA POSICIÓN GUARDADA (cuando fue creado) ===
             // Se dirige hacia donde estaba el jugador cuando fue generado
             const dirX = this.direccionInicialX - this.x;
             const dirY = this.direccionInicialY - this.y;
