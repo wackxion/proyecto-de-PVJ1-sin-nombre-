@@ -408,4 +408,18 @@ export class BoidParticle extends GameObject {
     update(delta) {
         // La actualización principal se hace desde Game.js
     }
+    
+    /**
+     * Destruye la partícula y la devuelve al pool si existe
+     * @param {Object} pool - Pool de objetos (opcional)
+     */
+    destroyAndRelease(pool = null) {
+        this.active = false;
+        if (this.imagen && this.imagen.parent) {
+            this.imagen.parent.removeChild(this.imagen);
+        }
+        if (pool) {
+            pool.release(this);
+        }
+    }
 }

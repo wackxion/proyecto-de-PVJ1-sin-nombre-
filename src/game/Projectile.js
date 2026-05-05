@@ -137,4 +137,15 @@ export class Proyectil extends GameObject {
             container.addChild(visual);
         }
     }
+    
+    /**
+     * Destruye el proyectil y lo devuelve al pool si existe
+     * @param {Object} pool - Pool de objetos (opcional)
+     */
+    destroyAndRelease(pool = null) {
+        this.destroy();
+        if (pool) {
+            pool.release(this);
+        }
+    }
 }
