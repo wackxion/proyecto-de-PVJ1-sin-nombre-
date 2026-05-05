@@ -910,13 +910,33 @@ _actualizarUI(delta = 0) {
      * @param {number} direction - Dirección del proyectil en radianes (ángulo)
      */
     crearProyectil(x, y, direction) {
-        // Crear el proyectil con la textura
-        const projectile = new Proyectil(x, y, direction, this.anchoJuego, this.altoJuego, this.texturaProyectil);
+        // Usar pool para obtener proyectil (reutilizar en lugar de crear nuevo)
+        const projectile = this.poolProyectiles.obtain();
         
-        // Renderizarlo en el stage
+        // Inicializar el proyectil con los valores correctos
+        projectile.x = x;
+        projectile.y = y;
+        projectile.rotacion = direction;
+        projectile.anchoJuego = this.anchoJuego;
+        projectile.altoJuego = this.altoJuego;
+        projectile.tiempoDeVida = 2.5;
+        projectile.active = true;
+        
+        // Calcular velocidad basada en la dirección
+        projectile.velX = Math.cos(direction) * projectile.velocidad;
+        projectile.velY = Math.sin(direction) * projectile.velocidad;
+        
+        // Posicionar sprite
+        if (projectile.imagen) {
+            projectile.imagen.x = x;
+            projectile.imagen.y = y;
+            projectile.imagen.rotation = direction;
+        }
+        
+        // Renderizar si no está renderizado
         projectile.render(this.aplicacion.stage);
         
-        // Agregarlo a la lista de proyectiles
+        // Agregar a la lista
         this.proyectiles.push(projectile);
     }
     
@@ -3422,43 +3442,7 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         const astroExplosion = new AsteroidExplosion(enemy.x, enemy.y, this.texturaAsteroidExplosion, 0.5);
         astroExplosion.render(this.aplicacion.stage);
         this.efectosExplosion.push(astroExplosion);
-    }
-    
-/**
-     * @param {number} x - Posición X donde nace el proyectil
-     * @param {number} y - Posición Y donde nace el proyectil
-     * @param {number} direction - Dirección del proyectil en radianes (ángulo)
-     */
-    crearProyectil(x, y, direction) {
-        // Usar pool para obtener proyectil (reutilizar en lugar de crear nuevo)
-        const projectile = this.poolProyectiles.obtain();
-        
-        // Inicializar el proyectil con los valores correctos
-        projectile.x = x;
-        projectile.y = y;
-        projectile.rotacion = direction;
-        projectile.anchoJuego = this.anchoJuego;
-        projectile.altoJuego = this.altoJuego;
-        projectile.tiempoDeVida = 2.5; // Tiempo máximo de vida
-        projectile.active = true;
-        
-        // Calcular velocidad basada en la dirección
-        projectile.velX = Math.cos(direction) * projectile.velocidad;
-        projectile.velY = Math.sin(direction) * projectile.velocidad;
-        
-        // Posicionar sprite
-        if (projectile.imagen) {
-            projectile.imagen.x = x;
-            projectile.imagen.y = y;
-            projectile.imagen.rotation = direction;
-        }
-        
-        // Renderizarlo en el stage si no está ya renderizado
-        projectile.render(this.aplicacion.stage);
-        
-        // Agregarlo a la lista de proyectiles activos
-        this.proyectiles.push(projectile);
-    }
+}
     
     /**
      * Detiene el juego
