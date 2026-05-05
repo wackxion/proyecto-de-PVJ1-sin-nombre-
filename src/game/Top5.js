@@ -85,7 +85,13 @@ export class Top5 {
                 this.listaMemoria = doc.data().lista || [];
             }
         } catch (e) {
-            console.error('Top5 - Error al cargar desde Firebase:', e);
+            // Silenciar errores de permisos - usar localStorage como fallback
+            if (e.code === 'permission-denied' || e.message?.includes('permission')) {
+                console.log('Top5 - Firebase sin permisos, usando localStorage');
+                this.firebaseListo = false; // Desactivar Firebase para evitar más intentos
+            } else {
+                console.error('Top5 - Error al cargar desde Firebase:', e);
+            }
         }
     }
     
@@ -98,7 +104,12 @@ export class Top5 {
         try {
             await this.top5Ref.set({ lista: lista });
         } catch (e) {
-            console.error('Top5 - Error al guardar en Firebase:', e);
+            // Silenciar errores de permisos
+            if (e.code === 'permission-denied' || e.message?.includes('permission')) {
+                console.log('Top5 - Firebase sin permisos para guardar');
+            } else {
+                console.error('Top5 - Error al guardar en Firebase:', e);
+            }
         }
     }
     

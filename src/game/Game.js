@@ -29,6 +29,13 @@ import { ObjectPool } from './ObjectPool.js';
 import { UIManager } from '../ui/UIManager.js';
 import { GestorEntrada } from '../systems/InputManager.js';
 
+// === MÓDULOS REFACTORIZADOS ===
+import { crearProyectil, actualizarProyectiles, actualizarProyectilesJugador, actualizarProyectilesEnemigos, procesarColisionesProyectiles } from './GameProjectiles.js';
+import { generarEnemigo, actualizarEnemigos, generarNaveEnemiga, actualizarNavesEnemigas, actualizarNavesEnemigasCompleto, verificarPosicionLibre, actualizarGeneracion, procesarColisionesJugador, procesarColisionesEnemigos, limpiarEnemigosLejanos } from './GameEnemies.js';
+import { crearCohetes, actualizarCohetes, actualizarUIMarcoCohetes, actualizarHabilidadCohetes, actualizarHabilidadDevorador, actualizarHabilidadPropulsor, activarDevorador, actualizarSuccion, actualizarUIMarcoDevorador, activarPropulsor, actualizarUIMarcoPropulsor, actualizarTiempoFuera, encontrarEnemigosCercanos } from './GameSkills.js';
+import { activarUlti, actualizarUlti, verificarColisionesProyectiles, actualizarEfectosImpacto } from './GameEffects.js';
+import { crearParticulasIniciales, crearParticulaFuera, actualizarParticulasBoid, resetearContadorCapturadas, actualizarSistemaBoid } from './GameBoids.js';
+
 export class Game {
     /**
      * Constructor del juego
@@ -82,12 +89,6 @@ export class Game {
         
         // Pool de partículas Boi
         this.poolParticulasBoid = null;
-        
-        // Variables para texturas de animación Boi (se cargan después)
-                particula.active = true;
-            },
-            100
-        );
         
         // EfectoUlti = el ataque especial (aro expansivo)
         this.efectoUlti = null;
@@ -513,16 +514,18 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
      * @param {number} cantidad - Número de partículas a crear
      */
     _crearParticulasBoid(cantidad) {
-        // Crear solo 10 partículas iniciales (las demás aparecen en grupos de 10)
-        const inicial = 10;
-        for (let i = 0; i < inicial; i++) {
-            const nuevaParticula = this._crearParticulaBoidFuera();
-            this.particulasBoid.push(nuevaParticula);
-            nuevaParticula.render(this.aplicacion.stage);
-        }
-        
-        // Inicializar timer para crear más partículas en grupos de 10
+        // Usar módulo refactorizado
+        crearParticulasIniciales(this, cantidad);
         this.timerParticulasBoid = 0;
+    }
+    
+    /**
+     * Crear una partícula Boid fuera de la pantalla
+     * @returns {BoidParticle} La partícula creada
+     */
+    _crearParticulaBoidFuera() {
+        // Usar módulo refactorizado
+        return crearParticulaFuera(this);
     }
     
     /**
@@ -596,7 +599,7 @@ _crearParticulaBoidFuera() {
         }
         
         // Usar pool para obtener partícula
-        const particula = this.poolParticulasBoid.obtain();
+        const particula = new BoidParticle(x, y, this.texturaParticulaBoid, this.texturasPboids);
         
         // Configurar posición y velocidad
         particula.x = x;
@@ -1207,7 +1210,7 @@ _actualizarUI(delta = 0) {
         const y = enemigo.y + Math.sin(angulo) * distancia;
         
         // Usar pool para obtener partícula
-        const particula = this.poolParticulasBoid.obtain();
+        const particula = new BoidParticle(x, y, this.texturaParticulaBoid, this.texturasPboids);
         
         // Velocidad aleatoria hacia el centro
         const centroX = this.anchoJuego / 2;
@@ -1283,8 +1286,20 @@ _actualizarUI(delta = 0) {
         }
     }
     
+/**
+     * Crea un proyectil desde la posición del jugador
+     * 
+     * @param {number} x - Posición X donde nace el proyectil
+     * @param {number} y - Posición Y donde nace el proyectil
+     * @param {number} direction - Dirección del proyectil en radianes (ángulo)
+     */
+crearProyectil(x, y, direction) {
+        // Usar módulo refactorizado
+        return crearProyectil(this, x, y, direction);
+    }
+    
     /**
-     * Crea un proyectil disparado por una nave enemiga
+     * Crea un proyectil enemigo desde una nave enemiga
      * 
      * @param {number} x - Posición X
      * @param {number} y - Posición Y
@@ -1376,33 +1391,6 @@ _actualizarUI(delta = 0) {
         }
         
         return true; // Posición libre
-    }
-    
-    /**
-     * Elimina enemigos que están muy lejos de la pantalla
-     * Se llama después de actualizar los enemigos
-     */
-    _limpiarEnemigosLejanos() {
-        const margin = 200; // Margen fuera de la pantalla
-        
-        for (let i = this.enemigos.length - 1; i >= 0; i--) {
-            const enemy = this.enemigos[i];
-            
-            // Si está muy lejos de la pantalla, destruirlo
-            if (enemy.x < -margin || enemy.x > this.anchoJuego + margin ||
-                enemy.y < -margin || enemy.y > this.altoJuego + margin) {
-                
-                // Remover el sprite si existe
-                const enemyVisual = enemy.imagen || enemy.sprite;
-                if (enemyVisual && enemyVisual.parent) {
-                    enemyVisual.parent.removeChild(enemyVisual);
-                }
-                
-                // Destruir el enemigo
-                enemy.destroy();
-                this.enemigos.splice(i, 1);
-            }
-        }
     }
     
     /**
@@ -2624,687 +2612,47 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
             this.jugador.update(delta, this.gestorEntrada);
         }
         
-        // === DEVORADOR DE PARTÍCULAS BOID (Tecla E) ===
-        // Verificar si se activa el devorador
-        let devoradorActivadoAhora = false;
-        if (this.gestorEntrada) {
-            devoradorActivadoAhora = this.gestorEntrada.debeUsarDevorar(delta);
-        }
+// === DEVORADOR DE PARTÍCULAS BOID (Tecla E) - usando módulo ===
+        const devoradorActivadoAhora = actualizarHabilidadDevorador(this, delta);
         
-        if (devoradorActivadoAhora && this.jugador && this.jugador.active) {
-            // Crear efecto de succión (visual)
-            this.efectoSuccion = new SuccionEffect(
-                this.jugador.x,
-                this.jugador.y,
-                this.anchoJuego,
-                this.altoJuego
-            );
-            this.efectoSuccion.render(this.aplicacion.stage);
-            
-            // Atraer partículas dentro de 200px hacia la nave (ignoran todo)
-            const radioDevorar = 200;
-            for (const particula of this.particulasBoid) {
-                if (!particula.active) continue;
-                
-                const dx = this.jugador.x - particula.x;
-                const dy = this.jugador.y - particula.y;
-                const distancia = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distancia < radioDevorar && distancia > 0) {
-                    // Forzar a la partícula a ir directamente a la nave (ignora todo)
-                    particula.velX = (dx / distancia) * 400;
-                    particula.velY = (dy / distancia) * 400;
-                    particula.siendoAtraida = true;
-                }
-            }
-            
-        }
+        // === HABILIDAD COHETES (Tecla Q) - usando módulo ===
+        actualizarHabilidadCohetes(this, delta);
         
-        // Actualizar efecto de succión
-        if (this.efectoSuccion && this.efectoSuccion.active) {
-            // Mantener el efecto en la posición del jugador
-            if (this.jugador && this.jugador.active) {
-                this.efectoSuccion.x = this.jugador.x;
-                this.efectoSuccion.y = this.jugador.y;
-            }
-            this.efectoSuccion.update(delta);
-        } else if (this.efectoSuccion) {
-            // Efecto terminado, destruirlo
-            this.efectoSuccion.destroy();
-            this.efectoSuccion = null;
-        }
+        // === HABILIDAD PROPULSOR (Tecla R) - usando módulo ===
+        actualizarHabilidadPropulsor(this, delta);
         
-        // Actualizar el marco del devorador según el cooldown (cambiar ambos: marco y fondo)
-        const cooldownActual = this.gestorEntrada ? this.gestorEntrada.obtenerCooldownDevorar() : 0;
+        // === HABILIDAD TIEMPO FUERA (Pasiva) - usando módulo ===
+        actualizarTiempoFuera(this, delta);
         
-        if (this.marcoDeboradorUX && this.fondoDeboradorUX) {
-            if (devoradorActivadoAhora || cooldownActual > 4.5) {
-                // Activo o reciente - ROJO BRILLANTE
-                this.marcoDeboradorUX.style.borderColor = '#FF0000';
-                this.marcoDeboradorUX.style.boxShadow = '0 0 20px #FF0000';
-                this.fondoDeboradorUX.style.borderColor = '#FF0000';
-                this.fondoDeboradorUX.style.boxShadow = '0 0 20px #FF0000';
-            } else if (cooldownActual > 0) {
-                // En cooldown - ROJO OSCURO
-                this.marcoDeboradorUX.style.borderColor = '#CC0000';
-                this.marcoDeboradorUX.style.boxShadow = '0 0 15px #CC0000';
-                this.fondoDeboradorUX.style.borderColor = '#CC0000';
-                this.fondoDeboradorUX.style.boxShadow = '0 0 15px #CC0000';
-            } else {
-                // Listo - AZUL
-                this.marcoDeboradorUX.style.borderColor = '#0044CC';
-                this.marcoDeboradorUX.style.boxShadow = '0 0 10px #0044CC';
-                this.fondoDeboradorUX.style.borderColor = '#0044CC';
-                this.fondoDeboradorUX.style.boxShadow = '0 0 10px #0044CC';
-            }
-        }
+// === ACTUALIZAR PARTÍCULAS BOID - usando módulo ===
+        actualizarSistemaBoid(this, delta);
         
-        // === HABILIDAD TIEMPO FUERA (Pasiva) ===
-        // Se activa cuando los escudos están en sobrecalentamiento
-        if (this.marcoTiempoUX && this.fondoTiempoUX) {
-            if (this.jugador && this.jugador.sobrecalentado) {
-                const tiempo = Date.now();
-                const palpito = Math.floor(tiempo / 300) % 2 === 0;
-                
-                // === ANIMACIÓN DEL RELOJ (siempre durante sobrecalentamiento) ===
-                if (this.iconoTiempoUX) {
-                    this.timerAnimacionReloj += delta;
-                    
-                    if (this.timerAnimacionReloj >= this.intervaloAnimacionReloj) {
-                        this.timerAnimacionReloj = 0;
-                        
-                        // Secuencia: 1,2,3,4,5,6,6(girado),1,2,3...
-                        this.relojFrameActual++;
-                        
-                        // Si pasamos de 7, volver a 1
-                        if (this.relojFrameActual > 7) {
-                            this.relojFrameActual = 1;
-                        }
-                        
-                        // Determinar qué mostrar
-                        if (this.relojFrameActual === 7) {
-                            // Segundo 6 con giro 360°
-                            this.iconoTiempoUX.src = 'assets/relog6.png';
-                            this.iconoTiempoUX.style.transform = 'rotate(360deg)';
-                            this.iconoTiempoUX.style.position = 'relative';
-                            this.iconoTiempoUX.style.margin = 'auto';
-                        } else {
-                            // Frames 1-6 sin giro
-                            this.iconoTiempoUX.src = `assets/relog${this.relojFrameActual}.png`;
-                            this.iconoTiempoUX.style.transform = 'rotate(0deg)';
-                            this.iconoTiempoUX.style.position = 'relative';
-                            this.iconoTiempoUX.style.margin = 'auto';
-                        }
-                    }
-                }
-                
-                if (this.tiempoFueroActivo) {
-                    // Ya se activó - queda AZUL fijo (sin palpitar)
-                    this.marcoTiempoUX.style.borderColor = '#0044CC';
-                    this.marcoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
-                    this.fondoTiempoUX.style.borderColor = '#0044CC';
-                    this.fondoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
-                } else {
-                    // No activado aún - BLANCO/AZUL (parpadea)
-                    if (palpito) {
-                        this.marcoTiempoUX.style.borderColor = '#FFFFFF';
-                        this.marcoTiempoUX.style.boxShadow = '0 0 25px #FFFFFF';
-                        this.fondoTiempoUX.style.borderColor = '#FFFFFF';
-                        this.fondoTiempoUX.style.boxShadow = '0 0 25px #FFFFFF';
-                    } else {
-                        this.marcoTiempoUX.style.borderColor = '#0044CC';
-                        this.marcoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
-                        this.fondoTiempoUX.style.borderColor = '#0044CC';
-                        this.fondoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
-                    }
-                    
-                    // Timer para activar la habilidad (10 segundos)
-                    this.timerTiempoFuera += delta;
-                    
-                    if (this.timerTiempoFuera >= this.duracionTiempoFuera) {
-                        this.tiempoFueroActivo = true;
-                        this.jugador.agregarEscudos(10); // Usa el método para salir del sobrecalentamiento
-                    }
-                }
-            } else {
-                // No está en sobrecalentamiento - restaurar imagen original
-                if (this.marcoTiempoUX) {
-                    this.marcoTiempoUX.style.borderColor = '#0044CC';
-                    this.marcoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
-                }
-                if (this.fondoTiempoUX) {
-                    this.fondoTiempoUX.style.borderColor = '#0044CC';
-                    this.fondoTiempoUX.style.boxShadow = '0 0 10px #0044CC';
-                }
-                if (this.iconoTiempoUX) {
-                    this.iconoTiempoUX.src = 'assets/tiempo fuera.png';
-                    this.iconoTiempoUX.style.transform = 'rotate(0deg)';
-                    this.iconoTiempoUX.style.width = '6vmin'; // Restaurar tamaño original
-                    this.iconoTiempoUX.style.position = 'relative';
-                    this.iconoTiempoUX.style.margin = 'auto';
-                }
-                this.timerTiempoFuera = 0;
-                this.tiempoFueroActivo = false;
-            }
-        }
+// === ACTUALIZAR PROYECTILES - usando módulo ===
+        actualizarProyectilesJugador(this, delta);
+        actualizarProyectilesEnemigos(this, delta);
         
-        // === HABILIDAD COHETES (Tecla Q) ===
-        // Lanzar 2 cohetes hacia los enemigos más cercanos
-        if (this.gestorEntrada && this.gestorEntrada.debeUsarCohetes(delta)) {
-            if (this.jugador && this.jugador.active && this.texturaCohete) {
-                // Encontrar los 2 enemigos más cercanos
-                const enemigosCercanos = this._encontrarEnemigosCercanos(2);
-                
-                for (const enemigo of enemigosCercanos) {
-                    if (enemigo && enemigo.active) {
-                        const cohete = new Cohete(
-                            this.jugador.x,
-                            this.jugador.y,
-                            enemigo,
-                            this.texturaCohete
-                        );
-                        cohete.render(this.aplicacion.stage);
-                        this.cohetes.push(cohete);
-                    }
-                }
-            }
-        }
+        // === ACTUALIZAR ENEMIGOS (usando módulo) ===
+        actualizarEnemigos(this, delta);
         
-        // Actualizar cohetes y cambiar color del marco
-        if (this.marcoCohetesUX && this.fondoCohetesUX) {
-            const cooldownCohetes = this.gestorEntrada ? this.gestorEntrada.obtenerCooldownCohetes() : 0;
-            
-            if (cooldownCohetes > 0) {
-                // En cooldown - ROJO
-                this.marcoCohetesUX.style.borderColor = '#CC0000';
-                this.marcoCohetesUX.style.boxShadow = '0 0 15px #CC0000';
-                this.fondoCohetesUX.style.borderColor = '#CC0000';
-                this.fondoCohetesUX.style.boxShadow = '0 0 15px #CC0000';
-            } else {
-                // Listo - AZUL
-                this.marcoCohetesUX.style.borderColor = '#0044CC';
-                this.marcoCohetesUX.style.boxShadow = '0 0 10px #0044CC';
-                this.fondoCohetesUX.style.borderColor = '#0044CC';
-                this.fondoCohetesUX.style.boxShadow = '0 0 10px #0044CC';
-            }
-        }
-        
-        // === HABILIDAD PROPULSOR (Tecla R) ===
-        // Dash: avanzar 300px en 1 segundo
-        if (this.gestorEntrada && this.gestorEntrada.debeUsarPropulsor(delta)) {
-            if (this.jugador && this.jugador.active) {
-                this.jugador.activarPropulsor();
-            }
-        }
-        
-        // Actualizar marco del propulsor
-        if (this.marcoPropulUX && this.fondoPropulUX) {
-            const cooldownPropulsor = this.gestorEntrada ? this.gestorEntrada.obtenerCooldownPropulsor() : 0;
-            
-            if (cooldownPropulsor > 0) {
-                // En cooldown - ROJO
-                this.marcoPropulUX.style.borderColor = '#CC0000';
-                this.marcoPropulUX.style.boxShadow = '0 0 15px #CC0000';
-                this.fondoPropulUX.style.borderColor = '#CC0000';
-                this.fondoPropulUX.style.boxShadow = '0 0 15px #CC0000';
-            } else {
-                // Listo - AZUL
-                this.marcoPropulUX.style.borderColor = '#0044CC';
-                this.marcoPropulUX.style.boxShadow = '0 0 10px #0044CC';
-                this.fondoPropulUX.style.borderColor = '#0044CC';
-                this.fondoPropulUX.style.boxShadow = '0 0 10px #0044CC';
-            }
-        }
-        
-        // Actualizar cohetes activos
-        for (let i = this.cohetes.length - 1; i >= 0; i--) {
-            const cohete = this.cohetes[i];
-            
-            if (!cohete.active) {
-                this.cohetes.splice(i, 1);
-                continue;
-            }
-            
-            // Actualizar movimiento
-            cohete.update(delta);
-            
-            let impacto = false;
-            
-            // Verificar colisión con objetivo actual
-            if (cohete.verificarColision()) {
-                impacto = true;
-            }
-            
-            // Si no hay colisión con el objetivo, verificar otros enemigos (asteroides y naves)
-            if (!impacto) {
-                // Verificar asteroides
-                for (const enemigo of this.enemigos) {
-                    if (!enemigo.active || !enemigo.x || !enemigo.y) continue;
-                    if (cohete.objetivo === enemigo) continue; // Ya verificado
-                    
-                    const dx = cohete.x - enemigo.x;
-                    const dy = cohete.y - enemigo.y;
-                    const distancia = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // Radio de colisión más generoso para asteroides
-                    const radioAst = enemigo.radio || 32;
-                    if (distancia < (12 + radioAst)) {
-                        cohete.objetivo = enemigo; // Cambiar objetivo
-                        impacto = true;
-                        break;
-                    }
-                }
-            }
-            
-            if (!impacto) {
-                // Verificar naves enemigas
-                for (const nave of this.enemigosNaves) {
-                    if (!nave.active || !nave.x || !nave.y) continue;
-                    
-                    const dx = cohete.x - nave.x;
-                    const dy = cohete.y - nave.y;
-                    const distancia = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // Radio de colisión más generoso para naves
-                    const radioNave = nave.radio || 20;
-                    if (distancia < (15 + radioNave)) {
-                        cohete.objetivo = nave;
-                        impacto = true;
-                        break;
-                    }
-                }
-            }
-            
-            // Si hubo impacto, destruir objetivo y cohete
-            if (impacto && cohete.objetivo && cohete.objetivo.active) {
-                const objetivo = cohete.objetivo;
-                
-                // Crear explosión
-                const escala = (objetivo.radio || 32) / 64;
-                const explosion = new AsteroidExplosion(
-                    objetivo.x, objetivo.y,
-                    this.texturaAsteroidExplosion,
-                    escala * 0.5
-                );
-                explosion.render(this.aplicacion.stage);
-                this.efectosImpacto.push(explosion);
-                
-                // Agregar puntos y carga ULTi
-                this.puntuacion += objetivo.puntos || 10;
-                this.jugador.agregarCargaUlti(objetivo.cargaUlti || 10);
-                
-                // Destruir objetivo (marcar inactivo Y destruir sprite)
-                if (objetivo.destroy) {
-                    objetivo.destroy(); // Esto también elimina el sprite
-                } else {
-                    objetivo.active = false;
-                    if (objetivo.imagen) {
-                        objetivo.imagen.visible = false;
-                        objetivo.imagen.parent?.removeChild(objetivo.imagen);
-                    }
-                }
-                
-                // Destruir cohete
-                cohete.destroy();
-                this.cohetes.splice(i, 1);
-                continue;
-            }
-            
-            // Eliminar si está fuera de pantalla
-            if (cohete.x < -100 || cohete.x > this.anchoJuego + 100 ||
-                cohete.y < -100 || cohete.y > this.altoJuego + 100) {
-                cohete.destroy();
-                this.cohetes.splice(i, 1);
-            }
-        }
-        
-        // === ACTUALIZAR PARTÍCULAS BOID ===
-        // Timer para crear partículas en grupos de 10 (cada 3 segundos)
-        this.timerParticulasBoid = (this.timerParticulasBoid || 0) + delta;
-        if (this.timerParticulasBoid >= 3 && this.particulasBoid.length < 100) {
-            this.timerParticulasBoid = 0;
-            // Crear grupo de 10 partículas
-            for (let i = 0; i < 10; i++) {
-                const nuevaParticula = this._crearParticulaBoidFuera();
-                this.particulasBoid.push(nuevaParticula);
-                nuevaParticula.render(this.aplicacion.stage);
-            }
-            
-        }
-        
-        const maxParticulas = 100; // Máximo 100 partículas en pantalla
-        
-        for (let i = this.particulasBoid.length - 1; i >= 0; i--) {
-            const particula = this.particulasBoid[i];
-            
-            // Resetear flag de atracción si está muy lejos de la nave
-            if (this.jugador && this.jugador.active) {
-                const dx = this.jugador.x - particula.x;
-                const dy = this.jugador.y - particula.y;
-                const distancia = Math.sqrt(dx * dx + dy * dy);
-                if (distancia > 250) {
-                    particula.siendoAtraida = false;
-                }
-            }
-            
-            // Actualizar comportamiento Boid (fuga de nave y asteroides)
-            particula.actualizar(
-                delta, 
-                this.particulasBoid, 
-                this.jugador, 
-                this.enemigosNaves,
-                this.enemigos,
-                this.anchoJuego,
-                this.altoJuego
-            );
-            
-            // Si está muy lejos, eliminarla y crear nueva
-            if (particula.x < -200 || particula.x > this.anchoJuego + 200 ||
-                particula.y < -200 || particula.y > this.altoJuego + 200) {
-                particula.destroy(this.poolParticulasBoid);
-                this.particulasBoid.splice(i, 1);
-                // Crear nueva solo si hay menos del máximo
-                if (this.particulasBoid.length < maxParticulas) {
-                    const nueva = this._crearParticulaBoidFuera();
-                    this.particulasBoid.push(nueva);
-                    nueva.render(this.aplicacion.stage);
-                }
-                continue;
-            }
-            
-            // REBOTAR al intentar salir (NO pueden salir)
-            const margen = 5;
-            if (particula.x < margen) {
-                particula.x = margen;
-                particula.velX = Math.abs(particula.velX) * 0.8;
-            } else if (particula.x > this.anchoJuego - margen) {
-                particula.x = this.anchoJuego - margen;
-                particula.velX = -Math.abs(particula.velX) * 0.8;
-            }
-            
-            if (particula.y < margen) {
-                particula.y = margen;
-                particula.velY = Math.abs(particula.velY) * 0.8;
-            } else if (particula.y > this.altoJuego - margen) {
-                particula.y = this.altoJuego - margen;
-                particula.velY = -Math.abs(particula.velY) * 0.8;
-            }
-            
-            // Captura por la nave
-            if (this.jugador && this.jugador.active && particula.puedeSerCapturada(this.jugador)) {
-                this._capturarParticulaBoid(particula, i);
-                if (this.particulasBoid.length < maxParticulas) {
-                    const nueva = this._crearParticulaBoidFuera();
-                    this.particulasBoid.push(nueva);
-                    nueva.render(this.aplicacion.stage);
-                }
-                continue;
-            }
-        }
-        
-        // Crear nuevas si hay menos del máximo (solo 1 por frame para que sea gradual)
-        if (this.particulasBoid.length < maxParticulas && Math.random() < 0.1) {
-            const nueva = this._crearParticulaBoidFuera();
-            this.particulasBoid.push(nueva);
-            nueva.render(this.aplicacion.stage);
-        }
-        
-        // Actualizar contador
-        if (this.uiManager && this.uiManager.actualizarContadorParticulas) {
-            this.uiManager.actualizarContadorParticulas(this.particulasBoid.length);
-        }
-        
-        // === ACTUALIZAR PROYECTILES ===
-        for (let i = this.proyectiles.length - 1; i >= 0; i--) {
-            const projectile = this.proyectiles[i];
-            projectile.update(delta);
-            
-            // Si el proyectil ya no está activo, removerlo
-            if (!projectile.active) {
-                const projVisual = projectile.imagen || projectile.sprite;
-                if (projVisual && projVisual.parent) {
-                    projVisual.parent.removeChild(projVisual);
-                }
-                this.proyectiles.splice(i, 1);
-            }
-        }
-        
-        // === ACTUALIZAR PROYECTILES ENEMIGOS ===
-        // Siempre actualizar (aunque no haya naves)
-        if (this.proyectilesEnemigos) {
-            for (let i = this.proyectilesEnemigos.length - 1; i >= 0; i--) {
-                const proj = this.proyectilesEnemigos[i];
-                proj.update(delta);
-                
-                // Verificar colisión con asteroides
-                for (let j = this.enemigos.length - 1; j >= 0; j--) {
-                    const ast = this.enemigos[j];
-                    if (!ast.active) continue;
-                    
-                    if (this._verificarColision(proj, ast)) {
-                        proj.active = false;
-                        
-                        // Destruir asteroide (SIN puntos para el jugador)
-                        const escala = ast.radio / 64;
-                        const explosion = new AsteroidExplosion(
-                            ast.x, ast.y,
-                            this.texturaAsteroidExplosion,
-                            escala * 0.35
-                        );
-                        explosion.render(this.aplicacion.stage);
-                        this.efectosImpacto.push(explosion);
-                        
-                        ast.destroy();
-                        this.enemigos.splice(j, 1);
-                        break;
-                    }
-                }
-                
-                if (!proj.active) {
-                    const projVisual = proj.imagen || proj.sprite;
-                    if (projVisual && projVisual.parent) {
-                        projVisual.parent.removeChild(projVisual);
-                    }
-                    this.proyectilesEnemigos.splice(i, 1);
-                }
-            }
-        }
-        
-        // === ACTUALIZAR ENEMIGOS ===
-        for (const enemy of this.enemigos) {
-            enemy.update(delta);
-        }
-        
-        // === ACTUALIZAR ENEMIGOS ESPECIALES ===
-        for (let i = this.enemigosSpeciales.length - 1; i >= 0; i--) {
-            const especial = this.enemigosSpeciales[i];
-            if (!especial.active) {
-                this.enemigosSpeciales.splice(i, 1);
-                continue;
-            }
-            especial.update(delta);
-        }
-        
-        // === ACTUALIZAR NAVES ENEMIGAS ===
-        for (let i = this.enemigosNaves.length - 1; i >= 0; i--) {
-            const naveEnemiga = this.enemigosNaves[i];
-            
-            if (!naveEnemiga.active) continue;
-            
-            // Actualizar la nave enemiga
-            naveEnemiga.update(delta);
-            
-            // Solo disparar si está en pantalla
-            if (naveEnemiga.x > 0 && naveEnemiga.x < this.anchoJuego &&
-                naveEnemiga.y > 0 && naveEnemiga.y < this.altoJuego) {
-                
-                // Verificar si dispara (cada 3 segundos)
-                if (naveEnemiga.yaDisparo && !naveEnemiga.disparoCreado) {
-                    // Calcular ángulo hacia el jugador
-                    const dx = this.jugador.x - naveEnemiga.x;
-                    const dy = this.jugador.y - naveEnemiga.y;
-                    const anguloDisparo = Math.atan2(dy, dx);
-                    
-                    // Verificar si la nave está apuntando hacia el jugador (diferencia < 30°)
-                    let diff = anguloDisparo - naveEnemiga.rotacion;
-                    while (diff > Math.PI) diff -= Math.PI * 2;
-                    while (diff < -Math.PI) diff += Math.PI * 2;
-                    
-                    // Solo dispara si está apuntando hacia el jugador (±30° = ±PI/6)
-                    if (Math.abs(diff) < Math.PI / 6) {
-                        // Gira hacia el jugador
-                        naveEnemiga.rotacion += diff * 8 * delta;
-                        
-                        // Crear el proyectil desde la punta de la nave
-                        this._crearProyectilEnemigo(naveEnemiga.x, naveEnemiga.y, anguloDisparo);
-                        naveEnemiga.disparoCreado = true;
-                    } else {
-                        // Si no está apuntando, girar hacia el jugador sin disparar
-                        naveEnemiga.rotacion += diff * 5 * delta;
-                    }
-                    
-                    // Resetear para el siguiente disparo
-                    naveEnemiga.yaDisparo = false;
-                }
-            }
-            
-            // Verificar colisión con asteroides
-            for (let j = this.enemigos.length - 1; j >= 0; j--) {
-                const asteroid = this.enemigos[j];
-                if (!asteroid.active) continue;
-                
-                if (naveEnemiga.verificarColision(asteroid)) {
-                    // Ambos se destruyen
-                    asteroid.salud = 0;
-                    asteroid.active = false;
-                    asteroid.destroy();
-                    
-                    // Crear efecto de explosión del asteroide
-                    const escala = asteroid.radio / 64;
-                    const astroExplosion = new AsteroidExplosion(
-                        asteroid.x, asteroid.y,
-                        this.texturaAsteroidExplosion,
-                        escala * 0.35
-                    );
-                    astroExplosion.render(this.aplicacion.stage);
-                    this.efectosImpacto.push(astroExplosion);
-                    
-                    // Destruir la nave enemiga
-                    naveEnemiga.destroy();
-                    this.enemigos.splice(j, 1);
-                    break;
-                }
-            }
-            
-            // Si la nave enemiga está muy lejos, destruirla
-            const margin = 200;
-            if (naveEnemiga.x < -margin || naveEnemiga.x > this.anchoJuego + margin ||
-                naveEnemiga.y < -margin || naveEnemiga.y > this.altoJuego + margin) {
-                naveEnemiga.destroy();
-            }
-            
-            // Eliminar si no está activa
-            if (!naveEnemiga.active) {
-                this.enemigosNaves.splice(i, 1);
-            }
-        }
+        // === ACTUALIZAR NAVES ENEMIGAS - usando módulo ===
+        actualizarNavesEnemigasCompleto(this, delta);
         
         // Eliminar enemigos que están muy lejos de la pantalla (fuera de vista)
-        this._limpiarEnemigosLejanos();
+        limpiarEnemigosLejanos(this);
         
-        // === ACTUALIZAR EFECTO ULTI ===
-        if (this.efectoUlti && this.efectoUlti.active) {
-            this.efectoUlti.update(delta);
-            
-            if (!this.efectoUlti.active) {
-                const ultiVisual = this.efectoUlti.imagen || this.efectoUlti.sprite;
-                if (ultiVisual && ultiVisual.parent) {
-                    ultiVisual.parent.removeChild(ultiVisual);
-                }
-                this.efectoUlti = null;
-            }
-        }
+        // === ACTUALIZAR EFECTO ULTI - usando módulo ===
+        actualizarUlti(this, delta);
         
-        // === ACTUALIZAR EFECTOS DE BURST ===
-        for (let i = this.efectosExplosion.length - 1; i >= 0; i--) {
-            const burst = this.efectosExplosion[i];
-            burst.update(delta);
-            
-            if (!burst.active) {
-                const burstVisual = burst.imagen || burst.sprite;
-                if (burstVisual && burstVisual.parent) {
-                    burstVisual.parent.removeChild(burstVisual);
-                }
-                this.efectosExplosion.splice(i, 1);
-            }
-        }
+        // === ACTUALIZAR EFECTOS - usando módulo ===
+        actualizarEfectosImpacto(this, delta);
         
-        // === ACTUALIZAR EFECTOS DE IMPACTO ===
-        for (let i = this.efectosImpacto.length - 1; i >= 0; i--) {
-            const hit = this.efectosImpacto[i];
-            hit.update(delta);
-            
-            if (!hit.active) {
-                const hitVisual = hit.imagen || hit.sprite;
-                if (hitVisual && hitVisual.parent) {
-                    hitVisual.parent.removeChild(hitVisual);
-                }
-                this.efectosImpacto.splice(i, 1);
-            }
-        }
+        // === PROCESAR COLISIONES - usando módulo ===
+        procesarColisionesProyectiles(this);
+        procesarColisionesJugador(this);
+        procesarColisionesEnemigos(this);
         
-        // === PROCESAR COLISIONES ===
-        this._procesarColisionesProyectiles();
-        this._procesarColisionesJugador();
-        this._procesarColisionesEnemigos();
-        
-        // === GENERAR NUEVOS ENEMIGOS ===
-        this.temporizadorSpawn += delta;
-        if (this.temporizadorSpawn >= this.intervaloSpawn) {
-            this.temporizadorSpawn = 0;
-            this._generarEnemigo();
-        }
-        
-        // NOTA: El avance de oleadas ahora se maneja cuando se destruyen asteroides
-        // en _procesarColisionesProyectiles()
-        
-        // === GENERAR NAVE ENEMIGA ===
-        // Las naves enemigas aparecen desde el inicio con intervalo progresivo
-        // Cada 5 oleadas aparece un grupo de 3 naves ADICIONAL a la generación normal
-        if (this.contadorOleadas >= 0) {
-            // Calcular intervalo: 25s (oleada 0) -> 5s (oleada 15)
-            // Formula: 25 - (oleada * 1.333), mínimo 5 segundos
-            const reduccion = this.contadorOleadas * (20 / 15); // 1.333 por oleada
-            this.intervaloNaveEnemiga = Math.max(5, 25 - reduccion);
-            
-            this.temporizadorNaveEnemiga += delta;
-            if (this.temporizadorNaveEnemiga >= this.intervaloNaveEnemiga) {
-                this.temporizadorNaveEnemiga = 0;
-                
-                // Cantidad de naves según oleada:
-                // 0-9: 1 nave
-                // 10-29: 2 naves
-                // 30+: 3 naves
-                let navesPorVez = 1;
-                if (this.contadorOleadas >= 30) {
-                    navesPorVez = 3;
-                } else if (this.contadorOleadas >= 10) {
-                    navesPorVez = 2;
-                }
-                
-                // Generación normal: 1, 2 o 3 naves según la oleada
-                for (let i = 0; i < navesPorVez; i++) {
-                    this._crearNaveEnemiga();
-                }
-                
-                // Cada 5 oleadas: generar 3 naves ADICIONALES (total 4 o 5)
-                if (this.contadorOleadas > 0 && this.contadorOleadas % 5 === 0) {
-                    for (let i = 0; i < 3; i++) {
-                        this._crearNaveEnemiga();
-                    }
-                }
-            }
-        }
+        // === GENERAR NUEVOS ENEMIGOS Y NAVES - usando módulo ===
+        actualizarGeneracion(this, delta);
         
         // === ACTUALIZAR UI ===
         this._actualizarUI();
