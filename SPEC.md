@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.3.8 (COMPLETADO)
+- **Versión:** v1.4.1 (COMPLETADO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -378,6 +378,31 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-*Documento actualizado para v1.3.5*
+## 8. Changelog v1.4.0
+
+### Agregado
+- **Módulos JavaScript** - Código refactorizado en 5 archivos separados:
+  - `GameProjectiles.js` - Proyectiles y colisiones
+  - `GameEnemies.js` - Enemigos, naves, generación
+  - `GameSkills.js` - Habilidades Q, E, R, Tiempo Fuera pasiva
+  - `GameEffects.js` - Efectos Ulti, explosiones
+  - `GameBoids.js` - Partículas Boid
+
+### Modificado
+- **Game.js** reducido de 3654 a 2887 líneas (-767 líneas, ~21%)
+- **Top5.js** - Silenciados errores de permisos Firebase
+- Corregidos bugs en colisiones con SpecialEnemy
+- Mini asteroides en órbita: no colisionan con proyectiles aliados
+- Mini asteroides en órbita: colisionan con otros asteroides (reciben/dañan 20 HP)
+- Eliminado: `_generarEnemigo`, `_crearNaveEnemiga`, `_crearProyectilEnemigo` (no usados)
+- Eliminado: `_crearParticulasBoid`, `_crearParticulaBoidFuera`, `_capturarParticulaBoid` (wrappers sin uso)
+
+### Técnológico
+- Funciones exportadas desde módulos para uso en game loop
+- Código legacy eliminado del game loop principal
+
+---
+
+*Documento actualizado para v1.4.1*
 
 

@@ -33,7 +33,7 @@ import { GestorEntrada } from '../systems/InputManager.js';
 import { crearProyectil, actualizarProyectiles, actualizarProyectilesJugador, actualizarProyectilesEnemigos, procesarColisionesProyectiles } from './GameProjectiles.js';
 import { generarEnemigo, actualizarEnemigos, generarNaveEnemiga, actualizarNavesEnemigas, actualizarNavesEnemigasCompleto, verificarPosicionLibre, actualizarGeneracion, procesarColisionesJugador, procesarColisionesEnemigos, limpiarEnemigosLejanos } from './GameEnemies.js';
 import { crearCohetes, actualizarCohetes, actualizarUIMarcoCohetes, actualizarHabilidadCohetes, actualizarHabilidadDevorador, actualizarHabilidadPropulsor, activarDevorador, actualizarSuccion, actualizarUIMarcoDevorador, activarPropulsor, actualizarUIMarcoPropulsor, actualizarTiempoFuera, encontrarEnemigosCercanos } from './GameSkills.js';
-import { activarUlti, actualizarUlti, verificarColisionesProyectiles, actualizarEfectosImpacto } from './GameEffects.js';
+import { activarUlti, actualizarUlti, actualizarEfectosImpacto } from './GameEffects.js';
 import { crearParticulasIniciales, crearParticulaFuera, actualizarParticulasBoid, resetearContadorCapturadas, actualizarSistemaBoid } from './GameBoids.js';
 
 export class Game {
@@ -298,7 +298,7 @@ export class Game {
         this.texturaCohete = this.aplicacion.renderer.generateTexture(graphicsCohete);
         
         // Crear 10 partículas Boid iniciales
-        this._crearParticulasBoid(10);
+        crearParticulasIniciales(this, 10);
         
         // console.log('Jugador creado y renderizado');
         
@@ -509,26 +509,7 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
         // console.log('Jugador renderizado, parent:', this.jugador.imagen?.parent);
     }
     
-    /**
-     * Crear partículas Boid iniciales
-     * @param {number} cantidad - Número de partículas a crear
-     */
-    _crearParticulasBoid(cantidad) {
-        // Usar módulo refactorizado
-        crearParticulasIniciales(this, cantidad);
-        this.timerParticulasBoid = 0;
-    }
-    
-    /**
-     * Crear una partícula Boid fuera de la pantalla
-     * @returns {BoidParticle} La partícula creada
-     */
-    _crearParticulaBoidFuera() {
-        // Usar módulo refactorizado
-        return crearParticulaFuera(this);
-    }
-    
-    /**
+/**
      * Capturar partícula Boid cuando la nave se acerca
      * @param {BoidParticle} particula - Partícula a capturar
      * @param {number} indice - Índice en el array
@@ -1196,7 +1177,7 @@ _actualizarUI(delta = 0) {
         this._crearParticulaBoidCercaDe(enemigo);
     }
     
-    /**
+/**
      * Crear partícula Boid a 10px de un enemigo
      * @param {Enemigo} enemigo - Enemy near which to create the particle
      */
@@ -1237,100 +1218,7 @@ _actualizarUI(delta = 0) {
         particula.render(this.aplicacion.stage);
     }
     
-    /**
-     * Crea una nave enemiga que aparece en cada oleada
-     * Aparece FUERA de la pantalla (como los asteroides) y se acerca al jugador
-     */
-    _crearNaveEnemiga() {
-        const w = this.anchoJuego;
-        const h = this.altoJuego;
-        
-        // Elegir un borde aleatorio para spawnear (fuera de la pantalla)
-        const borde = Math.floor(Math.random() * 4);
-        let x, y;
-        
-        // La posición de generación está estrictamente fuera de la pantalla
-        switch (borde) {
-            case 0: // Arriba (fuera de pantalla)
-                x = Math.random() * w;
-                y = -80;
-                break;
-            case 1: // Abajo (fuera de pantalla)
-                x = Math.random() * w;
-                y = h + 80;
-                break;
-            case 2: // Izquierda (fuera de pantalla)
-                x = -80;
-                y = Math.random() * h;
-                break;
-            case 3: // Derecha (fuera de pantalla)
-                x = w + 80;
-                y = Math.random() * h;
-                break;
-        }
-        
-        // Crear la nave enemiga solo si hay menos de 10
-        if (this.enemigosNaves.length < 10) {
-            const naveEnemiga = new EnemyShip(
-                x, y, 
-                this.texturaNaveEnemiga, 
-                this.jugador, 
-                this.enemigos,
-                this.anchoJuego, 
-                this.altoJuego
-            );
-            
-            // Renderizar y agregar a la lista
-            naveEnemiga.render(this.aplicacion.stage);
-            this.enemigosNaves.push(naveEnemiga);
-        }
-    }
-    
 /**
-     * Crea un proyectil desde la posición del jugador
-     * 
-     * @param {number} x - Posición X donde nace el proyectil
-     * @param {number} y - Posición Y donde nace el proyectil
-     * @param {number} direction - Dirección del proyectil en radianes (ángulo)
-     */
-crearProyectil(x, y, direction) {
-        // Usar módulo refactorizado
-        return crearProyectil(this, x, y, direction);
-    }
-    
-    /**
-     * Crea un proyectil enemigo desde una nave enemiga
-     * 
-     * @param {number} x - Posición X
-     * @param {number} y - Posición Y
-     * @param {number} direction - Dirección del disparo
-     */
-    _crearProyectilEnemigo(x, y, direction) {
-        // Calcular la posición de la punta de la nave
-        const distanciaPuntera = 35;
-        const origenX = x + Math.cos(direction) * distanciaPuntera;
-        const origenY = y + Math.sin(direction) * distanciaPuntera;
-        
-        // Crear proyectil teledirigido
-        const projectile = new EnemyProjectile(
-            origenX, origenY, direction,
-            this.anchoJuego, this.altoJuego,
-            this.texturaProyectil,
-            this.jugador,
-            this.enemigos
-        );
-        
-        // Renderizarlo
-        projectile.render(this.aplicacion.stage);
-        
-        // Agregar a la lista
-        if (!this.proyectilesEnemigos) {
-            this.proyectilesEnemigos = [];
-        }
-        this.proyectilesEnemigos.push(projectile);
-    }
-    
-    /**
      * Verifica si dos objetos circulares están en colisión
      * Usa la fórmula de distancia entre centros
      * 
@@ -2569,7 +2457,7 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         this._crearJugador();
         
         // Recrear partículas Boid iniciales (10)
-        this._crearParticulasBoid(10);
+        crearParticulasIniciales(this, 10);
         
         // Actualizar la UI
         this._actualizarUI(0);
