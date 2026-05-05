@@ -112,9 +112,11 @@ export class Proyectil extends GameObject {
         this.x += Math.cos(this.direccion) * this.velocidad * delta;
         this.y += Math.sin(this.direccion) * this.velocidad * delta;
         
-        // Actualizar la posición de la imagen
-        this.imagen.x = this.x;
-        this.imagen.y = this.y;
+        // Actualizar la posición de la imagen (solo si existe)
+        if (this.imagen) {
+            this.imagen.x = this.x;
+            this.imagen.y = this.y;
+        }
         
         // Verificar si el proyectil salió de la pantalla
         // Agregamos 50px de margen para que desaparezca fuera de la vista
@@ -131,9 +133,14 @@ export class Proyectil extends GameObject {
      * @param {PIXI.Container} container - Contenedor donde agregar el sprite
      */
     render(container) {
-        // Solo agregar si la imagen existe y no está ya en un contenedor
+        // Agregar el sprite al contenedor (necesario para pooling)
         const visual = this.imagen || this.sprite;
-        if (visual && !visual.parent) {
+        if (visual) {
+            // Si ya tiene padre, primero quitarl
+            if (visual.parent) {
+                visual.parent.removeChild(visual);
+            }
+            // Agregar al nuevo contenedor
             container.addChild(visual);
         }
     }

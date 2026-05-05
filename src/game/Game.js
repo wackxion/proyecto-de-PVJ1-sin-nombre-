@@ -77,24 +77,13 @@ export class Game {
         this.particulasBoid = [];
         
         // === OBJECT POOLS ===
-        // Pool de proyectiles del jugador
-        this.poolProyectiles = new ObjectPool(
-            () => new Proyectil(0, 0, this.texturaProyectil),
-            (proyectil) => {
-                proyectil.active = true;
-                proyectil.x = 0;
-                proyectil.y = 0;
-                proyectil.velX = 0;
-                proyectil.velY = 0;
-                proyectil.rotacion = 0;
-            },
-            50
-        );
+        // Pool de proyectiles del jugador - INICIALIZAR DESPUÉS de cargar texturas
+        this.poolProyectiles = null;
         
         // Pool de partículas Boi
-        this.poolParticulasBoid = new ObjectPool(
-            () => new BoidParticle(0, 0, this.texturaParticulaBoid, this.texturasPboids),
-            (particula) => {
+        this.poolParticulasBoid = null;
+        
+        // Variables para texturas de animación Boi (se cargan después)
                 particula.active = true;
             },
             100
@@ -543,7 +532,7 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
      */
     _capturarParticulaBoid(particula, indice) {
         // Eliminar la partícula (NO se crea otra automáticamente)
-        particula.destroyAndRelease(this.poolParticulasBoid);
+        particula.destroy(this.poolParticulasBoid);
         this.particulasBoid.splice(indice, 1);
         
         // Incrementar contador de partículas capturadas
@@ -910,30 +899,10 @@ _actualizarUI(delta = 0) {
      * @param {number} direction - Dirección del proyectil en radianes (ángulo)
      */
     crearProyectil(x, y, direction) {
-        // Usar pool para obtener proyectil (reutilizar en lugar de crear nuevo)
-        const projectile = this.poolProyectiles.obtain();
+        // Crear proyectil SIN usar pool (forma original)
+        const projectile = new Proyectil(x, y, direction, this.anchoJuego, this.altoJuego, this.texturaProyectil);
         
-        // Inicializar el proyectil con los valores correctos
-        projectile.x = x;
-        projectile.y = y;
-        projectile.rotacion = direction;
-        projectile.anchoJuego = this.anchoJuego;
-        projectile.altoJuego = this.altoJuego;
-        projectile.tiempoDeVida = 2.5;
-        projectile.active = true;
-        
-        // Calcular velocidad basada en la dirección
-        projectile.velX = Math.cos(direction) * projectile.velocidad;
-        projectile.velY = Math.sin(direction) * projectile.velocidad;
-        
-        // Posicionar sprite
-        if (projectile.imagen) {
-            projectile.imagen.x = x;
-            projectile.imagen.y = y;
-            projectile.imagen.rotation = direction;
-        }
-        
-        // Renderizar si no está renderizado
+        // Renderizar
         projectile.render(this.aplicacion.stage);
         
         // Agregar a la lista
@@ -1465,7 +1434,7 @@ _actualizarUI(delta = 0) {
                         this.efectosImpacto.push(explosion);
                         
                         // Destruir ambos proyectiles
-                        projectile.destroyAndRelease(this.poolProyectiles);
+                        projectile.destroy();
                         this.proyectiles.splice(i, 1);
                         
                         projEnemigo.destroy();
@@ -1585,7 +1554,7 @@ _actualizarUI(delta = 0) {
                     }
                     
                     // Destruir el proyectil (ya impactó)
-                    projectile.destroyAndRelease(this.poolProyectiles);
+                    projectile.destroy(this.poolProyectiles);
                     this.proyectiles.splice(i, 1);
                     
                     // Actualizar la UI
@@ -1664,7 +1633,7 @@ _actualizarUI(delta = 0) {
                         
                         // Solo destruir el proyectil si NO se convirtió en mini
                         if (!seConvirtioEnMini) {
-                            projectile.destroyAndRelease(this.poolProyectiles);
+                            projectile.destroy(this.poolProyectiles);
                             this.proyectiles.splice(i, 1);
                             this._actualizarUI();
                         }
@@ -1728,7 +1697,7 @@ _actualizarUI(delta = 0) {
                     }
                     
                     // Destruir el proyectil
-                    projectile.destroyAndRelease(this.poolProyectiles);
+                    projectile.destroy(this.poolProyectiles);
                     this.proyectiles.splice(i, 1);
                     
                     // Actualizar la UI
@@ -3032,7 +3001,7 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
             // Si está muy lejos, eliminarla y crear nueva
             if (particula.x < -200 || particula.x > this.anchoJuego + 200 ||
                 particula.y < -200 || particula.y > this.altoJuego + 200) {
-                particula.destroyAndRelease(this.poolParticulasBoid);
+                particula.destroy(this.poolParticulasBoid);
                 this.particulasBoid.splice(i, 1);
                 // Crear nueva solo si hay menos del máximo
                 if (this.particulasBoid.length < maxParticulas) {
