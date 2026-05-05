@@ -974,8 +974,8 @@ export class UIManager {
         tiempoFrame.id = 'tiempo-ux-frame';
         tiempoFrame.style.cssText = `
             position: absolute;
-            bottom: 1.8vmin;
-            left: 45.2%;
+            bottom: 2.3vmin;
+            left: 44%;
             transform: translateX(-300%);
             border: 5px solid #0044CC !important;
             border-radius: 0px;

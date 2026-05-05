@@ -155,7 +155,7 @@ body {
 
 /* Marco de Tiempo Fuera - Palpitando cuando activo */
 @keyframes palpitar-tiempo {
-    0%, 100% { border-color: #FF0000 !important; box-shadow: 0 0 20px #FF0000 !important; }
+    0%, 100% { border-color: #ffffff !important; box-shadow: 0 0 20px #ffffff !important; }
     50% { border-color: #0044CC !important; box-shadow: 0 0 10px #0044CC !important; }
 }
 

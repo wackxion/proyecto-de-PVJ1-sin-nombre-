@@ -710,18 +710,26 @@ export function limpiarEnemigosLejanos(game) {
             if (!especial || !especial.active || !especial.enOrbita) continue;
             
             if (game._verificarColision(enemy, especial)) {
-                especial.salud -= 20;
+                // Mini especial recibe -10 HP por colisión con asteroide
+                especial.salud -= 10;
+                // El asteroide también recibe daño
                 enemy.salud -= 20;
-                
+
                 const puntoMedioX = (enemy.x + especial.x) / 2;
                 const puntoMedioY = (enemy.y + especial.y) / 2;
                 const hit = new HitEffect(puntoMedioX, puntoMedioY, 'hit', 2, 0xCC0000);
                 hit.render(game.aplicacion.stage);
                 game.efectosImpacto.push(hit);
-                
+
                 enemy.alterDirection();
-                
+
                 if (especial.salud <= 0) {
+                    // Destruir mini especial con animación y puntos
+                    const explosion = new AsteroidExplosion(especial.x, especial.y, game.texturaAsteroidExplosion, 0.25, 0x0000FF);
+                    explosion.render(game.aplicacion.stage);
+                    game.efectosExplosion.push(explosion);
+
+                    game.puntuacion += 50;
                     especial.active = false;
                     if (especial.imagen && especial.imagen.parent) {
                         especial.imagen.parent.removeChild(especial.imagen);
@@ -788,7 +796,7 @@ export function procesarColisionesJugador(game) {
             game.enemigos.splice(i, 1);
             
             // Verificar game over
-            if (game.jugador.escudos <= 0) {
+            if (game.jugador.escudos <= 0 && !game.jugador.sobrecalentado) {
                 game.gameOver();
             }
         }
@@ -809,7 +817,7 @@ export function procesarColisionesJugador(game) {
             nave.destroy();
             game.enemigosNaves.splice(i, 1);
             
-            if (game.jugador.escudos <= 0) {
+            if (game.jugador.escudos <= 0 && !game.jugador.sobrecalentado) {
                 game.gameOver();
             }
         }
@@ -825,7 +833,7 @@ export function procesarColisionesJugador(game) {
             proj.destroy();
             game.proyectilesEnemigos.splice(i, 1);
             
-            if (game.jugador.escudos <= 0) {
+            if (game.jugador.escudos <= 0 && !game.jugador.sobrecalentado) {
                 game.gameOver();
             }
         }

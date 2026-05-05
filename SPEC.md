@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.4.1 (COMPLETADO)
+- **Versión:** v1.4.2 (COMPLETADO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -403,6 +403,27 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-*Documento actualizado para v1.4.1*
+## 9. Changelog v1.4.2
+
+### Agregado
+- Contenedor de habilidades en UI (flexbox) para mejor organización de iconos
+
+### Modificado
+- **Sistema de sobrecalentamiento**: Ya no termina el juego al entrar en sobrecalentamiento. Ahora el jugador puede seguir jugando sin escudos. Solo muere si recibe daño mientras ya está en sobrecalentamiento.
+- **SpecialEnemy**:
+  - Colisión con proyectil aliado: -10 HP → si llega a 0, se convierte en mini y orbita
+  - Colisión con asteroide: Rebota y actualiza dirección hacia posición guardada del jugador
+  - Mini SpecialEnemy (en órbita): -10 HP en colisiones con proyectiles enemigos, jugador y asteroides
+- **Tiempo Fuera**: Animación de palpitar ahora es blanca (#FFFFFF/#AAAAAA) en vez de naranja
+- **Top5**: Forzado uso de Firebase (deshabilitado fallback a localStorage)
+- **Firebase**: Corregida configuración de storageBucket (.appspot.com)
+
+### Técnico
+- Reglas de Firestore actualizadas para permitir lectura/escritura pública
+- Módulos JavaScript: GameProjectiles, GameEnemies, GameSkills, GameEffects, GameBoids
+
+---
+
+*Documento actualizado para v1.4.2*
 
 

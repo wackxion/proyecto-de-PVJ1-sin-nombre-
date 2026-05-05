@@ -481,17 +481,17 @@ export function actualizarTiempoFuera(game, delta) {
             }
         }
         
-        // Animación de parpadeo del marco
+        // Animación de parpadeo del marco (blanco)
         if (palpito) {
-            game.marcoTiempoUX.style.borderColor = '#FF6600';
-            game.marcoTiempoUX.style.boxShadow = '0 0 20px #FF6600';
-            game.fondoTiempoUX.style.borderColor = '#FF6600';
-            game.fondoTiempoUX.style.boxShadow = '0 0 20px #FF6600';
+            game.marcoTiempoUX.style.borderColor = '#FFFFFF';
+            game.marcoTiempoUX.style.boxShadow = '0 0 20px #FFFFFF';
+            game.fondoTiempoUX.style.borderColor = '#FFFFFF';
+            game.fondoTiempoUX.style.boxShadow = '0 0 20px #FFFFFF';
         } else {
-            game.marcoTiempoUX.style.borderColor = '#CC4400';
-            game.marcoTiempoUX.style.boxShadow = '0 0 10px #CC4400';
-            game.fondoTiempoUX.style.borderColor = '#CC4400';
-            game.fondoTiempoUX.style.boxShadow = '0 0 10px #CC4400';
+            game.marcoTiempoUX.style.borderColor = '#AAAAAA';
+            game.marcoTiempoUX.style.boxShadow = '0 0 10px #AAAAAA';
+            game.fondoTiempoUX.style.borderColor = '#AAAAAA';
+            game.fondoTiempoUX.style.boxShadow = '0 0 10px #AAAAAA';
         }
         
         // Regenerar escudos durante sobrecalentamiento (10% por segundo)

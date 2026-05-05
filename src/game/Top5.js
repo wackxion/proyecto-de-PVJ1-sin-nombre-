@@ -15,7 +15,7 @@ const FIREBASE_CONFIG = {
     apiKey: "AIzaSyDB3WpvSWI6zZ27SoUisjQg2KrpZ6FkmUo",
     authDomain: "jugando-en-el-espacio-fd6e7.firebaseapp.com",
     projectId: "jugando-en-el-espacio-fd6e7",
-    storageBucket: "jugando-en-el-espacio-fd6e7.firebasestorage.app",
+    storageBucket: "jugando-en-el-espacio-fd6e7.appspot.com",
     messagingSenderId: "526259305969",
     appId: "1:526259305969:web:603d5c490d5ba1c9a09850"
 };
@@ -69,29 +69,31 @@ export class Top5 {
                 this.firebaseListo = true;
             }
         } catch (e) {
-            console.error('Top5 - Error al inicializar Firebase:', e);
+            // Firebase no disponible - usar localStorage
+            this.firebaseListo = false;
         }
     }
-    
+
     /**
      * Carga los datos desde Firebase Firestore
      */
     async _cargarDesdeFirebase() {
-        if (!this.top5Ref) return;
-        
+        if (!this.top5Ref) {
+            console.log('Top5: top5Ref es null');
+            return;
+        }
+
         try {
+            console.log('Top5: Intentando cargar desde Firebase...');
             const doc = await this.top5Ref.get();
+            console.log('Top5: Doc gotten:', doc.exists, doc.data());
             if (doc.exists) {
                 this.listaMemoria = doc.data().lista || [];
+                console.log('Top5: Datos cargados:', this.listaMemoria);
             }
         } catch (e) {
-            // Silenciar errores de permisos - usar localStorage como fallback
-            if (e.code === 'permission-denied' || e.message?.includes('permission')) {
-                console.log('Top5 - Firebase sin permisos, usando localStorage');
-                this.firebaseListo = false; // Desactivar Firebase para evitar más intentos
-            } else {
-                console.error('Top5 - Error al cargar desde Firebase:', e);
-            }
+            console.log('Top5: Error al cargar desde Firebase:', e.message);
+            this.firebaseListo = false;
         }
     }
     
@@ -131,19 +133,17 @@ export class Top5 {
             return this.listaMemoria;
         }
         
-        // Si no, intentar localStorage
-        if (this._verificarLocalStorage()) {
-            try {
-                const data = localStorage.getItem(this.storageKey);
-                if (data) {
-                    return JSON.parse(data);
-                }
-            } catch (e) {
-                console.error('Top5 - Error al leer localStorage:', e);
-            }
-        }
-        
-        // Devolver lista en memoria
+// FORZAR SOLO FIREBASE - No usar localStorage
+        // if (this._verificarLocalStorage()) {
+        //     try {
+        //         const data = localStorage.getItem(this.storageKey);
+        //         if (data) {
+        //             return JSON.parse(data);
+        //         }
+        //     } catch (e) { }
+        // }
+
+        // Devolver lista en memoria (cargada desde Firebase)
         return this.listaMemoria;
     }
     
