@@ -28,15 +28,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // Precargar Top 5 en segundo plano
+    // Precargar Top 5 en segundo plano con retry adaptativo
     async function preloadTop5() {
-        try {
-            const top5Instance = new Top5();
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            top5Data = await top5Instance.obtenerLista();
-        } catch (e) {
-            console.log('Precarga Top 5:', e);
+        const maxIntentos = 5;
+        const tiempoBase = 500; // 500ms inicial
+        
+        for (let intento = 1; intento <= maxIntentos; intento++) {
+            try {
+                const top5Instance = new Top5();
+                
+                // Espera adaptativa: exponential backoff (500ms, 1000ms, 2000ms, 4000ms, 8000ms)
+                const tiempoEspera = tiempoBase * Math.pow(2, intento - 1);
+                await new Promise(resolve => setTimeout(resolve, tiempoEspera));
+                
+                const datos = await top5Instance.obtenerLista();
+                
+                // Verificar que los datos no estén vacíos
+                if (datos && datos.length > 0) {
+                    top5Data = datos;
+                    // console.log(`Top 5 cargado en intento ${intento}:`, datos.length, 'entradas');
+                    return;
+                }
+                
+                // console.log(`Intento ${intento}: datos vacíos, reintentando...`);
+            } catch (e) {
+                // console.log(`Intento ${intento} fallido:`, e.message);
+            }
         }
+        
+        // Si todos los intentos fallan, continuar sin datos
+        // console.log('Top 5: no se pudo cargar después de', maxIntentos, 'intentos');
     }
     preloadTop5();
     
@@ -44,8 +65,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     uiManager = new UIManager(container, {
         // Botón JUGAR
         onJugar: () => {
-            uiManager.mostrarPantallaCarga(async () => {
-                await inicializarJuego();
+            uiManager.mostrarPantallaCarga(async (updateProgress) => {
+                // Inicializar juego con callback de progreso
+                await inicializarJuego(updateProgress);
                 uiManager.ocultarMenuPrincipal();
             });
         },
@@ -73,12 +95,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 // =============================================================================
 // FUNCIÓN: Inicializar juego
 // =============================================================================
-async function inicializarJuego() {
+async function inicializarJuego(onProgress) {
     if (juegoInicializado) return;
     
     const container = document.getElementById('game-container');
     game = new Game();
-    await game.init(container);
+    await game.init(container, onProgress);
     
     juegoInicializado = true;
     window.game = game;

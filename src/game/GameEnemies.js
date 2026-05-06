@@ -177,9 +177,6 @@ export function generarEnemigo(game) {
         enemigo.render(game.aplicacion.stage);
         game.enemigos.push(enemigo);
         
-        // Crear partícula Boid a 10px del enemigo
-        crearParticulaBoidCercaDe(game, enemigo);
-        
         return;
     } else {
         // Asteroides normales aparecen desde cualquier borde
@@ -230,9 +227,6 @@ export function generarEnemigo(game) {
     // Renderizar y agregar a la lista
     enemigo.render(game.aplicacion.stage);
     game.enemigos.push(enemigo);
-    
-    // Crear partícula Boid a 10px del enemigo
-    crearParticulaBoidCercaDe(game, enemigo);
 }
 
 /**

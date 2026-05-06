@@ -358,7 +358,7 @@ export class UIManager {
      * Muestra pantalla de carga
      * @param {Function} callback - Función a ejecutar después
      */
-    mostrarPantallaCarga(callback) {
+    mostrarPantallaCarga(callback, onProgress) {
         const loadingScreen = document.createElement('div');
         loadingScreen.id = 'loading-screen';
         loadingScreen.style.cssText = `
@@ -386,12 +386,44 @@ export class UIManager {
         
         const loadingText = document.createElement('div');
         loadingText.textContent = 'CARGANDO...';
+        loadingText.id = 'loading-text';
         loadingText.style.cssText = `
             color: #0044CC;
             font-family: 'Segoe Script', cursive;
             font-size: 24px;
             margin-top: 20px;
             text-shadow: 0 0 10px #0044CC;
+        `;
+        
+        // Barra de progreso
+        const progressBarContainer = document.createElement('div');
+        progressBarContainer.style.cssText = `
+            width: 200px;
+            height: 20px;
+            border: 3px solid #0044CC;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 10px #0044CC;
+        `;
+        
+        const progressBarFill = document.createElement('div');
+        progressBarFill.id = 'loading-progress-fill';
+        progressBarFill.style.cssText = `
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #0044CC, #0088FF);
+            transition: width 0.2s ease;
+        `;
+        
+        const progressPercent = document.createElement('div');
+        progressPercent.id = 'loading-progress-percent';
+        progressPercent.textContent = '0%';
+        progressPercent.style.cssText = `
+            color: #0044CC;
+            font-family: 'Segoe Script', cursive;
+            font-size: 16px;
+            margin-top: 5px;
         `;
         
         // CSS para animación
@@ -417,13 +449,35 @@ export class UIManager {
             document.head.appendChild(style);
         }
         
+        // Agregar barra al contenedor
+        progressBarContainer.appendChild(progressBarFill);
         loadingScreen.appendChild(shipContainer);
         loadingScreen.appendChild(loadingText);
+        loadingScreen.appendChild(progressBarContainer);
+        loadingScreen.appendChild(progressPercent);
         this.container.appendChild(loadingScreen);
+        
+        // Función para actualizar progreso
+        const updateProgress = (percent, texto) => {
+            progressBarFill.style.width = percent + '%';
+            progressPercent.textContent = Math.round(percent) + '%';
+            if (texto) {
+                loadingText.textContent = texto;
+            }
+        };
         
         setTimeout(async () => {
             try {
+                // Si hay callback de progreso, pasarlo
+                if (onProgress) {
+                    onProgress(updateProgress);
+                } else {
+                    // Simular progreso si no hay callback
+                    updateProgress(50, 'CARGANDO...');
+                }
+                
                 await callback();
+                updateProgress(100, 'LISTO!');
                 loadingScreen.style.transition = 'opacity 0.5s ease';
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => loadingScreen.remove(), 500);

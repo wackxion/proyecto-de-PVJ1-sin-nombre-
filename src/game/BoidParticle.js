@@ -64,7 +64,7 @@ export class BoidParticle extends GameObject {
         this.siendoAtraida = false;
         
         // Parámetros de Boids - FUERZAS
-        this.fuerzaSeparacion = 0.03;
+        this.fuerzaSeparacion = 0.01;
         this.fuerzaCohesion = 0.005;
         this.fuerzaAlineacion = 0.01;
         this.fuerzaFuga = 0.6;  // DUPLICADO - huye el doble de rápido
@@ -175,6 +175,9 @@ export class BoidParticle extends GameObject {
         
         // Verificar colisiones con asteroides y rebotar
         this.verificarReboteAsteroides(asteroides, prevX, prevY);
+        
+        // Verificar colisiones con otras partículas Boid
+        this.verificarColisionParticulas(vecinos);
         
         // Actualizar sprite
         if (this.imagen) {
@@ -344,6 +347,37 @@ export class BoidParticle extends GameObject {
                 this.y = ast.y + normalY * nuevoDistancia;
                 
                 break;
+            }
+        }
+    }
+    
+    /**
+     * Verificar colisión con otras partículas Boid y separarlas si se superponen
+     * @param {Array} particulas - Lista de partículas
+     */
+    verificarColisionParticulas(particulas) {
+        for (const otra of particulas) {
+            if (otra === this || !otra.active) continue;
+            
+            const dx = this.x - otra.x;
+            const dy = this.y - otra.y;
+            const distancia = Math.sqrt(dx * dx + dy * dy);
+            
+            // Verificar si se superponen (suma de radios)
+            if (distancia > 0 && distancia < this.radio + otra.radio) {
+                // Calcular separación necesaria
+                const overlap = (this.radio + otra.radio) - distancia;
+                const normalX = dx / distancia;
+                const normalY = dy / distancia;
+                
+                // Separar cada una a la mitad de la superposición
+                const separacionX = normalX * overlap * 0.5;
+                const separacionY = normalY * overlap * 0.5;
+                
+                this.x += separacionX;
+                this.y += separacionY;
+                
+                // NO modificar la otra para evitar doble cálculo
             }
         }
     }

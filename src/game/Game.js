@@ -1905,8 +1905,8 @@ _actualizarUI(delta = 0) {
                         this.enemigosNaves.splice(j, 1);
                     }
                     
-                    // El mini asteroide también recibe daño (25 - same as a medium asteroid)
-                    especial.salud -= 25;
+                    // El mini asteroide también recibe daño (-10)
+                    especial.salud -= 10;
                     
                     // Animación de impacto en el especial
                     const hitEsp = new HitEffect(especial.x, especial.y, 'hit', 1.5);

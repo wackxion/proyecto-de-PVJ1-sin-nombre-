@@ -1,26 +1,20 @@
 /**
  * SpecialEnemy - Asteroide especial con comportamiento propio
- *
+ * 
  * Este enemigo aparece raramente (2-4%) y tiene:
- * - Imagen propia (asteroideESP.png)
- * - Se mueve hacia la posición del jugador
+ * - Se mueve hacia la última posición del jugador (trayectoria continua)
  * - 100 HP
- * - Da power-up al jugador al ser destruido por proyectil:
- *   - +20% velocidad de disparo
- *   - +20% escudos (si está por debajo de 100%, máximo 100%)
- *   - 100 puntos
- * - Si colisiona con el jugador, se transforma en mini y orbita la nave
- *
- * Mini Asteroide en Órbita (al colisionar con jugador):
- * - radio = 20px (reducido de 40px)
- * - radio de órbita = 130px
- * - velocidad de órbita = 1.5 rad/s
- * - 100 HP
- * - Proyectiles aliados traspasan (no recibe daño)
- * - Proyectiles enemigos le hacen daño (-25 HP)
- * - Al colisionar con el jugador: -10 HP al SpecialEnemy
- * - Al colisionar con otros asteroides: -10 HP al SpecialEnemy
- *
+ * - Recibe daño de proyectiles aliados
+ * - Rebota contra otros asteroides
+ * - Al colisionar con el jugador: se convierte en mini y orbita
+ * - Al destruirse: da power-up (+20% velocidad, +20% escudos)
+ * 
+ * Mini Asteroide Especial (al colisionar con jugador):
+ * - Orbita alrededor del jugador
+ * - Máximo 6 colisiones después se destruye
+ * - Proyectiles aliados traspasan
+ * - Proyectiles enemigos le hacen daño
+ * 
  * @extends GameObject
  */
 import { GameObject } from './GameObject.js';
@@ -31,45 +25,43 @@ export class SpecialEnemy extends GameObject {
         
         this.active = true;
         
-        // Referencia al jugador
+        // Referencia al jugador (se actualiza constantemente)
         this.jugador = jugador;
         
         // Dimensiones del área de juego
         this.anchoJuego = anchoJuego;
         this.altoJuego = altoJuego;
         
-        // Si es mini versión
+        // Si es mini versión (orbitando)
         this.esMini = esMini;
         
         // Salud
-        this.salud = esMini ? 100 : 100;  // 100 HP siempre
+        this.salud = 100;
         this.saludMax = 100;
         
         // Puntos que da al destruirse
         this.puntos = 100;
         
-        // Carga de ULTi que da
+        // Carga de ULTi
         this.cargaUlti = 0;
         
         // Radio de colisión
         this.radio = esMini ? 20 : 40;
         
-        // Guardar la posición inicial del jugador cuando se genera (el especial va hacia ahí)
-        // Este dato NO cambia - se usa solo para la dirección inicial
-        this.direccionInicialX = jugador.x;
-        this.direccionInicialY = jugador.y;
+        // Velocidad de desplazamiento
+        this.velocidad = esMini ? 0 : 80;
         
-        // Velocidad de desplazamiento inicial
-        this.velocidad = 80;
+        // Contador de colisiones para mini
+        this.colisionesRecibidas = 0;
+        this.maxColisiones = 6;
         
         // Modo órbita (cuando es mini y orbita al jugador)
         this.enOrbita = esMini;
         this.anguloOrbita = Math.random() * Math.PI * 2;
-        // Radio de órbita: 130px (aumentado 30% desde 100px)
-        this.radioOrbita = esMini ? 130 : 130;
-        this.velocidadOrbita = 1.5; // radianes por segundo
+        this.radioOrbita = 130;
+        this.velocidadOrbita = 1.5;
         
-        // Índice para evitar superposición (se asigna desde Game.js)
+        // Índice para evitar superposición en órbita
         this.indiceOrbita = 0;
         
         // Crear el sprite
@@ -80,42 +72,30 @@ export class SpecialEnemy extends GameObject {
             this.imagen.scale.set(escala);
         } else {
             this.imagen = new PIXI.Graphics();
-            this.imagen.rect(-20, -20, 40, 40);
-            this.imagen.fill(0xFF00FF);
+            this.imagen.beginFill(0x00FF00);
+            this.imagen.drawCircle(0, 0, esMini ? 20 : 40);
+            this.imagen.endFill();
         }
         
         this.imagen.x = x;
         this.imagen.y = y;
-        
         this.imagen.cullable = false;
-        
-        // Timer actualizar posicion
-        this.tiempoActualizacion = 0;
-        
-        // Tiempoalive
-        this.tiempoActual = 0;
     }
     
     /**
      * Actualiza el movimiento del Special Enemy
-     * Tiene dos modos:
-     * - MODO NORMAL: Se mueve hacia la última posición conocida del jugador
-     * - MODO ÓRBITA: Orbita alrededor del jugador (cuando se transforma en mini)
-     * 
-     * @param {number} delta - Tiempo transcurrido (segundos)
+     * - MODO NORMAL: Se mueve constantemente hacia la posición ACTUAL del jugador
+     * - MODO ÓRBITA: Orbita alrededor del jugador
      */
     update(delta) {
         if (!this.active) return;
         
-        this.tiempoActual += delta;
-        
         if (this.enOrbita && this.jugador && this.jugador.active) {
             // === MODO ÓRBITA ===
-            // Calcular velocidad y radio base según el índice para evitar superposición
             const velocidadBase = 1.5;
-            const radioBase = 130; // Aumentado 30% desde 100px
+            const radioBase = 130;
             
-            // Variación según índice: distribuye en diferentes "pistas"
+            // Variación según índice para evitar superposición
             const variacionVelocidad = (this.indiceOrbita % 3) * 0.3;
             const variacionRadio = (this.indiceOrbita % 4) * 15;
             
@@ -131,24 +111,23 @@ export class SpecialEnemy extends GameObject {
             
             this.x = centroX + Math.cos(this.anguloOrbita) * radioActual;
             this.y = centroY + Math.sin(this.anguloOrbita) * radioActual;
-} else {
-            // === MODO NORMAL: MOVIMIENTO HACIA POSICIÓN GUARDADA (cuando fue creado) ===
-            // Se dirige hacia donde estaba el jugador cuando fue generado
-            const dirX = this.direccionInicialX - this.x;
-            const dirY = this.direccionInicialY - this.y;
-            const dist = Math.sqrt(dirX * dirX + dirY * dirY);
+        } else if (this.jugador && this.jugador.active) {
+            // === MODO NORMAL: Se mueve hacia la posición ACTUAL del jugador ===
+            const dx = this.jugador.x - this.x;
+            const dy = this.jugador.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
             
             if (dist > 0) {
-                // Moverse hacia la posición inicial guardada
-                this.x += (dirX / dist) * this.velocidad * delta;
-                this.y += (dirY / dist) * this.velocidad * delta;
+                // Moverse hacia el jugador
+                this.x += (dx / dist) * this.velocidad * delta;
+                this.y += (dy / dist) * this.velocidad * delta;
             }
             
             // Verificar si salió de la pantalla por mucho
             const margin = 100;
             if (this.x < -margin || this.x > this.anchoJuego + margin ||
                 this.y < -margin || this.y > this.altoJuego + margin) {
-                // Si está muy lejos, volver gradualmente hacia el centro
+                // Regresar gradualmente hacia el centro
                 const centroX = this.anchoJuego / 2;
                 const centroY = this.altoJuego / 2;
                 this.x += (centroX - this.x) * 0.5 * delta;
@@ -166,8 +145,6 @@ export class SpecialEnemy extends GameObject {
     
     /**
      * Renderiza el Special Enemy en el contenedor
-     * 
-     * @param {PIXI.Container} container - Contenedor donde agregar el sprite
      */
     render(container) {
         if (this.imagen && !this.imagen.parent) {
@@ -186,10 +163,45 @@ export class SpecialEnemy extends GameObject {
     }
     
     /**
-     * Verifica si hay colisión con otro objeto
-     * 
-     * @param {Object} otro - Outro objeto con x, y, radio
-     * @returns {boolean} true si hay colisión
+     * Convierte el Special Enemy en modo órbita (mini asteroide)
+     * Se llama cuando colisiona con el jugador
+     */
+    convertirEnOrbita() {
+        this.enOrbita = true;
+        this.esMini = true;
+        this.radio = 20;
+        this.salud = 100;
+        this.colisionesRecibidas = 0;
+        
+        // Reducir tamaño visual
+        if (this.imagen) {
+            this.imagen.scale.set(0.25);
+        }
+        
+        // Posición inicial en la órbita
+        this.anguloOrbita = Math.random() * Math.PI * 2;
+        this.radioOrbita = 130;
+    }
+    
+    /**
+     * Registra una colisión y verifica si debe destruirse
+     * @returns {boolean} true si se destruyó
+     */
+    registrarColision() {
+        if (!this.enOrbita) return false;
+        
+        this.colisionesRecibidas++;
+        
+        // Destruir si reachazó el límite
+        if (this.colisionesRecibidas >= this.maxColisiones) {
+            this.destroy();
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Verifica colisión con otro objeto
      */
     verificarColision(otro) {
         if (!otro || !otro.active) return false;
@@ -199,32 +211,5 @@ export class SpecialEnemy extends GameObject {
         const distancia = Math.sqrt(dx * dx + dy * dy);
         
         return distancia < (this.radio + (otro.radio || 30));
-    }
-    
-    /**
-     * Convierte el Special Enemy en modo órbita (mini asteroide)
-     * Se llama cuando colisiona con el jugador
-     * 
-     * Efectos:
-     * - Se reduce el tamaño visual a la mitad (escala 0.25)
-     * - Se reduce el radio de colisión a 20px
-     * - Mantiene 100 HP (la mitad)
-     * - Comienza a orbitar alrededor del jugador
-     */
-    convertirEnOrbita() {
-        this.enOrbita = true;
-        this.esMini = true;
-        this.radio = 20;
-        this.salud = 100; // Mini asteroide tiene 100 HP
-        this.saludMax = 100;
-        
-        // Reducir tamaño visual
-        if (this.imagen) {
-            this.imagen.scale.set(0.25);
-        }
-        
-        // Posición inicial en la órbita
-        this.anguloOrbita = Math.random() * Math.PI * 2;
-        this.radioOrbita = 130; // Aumentado 30% desde 100px
     }
 }

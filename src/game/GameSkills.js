@@ -445,7 +445,31 @@ export function actualizarTiempoFuera(game, delta) {
         return;
     }
     
-    if (game.jugador && game.jugador.sobrecalentado) {
+    // Activar habilidad cuando entra en sobrecalentamiento (solo una vez)
+    if (game.jugador && game.jugador.sobrecalentado && !game.tiempoFueroActivo) {
+        game.tiempoFueroActivo = true;
+        game.timerTiempoFuera = 0;
+    }
+    
+    // Verificar si pasaron los 10 segundos de duración (aunque ya no esté sobrecalentado)
+    if (game.tiempoFueroActivo) {
+        game.timerTiempoFuera += delta;
+        
+        if (game.timerTiempoFuera >= game.duracionTiempoFuera) {
+            // Al terminar: regenerar 10 escudos
+            game.jugador.agregarEscudos(10);
+            
+            // Desactivar habilidad
+            game.tiempoFueroActivo = false;
+            game.timerTiempoFuera = 0;
+            game.relojFrameActual = 1;
+            game.timerAnimacionReloj = 0;
+            return;
+        }
+    }
+    
+    // Si está sobrecalentado y la habilidad está activa, mostrar animación
+    if (game.jugador && game.jugador.sobrecalentado && game.tiempoFueroActivo) {
         const tiempo = Date.now();
         const palpito = Math.floor(tiempo / 300) % 2 === 0;
         
@@ -493,24 +517,8 @@ export function actualizarTiempoFuera(game, delta) {
             game.fondoTiempoUX.style.borderColor = '#AAAAAA';
             game.fondoTiempoUX.style.boxShadow = '0 0 10px #AAAAAA';
         }
-        
-        // Regenerar escudos durante sobrecalentamiento (10% por segundo)
-        game.timerTiempoFuera += delta;
-        
-        if (game.timerTiempoFuera >= 1) {
-            game.timerTiempoFuera = 0;
-            
-            if (game.jugador && game.jugador.escudos < game.jugador.escudosMax) {
-                game.jugador.escudos = Math.min(
-                    game.jugador.escudosMax,
-                    game.jugador.escudos + (game.jugador.escudosMax * 0.10)
-                );
-            }
-        }
-        
-        game.tiempoFueroActivo = true;
     } else {
-        // Resetear cuando no está sobrecalentado
+        // Resetear cuando no está sobrecalentado o terminó la habilidad
         if (game.tiempoFueroActivo) {
             game.relojFrameActual = 1;
             game.timerAnimacionReloj = 0;

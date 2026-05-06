@@ -79,20 +79,20 @@ export class Top5 {
      */
     async _cargarDesdeFirebase() {
         if (!this.top5Ref) {
-            console.log('Top5: top5Ref es null');
+            // console.log('Top5: top5Ref es null');
             return;
         }
 
         try {
-            console.log('Top5: Intentando cargar desde Firebase...');
+            // console.log('Top5: Intentando cargar desde Firebase...');
             const doc = await this.top5Ref.get();
-            console.log('Top5: Doc gotten:', doc.exists, doc.data());
+            // console.log('Top5: Doc gotten:', doc.exists, doc.data());
             if (doc.exists) {
                 this.listaMemoria = doc.data().lista || [];
-                console.log('Top5: Datos cargados:', this.listaMemoria);
+                // console.log('Top5: Datos cargados:', this.listaMemoria);
             }
         } catch (e) {
-            console.log('Top5: Error al cargar desde Firebase:', e.message);
+            // console.log('Top5: Error al cargar desde Firebase:', e.message);
             this.firebaseListo = false;
         }
     }
@@ -108,9 +108,9 @@ export class Top5 {
         } catch (e) {
             // Silenciar errores de permisos
             if (e.code === 'permission-denied' || e.message?.includes('permission')) {
-                console.log('Top5 - Firebase sin permisos para guardar');
+                // console.log('Top5 - Firebase sin permisos para guardar');
             } else {
-                console.error('Top5 - Error al guardar en Firebase:', e);
+                // console.error('Top5 - Error al guardar en Firebase:', e);
             }
         }
     }
@@ -133,17 +133,21 @@ export class Top5 {
             return this.listaMemoria;
         }
         
-// FORZAR SOLO FIREBASE - No usar localStorage
-        // if (this._verificarLocalStorage()) {
-        //     try {
-        //         const data = localStorage.getItem(this.storageKey);
-        //         if (data) {
-        //             return JSON.parse(data);
-        //         }
-        //     } catch (e) { }
-        // }
+        // FALLBACK: localStorage si Firebase no está disponible
+        if (this._verificarLocalStorage()) {
+            try {
+                const data = localStorage.getItem(this.storageKey);
+                if (data) {
+                    this.listaMemoria = JSON.parse(data);
+                    // console.log('Top5: cargado desde localStorage');
+                    return this.listaMemoria;
+                }
+            } catch (e) { 
+                // console.log('Top5: error localStorage', e.message);
+            }
+        }
 
-        // Devolver lista en memoria (cargada desde Firebase)
+        // Devolver lista en memoria (puede estar vacía)
         return this.listaMemoria;
     }
     
@@ -266,7 +270,7 @@ export class Top5 {
         );
         
         if (yaExiste) {
-            console.log('Top5 - Entrada duplicada, no se guarda');
+            // console.log('Top5 - Entrada duplicada, no se guarda');
             return false;
         }
         

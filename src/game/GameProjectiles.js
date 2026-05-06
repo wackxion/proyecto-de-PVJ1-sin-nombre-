@@ -11,9 +11,11 @@
 
 import { Proyectil } from './Projectile.js';
 import { Enemigo } from './Enemy.js';
+import { SpecialEnemy } from './SpecialEnemy.js';
 import { AsteroidExplosion } from './AsteroidExplosion.js';
 import { ProyectilExplosion } from './ProyectilExplosion.js';
 import { HitEffect } from './HitEffect.js';
+import { BoidParticle } from './BoidParticle.js';
 
 /**
  * Crea un nuevo proyectil desde la posición del jugador
@@ -188,7 +190,7 @@ export function procesarColisionesProyectiles(game) {
         }
     }
 
-    // Proyectiles aliados con enemigos especiales (solo los que NO están en órbita)
+    // Proyectiles aliados con enemigos especiales
     for (let i = game.proyectiles.length - 1; i >= 0; i--) {
         const projectile = game.proyectiles[i];
         if (!projectile || !projectile.active) continue;
@@ -197,7 +199,7 @@ export function procesarColisionesProyectiles(game) {
             const especial = game.enemigosSpeciales[j];
             if (!especial || !especial.active) continue;
 
-            // Solo colisionar con especiales que NO están en órbita
+            // Mini especiales (enOrbita) son atravesados por proyectiles aliados
             if (especial.enOrbita) continue;
 
             if (game._verificarColision(projectile, especial)) {
@@ -206,28 +208,30 @@ export function procesarColisionesProyectiles(game) {
                 game.efectosImpacto.push(explocion);
 
                 especial.salud -= 10;
+                
+                // Efectos de impacto visual
+                const hit = new HitEffect(especial.x, especial.y, 'hit', 1.5);
+                hit.render(game.aplicacion.stage);
+                game.efectosImpacto.push(hit);
 
                 if (especial.salud <= 0) {
-                    let indiceOrbita = 0;
-                    for (const esp of game.enemigosSpeciales) {
-                        if (esp !== especial && esp.active && esp.enOrbita) {
-                            indiceOrbita++;
-                        }
-                    }
-
-                    especial.convertirEnOrbita();
-                    especial.active = true;
-                    especial.indiceOrbita = indiceOrbita;
-
+                    // DESTRUIR: crear 1 mini especial orbitando (SIN power-up)
                     game.puntuacion += especial.puntos || 100;
                     game.asteroidesDestruidos++;
+                    
+                    // Crear 1 mini especial orbitando
+                    const angulo = Math.random() * Math.PI * 2;
+                    const xMini = game.jugador.x + Math.cos(angulo) * 130;
+                    const yMini = game.jugador.y + Math.sin(angulo) * 130;
+                    
+                    const mini = new SpecialEnemy(xMini, yMini, game.jugador, game.texturaAsteroideSpecial, game.anchoJuego, game.altoJuego, true);
+                    mini.enOrbita = true;
+                    mini.indiceOrbita = 0;
+                    mini.render(game.aplicacion.stage);
+                    game.enemigosSpeciales.push(mini);
 
-                    const posX = game.jugador.x + Math.cos(especial.anguloOrbita) * 130;
-                    const posY = game.jugador.y + Math.sin(especial.anguloOrbita) * 130;
-
-                    const astroExplosion = new AsteroidExplosion(posX, posY, game.texturaAsteroidExplosion, 0.5, 0x0000FF);
-                    astroExplosion.render(game.aplicacion.stage);
-                    game.efectosExplosion.push(astroExplosion);
+                    especial.destroy();
+                    game.enemigosSpeciales.splice(j, 1);
                 }
 
                 projectile.destroy();

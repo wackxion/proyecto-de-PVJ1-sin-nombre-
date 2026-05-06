@@ -24,9 +24,29 @@ import { BoidParticle } from './BoidParticle.js';
  */
 export function crearParticulasIniciales(game, cantidad) {
     for (let i = 0; i < cantidad; i++) {
-        const x = Math.random() * game.anchoJuego;
-        const y = Math.random() * game.altoJuego;
-        
+        // Crear partícula FUERA de la pantalla (100px)
+        const borde = Math.floor(Math.random() * 4);
+        let x, y;
+
+        switch (borde) {
+            case 0: // Top
+                x = Math.random() * game.anchoJuego;
+                y = -100;
+                break;
+            case 1: // Bottom
+                x = Math.random() * game.anchoJuego;
+                y = game.altoJuego + 100;
+                break;
+            case 2: // Left
+                x = -100;
+                y = Math.random() * game.altoJuego;
+                break;
+            case 3: // Right
+                x = game.anchoJuego + 100;
+                y = Math.random() * game.altoJuego;
+                break;
+        }
+
         // Crear partícula
         const particula = new BoidParticle(x, y, game.texturaParticulaBoid, game.texturasPboids);
         
@@ -52,21 +72,21 @@ export function crearParticulaFuera(game) {
     const borde = Math.floor(Math.random() * 4);
     let x, y;
     
-    switch (borde) {
+switch (borde) {
         case 0: // Top
             x = Math.random() * game.anchoJuego;
-            y = -20;
+            y = -100;
             break;
         case 1: // Bottom
             x = Math.random() * game.anchoJuego;
-            y = game.altoJuego + 20;
+            y = game.altoJuego + 100;
             break;
         case 2: // Left
-            x = -20;
+            x = -100;
             y = Math.random() * game.altoJuego;
             break;
         case 3: // Right
-            x = game.anchoJuego + 20;
+            x = game.anchoJuego + 100;
             y = Math.random() * game.altoJuego;
             break;
     }
@@ -219,11 +239,6 @@ function _capturarParticulaBoid(game, indice) {
     // Actualizar UI del devorador
     if (game.contadorDevoradorUX) {
         game.contadorDevoradorUX.textContent = game.particulasCapturadas.toString();
-    }
-    
-    // Agregar carga al Ulti por cada partícula capturada
-    if (game.jugador) {
-        game.jugador.agregarCargaUlti(2); // 2% de carga por partícula
     }
 }
 
