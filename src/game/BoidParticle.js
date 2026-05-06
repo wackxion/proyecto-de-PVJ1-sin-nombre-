@@ -24,20 +24,20 @@ export class BoidParticle extends GameObject {
         // Texturas de animación
         this.texturasAnimacion = texturasAnimacion;
         
-        // Tamaño de la partícula (15px x 15px)
-        this.width = 15;
-        this.height = 15;
-        
-        // Radio de colisión (7.5px = la mitad del tamaño)
-        this.radio = 7.5;
-        
+        // Tamaño de la partícula (7px x 7px)
+        this.width = 7;
+        this.height = 7;
+
+        // Radio de colisión (3.5px = la mitad del tamaño)
+        this.radio = 3.5;
+
         // Velocidad de la partícula
         this.velX = (Math.random() - 0.5) * 150;
         this.velY = (Math.random() - 0.5) * 150;
-        
+
         // Velocidad máxima
         this.velocidadMax = 180;
-        
+
         // Crear sprite
         this.imagen = new PIXI.Sprite(textura);
         this.imagen.width = this.width;
@@ -45,21 +45,10 @@ export class BoidParticle extends GameObject {
         this.imagen.anchor.set(0.5);
         this.imagen.x = x;
         this.imagen.y = y;
-        
+
         // Color de la partícula (blanco)
         this.imagen.tint = 0xFFFFFF;
-        
-        // Sin animación - usar solo la primera textura (Pboids1)
-        this.frameActual = 0;
-        this.timerAnimacion = 0;
-        this.intervaloAnimacion = 0.2;
-        // Solo usar la primera textura
-        this.secuenciaAnimacion = [0];
-        
-        // Efecto de brillar (timer para cambiar color)
-        this.timerBrillo = Math.random() * Math.PI * 2; // Phase aleatoria
-        this.velocidadBrillo = 3 + Math.random() * 2; // Velocidad de parpadeo
-        
+
         // Flag para saber si está siendo atraída por el devorador
         this.siendoAtraida = false;
         
@@ -68,7 +57,7 @@ export class BoidParticle extends GameObject {
         this.fuerzaCohesion = 0.005;
         this.fuerzaAlineacion = 0.01;
         this.fuerzaFuga = 0.6;  // DUPLICADO - huye el doble de rápido
-        this.rangoVision = 50;
+        this.rangoVision = 100;
         this.rangoFuga = 200;  // DUPLICADO - detecta la nave desde el doble de lejos
     }
     

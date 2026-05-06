@@ -273,13 +273,15 @@ export class Game {
         // Crear el jugador (nave)
         this._crearJugador();
         
-        // Cargar texturas de animación Pboids
+        // Cargar textura Pboids2
         const texturasPboids = [];
-        for (let i = 1; i <= 4; i++) {
-            const textura = await PIXI.Assets.load(`assets/Pboids${i}.png`);
+        try {
+            const textura = await PIXI.Assets.load('assets/Pboids2.png');
             texturasPboids.push(textura);
+        } catch (e) {
+            texturasPboids.push(PIXI.Texture.WHITE);
         }
-        
+
         // Crear textura de partícula Boid (cuadrado blanco 10x10px) como fallback
         const graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF);
