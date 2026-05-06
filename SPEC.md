@@ -7,7 +7,7 @@
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
-- **URL del Juego:** https://wackxion.github.io/proyecto-de-PVJ1-sin-nombre-/
+- **URL del Juego:** https://wackxion.github.io/proyecto-de-PVJ1-Jugando-en-el-Espacio-/
 
 ---
 
