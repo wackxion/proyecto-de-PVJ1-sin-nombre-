@@ -6,7 +6,7 @@
  * - HUD del juego (barras, score, oleada)
  * - Posicionamiento responsive (se adapta a cualquier pantalla)
  * 
- * v1.4.4
+ * v1.4.5
  */
 export class UIManager {
     /**
@@ -214,7 +214,7 @@ export class UIManager {
         // Versión (esquina inferior derecha)
         const versionDisplay = document.createElement('div');
         versionDisplay.id = 'version-display';
-        versionDisplay.textContent = 'v1.4.4';
+        versionDisplay.textContent = 'v1.4.5';
         versionDisplay.style.cssText = `
             position: absolute;
             bottom: 10px;

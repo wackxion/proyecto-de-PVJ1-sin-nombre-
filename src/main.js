@@ -4,7 +4,7 @@
  * Solo inicializa UIManager y maneja el flujo del menú.
  * Todo el código de UI está en src/ui/UIManager.js
  * 
- * v1.4.4
+ * v1.4.5
  */
 import { Game } from './game/Game.js';
 import { UIManager } from './ui/UIManager.js';

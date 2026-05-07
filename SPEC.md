@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.4.4 (COMPLETADO)
+- **Versión:** v1.4.5 (COMPLETADO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -461,14 +461,23 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 - **Game Over + Record**:
   - Si hay record, los botones Reiniciar/Top5 no se crean hasta guardar el nombre
   - Posición de botones guardada para recrearse correctamente después de guardar nombre
+  - Botones ahora se limpian por ID (fix para botones duplicados al reiniciar)
+
+### v1.4.5 (Actual)
+> **SpecialEnemy: movimiento corregido y recycle**
+
+- **SpecialEnemy**:
+  - Movimiento corregido: ahora guarda la posición del jugador al crearse y se mueve en esa dirección (pasa de largo como proyectil)
+  - Recycle: cuando sale 200px de la pantalla, reaparece en un borde aleatorio con nueva dirección hacia el centro
 
 ### Bug Fixes
 - Corregido orden de parámetros en generarNaveEnemiga
 - Agregada colisión proyectil-nave enemiga en GameProjectiles.js
 - Fix de reinicio automático al guardar nombre en Top5
+- Fix de botones que no se eliminaban al reiniciar (ahora se limpian por ID)
 
 ---
 
-*Documento actualizado para v1.4.4*
+*Documento actualizado para v1.4.5*
 
 

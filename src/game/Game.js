@@ -2162,8 +2162,8 @@ _actualizarUI(delta = 0) {
                             this.posicionBotonesGameOver.y,
                             this.posicionBotonesGameOver.ancho
                         );
+                        this.clickHandlerActivo = false;
                     }
-                    this.clickHandlerActivo = false;
                 } else {
                     // Si el nombre no es válido (vacío o con caracteres inválidos)
                     alert('Nombre inválido. Solo letras y números.');
@@ -2281,9 +2281,14 @@ _actualizarUI(delta = 0) {
         if (this.limpiezaEnProgreso) return;
         this.limpiezaEnProgreso = true;
         
-        // Remover botones HTML
+        // Remover botones HTML por ID
+        const btnReiniciar = document.getElementById('btn-reiniciar');
+        const btnTop5 = document.getElementById('btn-top5');
+        if (btnReiniciar) btnReiniciar.remove();
+        if (btnTop5) btnTop5.remove();
+        
+        // Limpiar array de botones
         if (this.botonesHTML) {
-            this.botonesHTML.forEach(btn => btn.remove());
             this.botonesHTML = null;
         }
         

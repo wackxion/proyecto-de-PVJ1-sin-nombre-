@@ -51,6 +51,24 @@ export class SpecialEnemy extends GameObject {
         // Velocidad de desplazamiento
         this.velocidad = esMini ? 0 : 80;
         
+        // Guardar la posición del jugador al momento de crear el SpecialEnemy
+        // Se mueve hacia esa posición y pasa de largo (como proyectil)
+        if (!esMini && jugador) {
+            const dx = jugador.x - x;
+            const dy = jugador.y - y;
+            const mag = Math.sqrt(dx * dx + dy * dy);
+            if (mag > 0) {
+                this.direccionX = dx / mag;  // Normalizado
+                this.direccionY = dy / mag;
+            } else {
+                this.direccionX = 0;
+                this.direccionY = -1;
+            }
+        } else {
+            this.direccionX = 0;
+            this.direccionY = 0;
+        }
+        
         // Contador de colisiones para mini
         this.colisionesRecibidas = 0;
         this.maxColisiones = 6;
@@ -111,27 +129,49 @@ export class SpecialEnemy extends GameObject {
             
             this.x = centroX + Math.cos(this.anguloOrbita) * radioActual;
             this.y = centroY + Math.sin(this.anguloOrbita) * radioActual;
-        } else if (this.jugador && this.jugador.active) {
-            // === MODO NORMAL: Se mueve hacia la posición ACTUAL del jugador ===
-            const dx = this.jugador.x - this.x;
-            const dy = this.jugador.y - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+        } else {
+            // === MODO NORMAL: Se mueve en la dirección guardada (pasa de largo) ===
+            // Se mueve hacia la posición del jugador que tenía al crearse
+            // No se detiene, sigue de largo como un proyectil
+            this.x += this.direccionX * this.velocidad * delta;
+            this.y += this.direccionY * this.velocidad * delta;
             
-            if (dist > 0) {
-                // Moverse hacia el jugador
-                this.x += (dx / dist) * this.velocidad * delta;
-                this.y += (dy / dist) * this.velocidad * delta;
-            }
-            
-            // Verificar si salió de la pantalla por mucho
-            const margin = 100;
+            // Recyclo: si está muy fuera de la pantalla, mandarlo de vuelta
+            const margin = 200;
             if (this.x < -margin || this.x > this.anchoJuego + margin ||
                 this.y < -margin || this.y > this.altoJuego + margin) {
-                // Regresar gradualmente hacia el centro
+                
+                // Elegir un borde aleatorio para reaparecer
+                const borde = Math.floor(Math.random() * 4);
+                switch (borde) {
+                    case 0: // Top
+                        this.x = Math.random() * this.anchoJuego;
+                        this.y = -100;
+                        break;
+                    case 1: // Bottom
+                        this.x = Math.random() * this.anchoJuego;
+                        this.y = this.altoJuego + 100;
+                        break;
+                    case 2: // Left
+                        this.x = -100;
+                        this.y = Math.random() * this.altoJuego;
+                        break;
+                    case 3: // Right
+                        this.x = this.anchoJuego + 100;
+                        this.y = Math.random() * this.altoJuego;
+                        break;
+                }
+                
+                // Nueva dirección hacia el centro de la pantalla
                 const centroX = this.anchoJuego / 2;
                 const centroY = this.altoJuego / 2;
-                this.x += (centroX - this.x) * 0.5 * delta;
-                this.y += (centroY - this.y) * 0.5 * delta;
+                const dx = centroX - this.x;
+                const dy = centroY - this.y;
+                const mag = Math.sqrt(dx * dx + dy * dy);
+                if (mag > 0) {
+                    this.direccionX = dx / mag;
+                    this.direccionY = dy / mag;
+                }
             }
         }
         
