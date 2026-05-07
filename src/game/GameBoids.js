@@ -160,57 +160,53 @@ export function actualizarParticulasBoid(game, delta) {
             particula.imagen.y = particula.y;
         }
         
-        // Eliminar si está muy fuera de la pantalla
-        if (particula.x < -200 || particula.x > game.anchoJuego + 200 ||
-            particula.y < -200 || particula.y > game.altoJuego + 200) {
-            
-            particula.destroy();
-            game.particulasBoid.splice(i, 1);
-            
-            // Crear nueva solo si hay menos del máximo
-            if (game.particulasBoid.length < maxParticulas) {
-                const nuevaParticula = crearParticulaFuera(game);
-                game.particulasBoid.push(nuevaParticula);
-                nuevaParticula.render(game.aplicacion.stage);
+        // Las partículas pueden entrar y salir de la pantalla libremente
+        // Recyclo: si está más de 5 segundos fuera, mandarla de vuelta a un borde
+        const fueraDeLosBordes = particula.x < -50 || particula.x > game.anchoJuego + 50 ||
+                                 particula.y < -50 || particula.y > game.altoJuego + 50;
+        
+        if (fueraDeLosBordes) {
+            particula.contadorFueraDePantalla = (particula.contadorFueraDePantalla || 0) + delta;
+            if (particula.contadorFueraDePantalla > 5) {
+                // Recyclo: mover a un borde y dar velocidad hacia el centro
+                const borde = Math.floor(Math.random() * 4);
+                switch (borde) {
+                    case 0: // Top
+                        particula.x = Math.random() * game.anchoJuego;
+                        particula.y = -100;
+                        break;
+                    case 1: // Bottom
+                        particula.x = Math.random() * game.anchoJuego;
+                        particula.y = game.altoJuego + 100;
+                        break;
+                    case 2: // Left
+                        particula.x = -100;
+                        particula.y = Math.random() * game.altoJuego;
+                        break;
+                    case 3: // Right
+                        particula.x = game.anchoJuego + 100;
+                        particula.y = Math.random() * game.altoJuego;
+                        break;
+                }
+                // Velocidad hacia el centro
+                const centroX = game.anchoJuego / 2;
+                const centroY = game.altoJuego / 2;
+                const dx = centroX - particula.x;
+                const dy = centroY - particula.y;
+                const mag = Math.sqrt(dx * dx + dy * dy);
+                particula.velX = (dx / mag) * 50 + (Math.random() - 0.5) * 30;
+                particula.velY = (dy / mag) * 50 + (Math.random() - 0.5) * 30;
+                particula.contadorFueraDePantalla = 0;
             }
-            continue;
-        }
-        
-        // REBOTAR al intentar salir (NO pueden salir)
-        const margen = 5;
-        if (particula.x < margen) {
-            particula.x = margen;
-            particula.velX = Math.abs(particula.velX) * 0.8;
-        } else if (particula.x > game.anchoJuego - margen) {
-            particula.x = game.anchoJuego - margen;
-            particula.velX = -Math.abs(particula.velX) * 0.8;
-        }
-        
-        if (particula.y < margen) {
-            particula.y = margen;
-            particula.velY = Math.abs(particula.velY) * 0.8;
-        } else if (particula.y > game.altoJuego - margen) {
-            particula.y = game.altoJuego - margen;
-            particula.velY = -Math.abs(particula.velY) * 0.8;
+        } else {
+            particula.contadorFueraDePantalla = 0;
         }
         
         // Captura por la nave
         if (game.jugador && game.jugador.active && particula.puedeSerCapturada(game.jugador)) {
             _capturarParticulaBoid(game, i);
-            if (game.particulasBoid.length < maxParticulas) {
-                const nueva = crearParticulaFuera(game);
-                game.particulasBoid.push(nueva);
-                nueva.render(game.aplicacion.stage);
-            }
             continue;
         }
-    }
-    
-    // Crear nuevas si hay menos del máximo (solo 1 por frame para que sea gradual)
-    if (game.particulasBoid.length < maxParticulas && Math.random() < 0.1) {
-        const nueva = crearParticulaFuera(game);
-        game.particulasBoid.push(nueva);
-        nueva.render(game.aplicacion.stage);
     }
     
     // Actualizar contador UI
@@ -257,15 +253,15 @@ export function resetearContadorCapturadas(game) {
 
 /**
  * Función completa para manejar partículas Boid en el game loop
- * Incluye timer para crear partículas en grupos de 10 cada 3 segundos
+ * Incluye timer para crear partículas en grupos de 10 cada 7 segundos
  * 
  * @param {Game} game - Referencia al objeto Game principal
  * @param {number} delta - Tiempo transcurrido
  */
 export function actualizarSistemaBoid(game, delta) {
-    // Timer para crear partículas en grupos de 10 (cada 3 segundos)
+    // Timer para crear partículas en grupos de 10 (cada 7 segundos)
     game.timerParticulasBoid = (game.timerParticulasBoid || 0) + delta;
-    if (game.timerParticulasBoid >= 3 && game.particulasBoid.length < 100) {
+    if (game.timerParticulasBoid >= 7 && game.particulasBoid.length < 100) {
         game.timerParticulasBoid = 0;
         // Crear grupo de 10 partículas
         for (let i = 0; i < 10; i++) {

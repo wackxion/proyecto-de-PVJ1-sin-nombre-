@@ -207,7 +207,7 @@ export function procesarColisionesProyectiles(game) {
                 explocion.render(game.aplicacion.stage);
                 game.efectosImpacto.push(explocion);
 
-                especial.salud -= 10;
+                especial.salud -= projectile.dano;
                 
                 // Efectos de impacto visual
                 const hit = new HitEffect(especial.x, especial.y, 'hit', 1.5);
@@ -359,6 +359,61 @@ export function procesarColisionesProyectiles(game) {
                 projectile.destroy();
                 game.proyectiles.splice(i, 1);
                 break;
+            }
+        }
+    }
+
+    // === PROYECTILES ALIADOS CON NAVES ENEMIGAS ===
+    if (game.enemigosNaves && game.enemigosNaves.length > 0) {
+        for (let i = game.proyectiles.length - 1; i >= 0; i--) {
+            const projectile = game.proyectiles[i];
+            if (!projectile || !projectile.active) continue;
+
+            for (let k = game.enemigosNaves.length - 1; k >= 0; k--) {
+                const naveEnemiga = game.enemigosNaves[k];
+                if (!naveEnemiga || !naveEnemiga.active) continue;
+
+                // Verificar colisión
+                if (game._verificarColision(projectile, naveEnemiga)) {
+                    // Efecto visual de impacto
+                    const hit = new HitEffect(naveEnemiga.x, naveEnemiga.y, 'hit', 2);
+                    hit.render(game.aplicacion.stage);
+                    game.efectosImpacto.push(hit);
+
+                    // Aplicar daño a la nave enemiga
+                    const destruida = naveEnemiga.recibirDano(projectile.dano);
+
+                    // Destruir proyectil
+                    projectile.destroy();
+                    game.proyectiles.splice(i, 1);
+
+                    // Si la nave fue destruida
+                    if (destruida) {
+                        // Animación de destrucción (color verde para naves)
+                        const naveExplosion = new AsteroidExplosion(
+                            naveEnemiga.x, naveEnemiga.y,
+                            game.texturaAsteroidExplosion,
+                            0.5,
+                            0x00FF00
+                        );
+                        naveExplosion.render(game.aplicacion.stage);
+                        game.efectosImpacto.push(naveExplosion);
+
+                        // Sumar puntos
+                        game.puntuacion += 500;
+                        game.asteroidesDestruidos++;
+
+                        // Agregar carga ULTi
+                        if (game.jugador) {
+                            game.jugador.agregarCargaUlti(naveEnemiga.cargaUlti || 10);
+                        }
+
+                        // Eliminar la nave de la lista
+                        game.enemigosNaves.splice(k, 1);
+                    }
+
+                    break; // El proyectil ya se usó
+                }
             }
         }
     }

@@ -410,8 +410,8 @@ export function generarNaveEnemiga(game) {
             break;
     }
     
-    // Crear la nave enemiga
-    const nave = new EnemyShip(x, y, game.jugador, game.texturaNaveEnemiga, game.enemigos, game.anchoJuego, game.altoJuego);
+    // Crear la nave enemiga (orden correcto: x, y, textura, jugador, enemigos, ancho, alto)
+    const nave = new EnemyShip(x, y, game.texturaNaveEnemiga, game.jugador, game.enemigos, game.anchoJuego, game.altoJuego);
     nave.render(game.aplicacion.stage);
     game.enemigosNaves.push(nave);
 }
@@ -587,9 +587,10 @@ export function actualizarGeneracion(game, delta) {
     
     // Generar naves enemigas
     if (game.contadorOleadas >= 0) {
-        // Calcular intervalo: 25s (oleada 0) -> 5s (oleada 15)
-        const reduccion = game.contadorOleadas * (20 / 15);
-        game.intervaloNaveEnemiga = Math.max(5, 25 - reduccion);
+        // Calcular intervalo: 8s (oleada 0) -> 5s (oleada 15)
+        // Reducido de 25s a 8s para que aparezcan más rápido al inicio
+        const reduccion = game.contadorOleadas * (3 / 15);
+        game.intervaloNaveEnemiga = Math.max(5, 8 - reduccion);
         
         game.temporizadorNaveEnemiga += delta;
         if (game.temporizadorNaveEnemiga >= game.intervaloNaveEnemiga) {

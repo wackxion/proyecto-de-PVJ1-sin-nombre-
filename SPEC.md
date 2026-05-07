@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.4.3 (COMPLETADO)
+- **Versión:** v1.4.4 (COMPLETADO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -440,6 +440,35 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-*Documento actualizado para v1.4.3*
+## 11. Changelog v1.4.4
+
+### Modificado
+- **Naves Enemigas**:
+  - Intervalo de aparición reducido de 25s a 8s (desde oleada 0)
+  - Parámetros del constructor corregidos (orden: x, y, textura, jugador, enemigos, ancho, alto)
+  - Agregada verificación de colisión con proyectiles en GameProjectiles.js
+- **Partículas Boid**:
+  - Eliminados límites de rebote en bordes (pueden entrar y salir libremente)
+  - Sistema de Reciclaje: si pasan más de 5s fuera de la pantalla, se reposicionan en un borde en vez de destruirse
+  - Intervalo de creación: cada 7 segundos (era 10s)
+  - Cantidad por creación: 10 partículas
+  - Máximo: 100 partículas
+- **Habilidad Cohete (Q)**:
+  - Ahora puede dañar SpecialEnemy grandes (no los mini en órbita)
+  - Excluye mini especiales (enOrbita = true) de objetivos cercanos
+- **SpecialEnemy**:
+  - Daño de proyectiles corregido: ahora recibe 25 HP (era 10 hardcodeado)
+- **Game Over + Record**:
+  - Si hay record, los botones Reiniciar/Top5 no se crean hasta guardar el nombre
+  - Posición de botones guardada para recrearse correctamente después de guardar nombre
+
+### Bug Fixes
+- Corregido orden de parámetros en generarNaveEnemiga
+- Agregada colisión proyectil-nave enemiga en GameProjectiles.js
+- Fix de reinicio automático al guardar nombre en Top5
+
+---
+
+*Documento actualizado para v1.4.4*
 
 

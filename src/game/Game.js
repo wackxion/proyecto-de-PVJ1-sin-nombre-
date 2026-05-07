@@ -1169,19 +1169,34 @@ _actualizarUI(delta = 0) {
     }
     
 /**
-     * Crear partícula Boid a 10px de un enemigo
-     * @param {Enemigo} enemigo - Enemy near which to create the particle
+     * Crear partícula Boid FUERA de la pantalla (cuando se destruye un enemigo)
+     * @param {Enemigo} enemigo - Enemy that was destroyed (no usado para posición)
      */
     _crearParticulaBoidCercaDe(enemigo) {
-        if (!enemigo || !enemigo.x || !enemigo.y) return;
+        // Crear partícula FUERA de la pantalla (100px margen)
+        const borde = Math.floor(Math.random() * 4);
+        let x, y;
+
+        switch (borde) {
+            case 0: // Top
+                x = Math.random() * this.anchoJuego;
+                y = -100;
+                break;
+            case 1: // Bottom
+                x = Math.random() * this.anchoJuego;
+                y = this.altoJuego + 100;
+                break;
+            case 2: // Left
+                x = -100;
+                y = Math.random() * this.altoJuego;
+                break;
+            case 3: // Right
+                x = this.anchoJuego + 100;
+                y = Math.random() * this.altoJuego;
+                break;
+        }
         
-        // Posición aleatoria a 10px del enemigo
-        const angulo = Math.random() * Math.PI * 2;
-        const distancia = 10;
-        const x = enemigo.x + Math.cos(angulo) * distancia;
-        const y = enemigo.y + Math.sin(angulo) * distancia;
-        
-        // Usar pool para obtener partícula
+        // Crear partícula en esa posición
         const particula = new BoidParticle(x, y, this.texturaParticulaBoid, this.texturasPboids);
         
         // Velocidad aleatoria hacia el centro
@@ -2138,14 +2153,17 @@ _actualizarUI(delta = 0) {
                         this.bgImageRecord.remove();
                         this.bgImageRecord = null;
                     }
-                    this.clickHandlerActivo = true;                // Reactivar clicks para reiniciar
                     this.gestorEntrada.habilitar();                // Reactivar teclado del juego
                     
-                    // Mostrar botones de nuevo
-                    const btnReiniciar = document.getElementById('btn-reiniciar');
-                    const btnTop5 = document.getElementById('btn-top5');
-                    if (btnReiniciar) btnReiniciar.style.display = 'block';
-                    if (btnTop5) btnTop5.style.display = 'block';
+                    // Crear botones de nuevo en la misma posición
+                    if (this.posicionBotonesGameOver) {
+                        this._crearBotonesGameOverHTML(
+                            this.posicionBotonesGameOver.x,
+                            this.posicionBotonesGameOver.y,
+                            this.posicionBotonesGameOver.ancho
+                        );
+                    }
+                    this.clickHandlerActivo = false;
                 } else {
                     // Si el nombre no es válido (vacío o con caracteres inválidos)
                     alert('Nombre inválido. Solo letras y números.');
@@ -2165,14 +2183,17 @@ _actualizarUI(delta = 0) {
                             this.bgImageRecord.remove();
                             this.bgImageRecord = null;
                         }
-                        this.clickHandlerActivo = true;
                         this.gestorEntrada.habilitar();
                         
-                        // Mostrar botones de nuevo
-                        const btnReiniciar = document.getElementById('btn-reiniciar');
-                        const btnTop5 = document.getElementById('btn-top5');
-                        if (btnReiniciar) btnReiniciar.style.display = 'block';
-                        if (btnTop5) btnTop5.style.display = 'block';
+                        // Crear botones de nuevo en la misma posición
+                        if (this.posicionBotonesGameOver) {
+                            this._crearBotonesGameOverHTML(
+                                this.posicionBotonesGameOver.x,
+                                this.posicionBotonesGameOver.y,
+                                this.posicionBotonesGameOver.ancho
+                            );
+                        }
+                        this.clickHandlerActivo = false;
                     } else {
                         alert('Nombre inválido. Solo letras y números.');
                     }
@@ -2301,6 +2322,15 @@ _actualizarUI(delta = 0) {
  * Se posicionan a la derecha de la imagen de Game Over
  */
 _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
+    // Guardar posición SIEMPRE (antes del return para que funcione después de guardar nombre)
+    this.posicionBotonesGameOver = { x: xCentro, y: yCentro, ancho: ancho };
+    
+    // Si estamos esperando nombre para el Top 5 (record), NO crear botones
+    // Se crean después de guardar el nombre
+    if (this.esperandoNombreTop5) {
+        return;
+    }
+    
     const canvas = this.aplicacion.canvas;
     const rect = canvas.getBoundingClientRect();
     const scaleY = rect.height / this.altoJuego;

@@ -35,7 +35,7 @@ export function encontrarEnemigosCercanos(game, cantidad) {
         ...game.enemigos,
         ...game.enemigosNaves,
         ...game.enemigosSpeciales
-    ].filter(e => e && e.active);
+    ].filter(e => e && e.active && !e.enOrbita); // Excluir mini especiales
     
     // Ordenar por distancia al jugador
     todosEnemigos.sort((a, b) => {
@@ -189,6 +189,26 @@ export function actualizarCohetes(game, delta) {
                 const radioNave = nave.radio || 20;
                 if (distancia < (15 + radioNave)) {
                     cohete.objetivo = nave;
+                    impacto = true;
+                    break;
+                }
+            }
+        }
+
+        if (!impacto) {
+            // Verificar enemigos especiales (PERO NO los mini que orbitan)
+            for (const especial of game.enemigosSpeciales) {
+                if (!especial.active || !especial.x || !especial.y) continue;
+                // Los mini especiales tienen enOrbita = true, no les hacen daño
+                if (especial.enOrbita) continue;
+                
+                const dx = cohete.x - especial.x;
+                const dy = cohete.y - especial.y;
+                const distancia = Math.sqrt(dx * dx + dy * dy);
+                
+                const radioEspecial = especial.radio || 40;
+                if (distancia < (15 + radioEspecial)) {
+                    cohete.objetivo = especial;
                     impacto = true;
                     break;
                 }

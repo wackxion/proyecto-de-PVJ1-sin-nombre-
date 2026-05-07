@@ -388,24 +388,8 @@ export class BoidParticle extends GameObject {
      * @param {number} altoJuego - Alto del juego
      */
     mantenerEnPantalla(anchoJuego, altoJuego) {
-        const margen = 10;
-        
-        // Rebotar en los bordes usando los límites dinámicos
-        if (this.x < margen) {
-            this.x = margen;
-            this.velX = Math.abs(this.velX);
-        } else if (this.x > anchoJuego - margen) {
-            this.x = anchoJuego - margen;
-            this.velX = -Math.abs(this.velX);
-        }
-        
-        if (this.y < margen) {
-            this.y = margen;
-            this.velY = Math.abs(this.velY);
-        } else if (this.y > altoJuego - margen) {
-            this.y = altoJuego - margen;
-            this.velY = -Math.abs(this.velY);
-        }
+        // Las partículas pueden salir de la pantalla freely
+        // No hay límite - pueden entrar y salir
     }
     
     /**
