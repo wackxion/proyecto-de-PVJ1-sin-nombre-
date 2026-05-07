@@ -282,16 +282,10 @@ export class Game {
             texturasPboids.push(PIXI.Texture.WHITE);
         }
 
-        // Crear textura de partícula Boid (cuadrado blanco 10x10px) como fallback
-        const graphics = new PIXI.Graphics();
-        graphics.beginFill(0xFFFFFF);
-        graphics.drawRect(0, 0, 10, 10);
-        graphics.endFill();
-        
-        // Renderizar a textura
-        this.texturaParticulaBoid = this.aplicacion.renderer.generateTexture(graphics);
+        // Usar Pboids2 como textura de partícula Boid
+        this.texturaParticulaBoid = texturasPboids[0] || PIXI.Texture.WHITE;
         this.texturasPboids = texturasPboids;
-        
+
         // Crear textura de cohete (rectángulo rojo)
         const graphicsCohete = new PIXI.Graphics();
         graphicsCohete.beginFill(0xFF4400); // Naranja/rojo
@@ -541,41 +535,36 @@ _crearParticulaBoidFuera() {
         const lado = Math.floor(Math.random() * 4);
         let x, y;
         let vx, vy;
-        
-        // Margen proporcional al tamaño del juego (5% del tamaño)
-        const margenX = this.anchoJuego;
-        const margenY = this.altoJuego;
-        
-        // Velocidad proporcional al tamaño
-        const velocidadBase = this.anchoJuego ;
-        const velocidadLateral = this.anchoJuego ;
-        
+
+        // Margen fijo de 100px
+        const margen = 100;
+
+        // Velocidad fija
+        const velocidadBase = 100;
+        const velocidadLateral = 50;
+
         switch(lado) {
-            case 0: // Arriba - aparecen en toda la parte superior
+            case 0: // Arriba
                 x = Math.random() * this.anchoJuego;
-                y = -margenY;
-                // Velocidad hacia abajo (con componente lateral aleatorio)
+                y = -margen;
                 vx = (Math.random() - 0.5) * velocidadLateral;
                 vy = velocidadBase + Math.random() * (velocidadBase * 0.5);
                 break;
-            case 1: // Derecha - aparecen en toda la parte derecha
-                x = this.anchoJuego + margenX;
+            case 1: // Derecha
+                x = this.anchoJuego + margen;
                 y = Math.random() * this.altoJuego;
-                // Velocidad hacia la izquierda
                 vx = -(velocidadBase + Math.random() * (velocidadBase * 0.5));
                 vy = (Math.random() - 0.5) * velocidadLateral;
                 break;
-            case 2: // Abajo - aparecen en toda la parte inferior
+            case 2: // Abajo
                 x = Math.random() * this.anchoJuego;
-                y = this.altoJuego + margenY;
-                // Velocidad hacia arriba
+                y = this.altoJuego + margen;
                 vx = (Math.random() - 0.5) * velocidadLateral;
                 vy = -(velocidadBase + Math.random() * (velocidadBase * 0.5));
                 break;
-            case 3: // Izquierda - aparecen en toda la parte izquierda
-                x = -margenX;
+            case 3: // Izquierda
+                x = -margen;
                 y = Math.random() * this.altoJuego;
-                // Velocidad hacia la derecha
                 vx = velocidadBase + Math.random() * (velocidadBase * 0.5);
                 vy = (Math.random() - 0.5) * velocidadLateral;
                 break;

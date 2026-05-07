@@ -24,12 +24,12 @@ export class BoidParticle extends GameObject {
         // Texturas de animación
         this.texturasAnimacion = texturasAnimacion;
         
-        // Tamaño de la partícula (7px x 7px)
-        this.width = 7;
-        this.height = 7;
+        // Tamaño de la partícula (10px x 10px)
+        this.width = 10;
+        this.height = 10;
 
-        // Radio de colisión (3.5px = la mitad del tamaño)
-        this.radio = 3.5;
+        // Radio de colisión (5px = la mitad del tamaño)
+        this.radio = 5;
 
         // Velocidad de la partícula
         this.velX = (Math.random() - 0.5) * 150;
