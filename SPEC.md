@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.4.2 (COMPLETADO)
+- **Versión:** v1.4.3 (COMPLETADO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -424,6 +424,22 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-*Documento actualizado para v1.4.2*
+## 10. Changelog v1.4.3
+
+### Modificado
+- **BoidParticle**:
+  - Tamaño: 10x10 px (era 7x7)
+  - Rango visión: 100 px (era 50)
+  - Eliminado efecto de brillo
+  - Ahora usa textura Pboids2.png (no cuadrado blanco)
+- **Partículas Boid**:
+  - Creación a 100px fuera de la pantalla
+  - Contenedor puesto detrás de la UI
+- **Mini SpecialEnemy**:
+  - Daño reducido de 25 a 10 HP en colisiones
+
+---
+
+*Documento actualizado para v1.4.3*
 
 
