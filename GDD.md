@@ -1,7 +1,7 @@
 # 📋 GDD - Historial de Versiones
 
 **Proyecto:** Jugando en el Espacio  
-**Versión actual:** v1.3.8  
+**Versión actual:** v1.4.4  
 **Curso:** Programación de Videojuegos 1 - UNAHUR  
 **Profesor:** Facundo Saiegh  
 **Desarrollador:** Braian Zapater
@@ -9,6 +9,13 @@
 ---
 
 ## 📜 Registro de Commits por Versión
+
+### v1.4.4
+> **Fix naves enemigas, partículas Boid y Game Over con record**
+
+| Commit | Descripción |
+|--------|-------------|
+| `b1b4429` | v1.4.4: Fix naves enemigas, partículas Boid y Game Over con record |
 
 ### v1.3.5 (Actual)
 > **UI mejorada: iconos de habilidades, efectos de escudo**
