@@ -59,8 +59,8 @@ export class UltiEffect extends GameObject {
         
         // MaxRadius: El radio máximo que puede alcanzar (esquina de la pantalla)
         // Se calcula usando Pitágoras para obtener la diagonal de la pantalla
-        // Se reduce un 50% para que la ULTi sea más pequeña
-        this.maxRadius = Math.sqrt(gameWidth * gameWidth + gameHeight * gameHeight) * 0.3;
+        // Se reduce un 40% (era 30%, ahora es 18%)
+        this.maxRadius = Math.sqrt(gameWidth * gameWidth + gameHeight * gameHeight) * 0.18;
         
         // ExpansionSpeed: Qué tan rápido se expande el aro (800 píxeles por segundo)
         this.expansionSpeed = 800;

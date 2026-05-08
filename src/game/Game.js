@@ -34,7 +34,8 @@ import { crearProyectil, actualizarProyectiles, actualizarProyectilesJugador, ac
 import { generarEnemigo, actualizarEnemigos, generarNaveEnemiga, actualizarNavesEnemigas, actualizarNavesEnemigasCompleto, verificarPosicionLibre, actualizarGeneracion, procesarColisionesJugador, procesarColisionesEnemigos, limpiarEnemigosLejanos } from './GameEnemies.js';
 import { crearCohetes, actualizarCohetes, actualizarUIMarcoCohetes, actualizarHabilidadCohetes, actualizarHabilidadDevorador, actualizarHabilidadPropulsor, activarDevorador, actualizarSuccion, actualizarUIMarcoDevorador, activarPropulsor, actualizarUIMarcoPropulsor, actualizarTiempoFuera, encontrarEnemigosCercanos } from './GameSkills.js';
 import { activarUlti, actualizarUlti, actualizarEfectosImpacto } from './GameEffects.js';
-import { crearParticulasIniciales, crearParticulaFuera, actualizarParticulasBoid, resetearContadorCapturadas, actualizarSistemaBoid } from './GameBoids.js';
+import { crearParticulaFuera, actualizarParticulasBoid, resetearContadorCapturadas, actualizarSistemaBoid } from './GameBoids.js';
+import { inicializarMejoras, crearVentanaMejoras, comprarMejora, actualizarUIMejoras, limpiarVentanaMejoras } from './GameMejoras.js';
 
 export class Game {
     /**
@@ -173,6 +174,9 @@ export class Game {
         this.pausado = false;
         this.mostrandoTop5EnPausa = false;
         
+        // Inicializar sistema de mejoras
+        inicializarMejoras(this);
+        
         // === ESTILOS PREDEFINIDOS PARA PIXI.TEXT ===
         // Para reutilizar y evitar repetir código
         this.estilos = {
@@ -292,9 +296,6 @@ export class Game {
         graphicsCohete.drawRect(0, 0, 16, 8);
         graphicsCohete.endFill();
         this.texturaCohete = this.aplicacion.renderer.generateTexture(graphicsCohete);
-        
-        // Crear 10 partículas Boid iniciales
-        crearParticulasIniciales(this, 10);
         
         // console.log('Jugador creado y renderizado');
         
@@ -1939,6 +1940,18 @@ _actualizarUI(delta = 0) {
         }
         
         // Las colisiones nave-asteroide se verifican en el loop de actualización de naves enemigas
+        
+        // Verificar colisión del jugador con partículas boid (captura directa al tocar)
+        for (let i = this.particulasBoid.length - 1; i >= 0; i--) {
+            const particula = this.particulasBoid[i];
+            if (!particula || !particula.active) continue;
+            
+            // Verificar colisión directa entre el jugador y la partícula
+            if (this.jugador && particula.verificarColision(this.jugador)) {
+                // Capturar la partícula
+                this._capturarParticulaBoid(particula, i);
+            }
+        }
     }
     
     /**
@@ -2445,6 +2458,7 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         this.particulasBoid = [];
         this.timerParticulasBoid = 0;
         this.particulasCapturadas = 0;
+        inicializarMejoras(this);
         
         // Resetear habilidad Tiempo Fuera
         this.tiempoFueroActivo = false;
@@ -2482,9 +2496,6 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         // Recrear el jugador
         this._crearJugador();
         
-        // Recrear partículas Boid iniciales (10)
-        crearParticulasIniciales(this, 10);
-        
         // Actualizar la UI
         this._actualizarUI(0);
         
@@ -2507,12 +2518,30 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         // ticker.deltaTime viene en frames, convertir a segundos dividiendo por 60
         const delta = ticker.deltaTime / 60;
         
-        // === CONTROL DE PAUSA (Tecla P) ===
-        // Si se presiona P, alternar pausa
-        if (this.gestorEntrada.debePausar()) {
+// === CONTROL DE PAUSA (Tecla P) ===
+        // Si se presiona P, alternar pausa (solo si no está en Game Over)
+        if (this.gestorEntrada.debePausar() && !this.enGameOver) {
             this.pausado = !this.pausado;
             // Limpiar la tecla para que no se togglee constantemente
             this.gestorEntrada.reiniciar();
+            
+            if (this.pausado && !this.mostrandoVentanaMejoras) {
+                crearVentanaMejoras(this);
+            } else if (!this.pausado && this.mostrandoVentanaMejoras) {
+                limpiarVentanaMejoras(this);
+            }
+        }
+        
+// Si el juego está pausado, actualizar contador y salir del loop
+        if (this.pausado) {
+            // Actualizar contador de partículas aunque esté pausado
+            if (this.elementoOleada) {
+                const cantidadPBOids = this.particulasBoid ? this.particulasBoid.length : 0;
+                const faltantes = this.objetivoOleada - this.asteroidesDestruidos;
+                this.elementoOleada.textContent = `Oleada: ${this.contadorOleadas} | Faltan: ${faltantes} | Ast: ${this.intervaloSpawn.toFixed(1)}s | Naves: ${this.intervaloNaveEnemiga.toFixed(1)}s | PBOids: ${cantidadPBOids}`;
+            }
+            // No mostrar Top 5 con T - solo funciona desde el menu de pausa
+            return;
         }
         
 // Si el juego está pausado, salir del loop

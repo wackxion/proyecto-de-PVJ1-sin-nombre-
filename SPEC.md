@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.4.5 (COMPLETADO)
+- **Versión:** v1.4.6 (COMPLETADO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -478,6 +478,49 @@ Cuando un asteroide o nave enemiga colisiona con el mini asteroide en órbita:
 
 ---
 
-*Documento actualizado para v1.4.5*
+## 12. Changelog v1.4.6 (Actual)
+
+### Agregado
+
+#### Sistema de Mejoras (GameMejoras.js)
+- Nuevo módulo `GameMejoras.js` para gestionar la ventana de mejoras
+- Ventana de mejoras con:
+  - Título "MEJORAS" centrado arriba
+  - Imagen de proyectil + precio al lado
+  - 5 barras de mejoras (+1, +3, +5, +5, +10) con animación al comprar
+  - Contador de partículas boids (imagen Pboids2 + número azul)
+  - Fondo más pequeño (60% de la pantalla)
+- Precio se actualiza SOLO cuando se compra exitosamente
+- Las mejoras se reinician al reiniciar el juego
+
+#### Captura de Partículas
+- Las partículas ahora se capturan al tocar la nave directamente (antes solo con Devorador)
+- Contador del Devorador muestra las partículas **recolectadas** (no las existentes en pantalla)
+
+### Modificado
+
+#### Partículas Boid
+- **Eliminado**: Ya no empiezan con 10 partículas al iniciar/reiniciar el juego
+- El jugador empieza con 0 partículas y se generan durante el juego
+
+#### ULTi
+- Radio reducido de 30% a 18% de la diagonal de la pantalla
+- Para 1920x1080: ~661px → ~397px
+
+#### Ventana de Mejoras
+- Fondo achicado de 80% a 60%
+- Título movido a posición y=220
+- Contador de partículas subido dentro del fondo
+- Precio movido al lado derecho del proyectil
+
+### Bug Fixes
+- Fix: Al reiniciar, ahora se pueden comprar mejoras (eventos de click funcionan correctamente)
+- Fix: Contador de partículas muestra recolectadas, no existentes
+- Fix: Precio no se actualizaba cuando no se podía comprar (ahora sí funciona)
+- Limpieza: Código antiguo de mejoras eliminado de Game.js
+
+---
+
+*Documento actualizado para v1.4.6*
 
 
