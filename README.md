@@ -114,8 +114,7 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 - Los escudos van de 0% a 100%
 - Al llegar a 0%, entra en **sobrecalentamiento** (barra roja)
 - **NO se apaga automáticamente después de 10 segundos**
-- **Solo se apaga cuando el jugador recibe escudos** (al destruir Special Enemy)
-- Los Special Enemies dan +20% escudos
+- **Solo se apaga cuando el jugador recibe escudos** 
 
 ### Sistema de Oleadas
 | Oleada | Intervalo Naves | Naves por oleada |
@@ -137,8 +136,6 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 - No permite entradas duplicadas
 - Al hacer nuevo record, se solicita nombre (máx 8 caracteres, solo letras y números)
 - Muestra: N° | NOMBRE | PUNTOS | OLEADAS
-- Se puede acceder durante el juego con la tecla **T**
-- Persistente entre sesiones y dispositivos
 
 ---
 
@@ -237,7 +234,7 @@ serve .
 - Ventana de mejoras mejorada (título, precio, contador)
 - Fix de click en barras después de reiniciar
 
-### v1.3.5 (Actual)
+### v1.3.5
 > **Pantalla de inicio y menú principal** - Nueva experiencia de usuario
 
 #### Nuevas Características
