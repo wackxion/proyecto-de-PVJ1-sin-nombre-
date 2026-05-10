@@ -259,13 +259,14 @@ export function comprarMejora(game, indice) {
     
     // Verificar si ya está comprada (nivel >= 1)
     if (nivelActual >= 1) {
-        console.log('Esta mejora ya está comprada');
+        _mostrarMensajeError(game, 'Esta mejora ya está comprada');
         return;
     }
     
     // Verificar partículas: debe tener al menos el costo necesario
     if (particulasActuales < costo) {
-        console.log('No hay suficientes partículas');
+        // Mostrar mensaje de "No hay suficientes partículas"
+        _mostrarMensajeError(game, 'No hay suficientes partículas');
         return;
     }
     
@@ -386,4 +387,38 @@ export function limpiarVentanaMejoras(game) {
         }
         game.elementosFinJuego = [];
     }
+}
+
+/**
+ * Muestra un mensaje de error temporal en la ventana de mejoras
+ * @param {Game} game - Referencia al objeto Game principal
+ * @param {string} mensaje - Mensaje a mostrar
+ */
+function _mostrarMensajeError(game, mensaje) {
+    // Crear texto de error
+    const textoError = new PIXI.Text(mensaje, {
+        fontFamily: 'Arial',
+        fontSize: 18,
+        fill: 0xFF0000,
+        fontWeight: 'bold',
+        stroke: 0x000000,
+        strokeThickness: 2
+    });
+    textoError.anchor.set(0.5);
+    textoError.x = game.anchoJuego / 2;
+    textoError.y = game.altoJuego / 2 + 60;
+    game.aplicacion.stage.addChild(textoError);
+    game.elementosFinJuego.push(textoError);
+    
+    // Desaparecer después de 2 segundos
+    setTimeout(() => {
+        if (textoError.parent) {
+            textoError.parent.removeChild(textoError);
+            const idx = game.elementosFinJuego.indexOf(textoError);
+            if (idx > -1) {
+                game.elementosFinJuego.splice(idx, 1);
+            }
+            textoError.destroy();
+        }
+    }, 2000);
 }

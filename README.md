@@ -20,21 +20,30 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 
 **Jugando en el Espacio** es un juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides y naves enemigas.
 
-### Mecánicas del Juego (v1.3.5)
+### Mecánicas del Juego (v1.4.6)
 - **Movimiento tipo tanque** - La nave rota (A/D) y avanza (W) con inercia
 - **Sistema de aceleración** - Mantén W para acelerar (1s), luego sobrecalentamiento (3s)
 - **Disparar** proyectiles (Espacio) hacia la dirección que apunta la nave
-- **Ataque especial (Ulti)** - Pulso expansivo que destruye todo a su paso
+- **Ataque especial (Ulti)** - Pulso expansivo que destruye todo a su paso (radio 18% diagonal)
 - Los asteroides vienen en **4 tamaños** (grande, mediano, pequeño, especial)
 - Los asteroides grandes **orbitan** alrededor de la nave
 - Al destruir asteroides grandes/medianos, se rompen en fragmentos más pequeños
 - Sistema de **escudos** (porcentaje 0-100%)
 - Al recibir daño aparece una **esfera azul** temporal
 - **Sistema de oleadas** - Cada 10 asteroides destruidos avanza la oleada
-- **Naves enemigas** - Aparecen desde el inicio, cada 5 oleadas aparece un grupo extra
-- **Asteroides especiales** - Aparece 2%, tiene comportamiento propio
+- **Naves enemigas** - Aparecen desde el inicio (intervalo 8s), cada 5 oleadas aparece un grupo extra
+- **Asteroides especiales** - Aparece 2%, tiene comportamiento propio, 100 HP
 - **Sistema Top 5** - Guarda puntuaciones en la nube (Firebase)
-- **Dificultad progresiva** - Aumenta cada oleada
+- **Partículas Boid** - Partículas que aparecen durante el juego, se capturan tocando la nave
+- **Sistema de Mejoras** - Pausa con P, usa partículas boids para comprar mejoras (+1, +3, +5, +5, +10)
+
+### Habilidades
+| Tecla | Habilidad | Cooldown |
+|-------|-----------|----------|
+| Q | Cohetes - Lanza 2 cohetes hacia enemigos cercanos | 5 seg |
+| E | Devorador - Atrae partículas Boisd dentro de 200px | 5 seg |
+| R | Propulsor - Dash de 300px | 15 seg |
+| S | ULTi - Pulso expansivo | - |
 
 ---
 
@@ -63,8 +72,11 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 | S / Flecha ↓ | Activar ataque especial (Ulti) |
 | A / Flecha ← | Rotar nave a la izquierda |
 | D / Flecha → | Rotar nave a la derecha |
+| Q | Cohetes (2 hacia enemigos cercanos) |
+| E | Devorador (atrae partículas Boisd) |
+| R | Propulsor (dash de 300px) |
 | ENTER / Click | Reiniciar (en Game Over) |
-| P | Pausar/Reanudar juego |
+| P | Pausar/Abrir ventana de mejoras |
 | T | Ver Top 5 durante el juego |
 
 ---
@@ -86,7 +98,7 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 | SMALL | 32x32 | 16px | 25 HP | 10% | Va directo a la nave | 30 |
 | MEDIUM | 64x64 | 32px | 50 HP | 25% | Va directo a la nave | 20 |
 | LARGE | 128x128 | 64px | 75 HP | 50% | Orbita alrededor de la nave | 10 |
-| SPECIAL | 128x128 | 48px | 200 HP | 0% | Power-up al destruir | 100 |
+| SPECIAL | 96x96 | 48px | 100 HP | 0% | Power-up al destruir ( orbita) | 100 |
 
 ### Sistema de Naves Enemigas (v1.3.2)
 - Appeecen desde el **inicio del juego** (oleada 0)
@@ -181,7 +193,17 @@ serve .
     │   ├── ProyectilExplosion.js # Animación de proyectil
     │   ├── AsteroidExplosion.js # Animación de asteroide
     │   ├── Top5.js       # Sistema de puntuación Top 5 (Firebase)
-    │   └── GameObject.js # Clase base
+    │   ├── GameObject.js # Clase base
+    │   ├── BoidParticle.js # Partículas Boisd
+    │   ├── Cohete.js     # Cohetes teledirigidos (habilidad Q)
+    │   ├── SuccionEffect.js # Efecto de succión (Devorador)
+    │   ├── ObjectPool.js # Pool de objetos
+    │   ├── GameProjectiles.js # Módulo de proyectiles
+    │   ├── GameEnemies.js # Módulo de enemigos
+    │   ├── GameSkills.js # Módulo de habilidades
+    │   ├── GameEffects.js # Módulo de efectos
+    │   ├── GameBoids.js # Módulo de partículas Boisd
+    │   └── GameMejoras.js # Módulo de mejoras
     └── systems/
         └── InputManager.js # Gestión de teclado (clase: GestorEntrada)
 ```
@@ -191,12 +213,29 @@ serve .
 ## 🔗 Recursos Útiles
 
 - [PixiJS Documentación](https://pixijs.com/8.x/guides/components)
-- [Universal LPC Spritesheet Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/)
-- [Free Texture Packer](https://free-tex-packer.com/app/)
 
 ---
 
 ## 📜 Historial de Versiones
+
+### v1.4.6 (Actual)
+> **Sistema de Mejoras y mejoras varias**
+
+**Sistema de Mejoras:**
+- Nuevo módulo `GameMejoras.js` para gestionar ventana de mejoras
+- Ventana con título, proyectil + precio, 5 barras de mejoras con animación
+- Contador de partículas boids con imagen Pboids2
+- Mensajes de error al intentar comprar sin saldo
+
+**Captura de Partículas:**
+- Las partículas ahora se capturan al tocar la nave directamente
+- Contador del Devorador muestra partículas **recolectadas**
+
+**Otros cambios:**
+- Partículas Boisd ya no empiezan con 10 al iniciar
+- ULTi reducida de 30% a 18% de la diagonal
+- Ventana de mejoras mejorada (título, precio, contador)
+- Fix de click en barras después de reiniciar
 
 ### v1.3.5 (Actual)
 > **Pantalla de inicio y menú principal** - Nueva experiencia de usuario
@@ -317,6 +356,51 @@ serve .
 - Sistema de oleadas
 - Naves enemigas con IA
 - Special Enemies con transformación en órbita
+
+---
+
+## 🎨 Referencia de Sprites y Assets
+
+### Personajes y Naves
+| Archivo | Uso |
+|---------|-----|
+| `nave.png` | Nave del jugador |
+| `naveEnemiga.png` | Naves enemigas |
+
+### Asteroides
+| Archivo | Uso |
+|---------|-----|
+| `asteroide.png` | Asteroides (SMALL, MEDIUM, LARGE) |
+| `especial.png` | Asteroide especial (SpecialEnemy) |
+
+### Proyectiles y Efectos
+| Archivo | Uso |
+|---------|-----|
+| `proyectil.png` | Proyectiles del jugador |
+| `proyectilEnemigo.png` | Proyectiles de naves enemigas |
+| `cohete.png` | Cohetes de habilidad Q |
+| `Pboids2.png` | Partículas Boisd |
+
+### UI e Iconos
+| Archivo | Uso |
+|---------|-----|
+| `escudo1.png` / `escudo2.png` / `escudo3.png` | Iconos de escudo (según %) |
+| `ultiicon1.png` - `ultiicon5.png` | Iconos de ULTi (según %) |
+| `aceleracion1.png` | Icono de aceleración |
+| `cohetes.png` | Icono de habilidad Cohetes |
+| `propulsor.png` | Icono de habilidad Propulsor |
+| `relog1.png` - `relog6.png` | Animación de Tiempo Fuera |
+| `puntuacion2.png` | Decoración UI inferior |
+| `top5Boton.png` | Botón Top 5 |
+| `guardadoBoton.png` | Botón guardar record |
+
+### Fondos y Pantallas
+| Archivo | Uso |
+|---------|-----|
+| `fondoEspacio2.png` | Menú principal |
+| `gameOver.jpg` | Pantalla de Game Over |
+| `guardarPuuntos.png` | Formulario Top 5 |
+| `tutorial.png` | Imagen de tutorial |
 
 ---
 
