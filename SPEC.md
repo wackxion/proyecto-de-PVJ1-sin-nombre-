@@ -3,7 +3,7 @@
 ## 1. Información del Proyecto
 
 - **Nombre del Juego:** Jugando en el Espacio
-- **Versión:** v1.4.6 (COMPLETADO)
+- **Versión:** v1.5.0 (COMPLETADO)
 - **Curso:** Programación de Videojuegos 1 - UNAHUR
 - **Profesor:** Facundo Saiegh
 - **Integrantes:** Braian Zapater
@@ -17,7 +17,7 @@
 
 **Concepto:** Juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides de diferentes tamaños y naves enemigas.
 
-**Mecánicas Principales (v1.3.6):**
+**Mecánicas Principales (v1.5.0):**
 - Nave puede **rotar** hacia la izquierda (A) o derecha (D)
 - **Avanzar** con inercia (W) - sistema de aceleración con sobrecalentamiento
 - **Disparar** proyectiles (Espacio) hacia la dirección que apunta la nave

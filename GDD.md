@@ -1,7 +1,7 @@
 # 📋 GDD - Historial de Versiones
 
 **Proyecto:** Jugando en el Espacio  
-**Versión actual:** v1.4.6  
+**Versión actual:** v1.5.0  
 **Curso:** Programación de Videojuegos 1 - UNAHUR  
 **Profesor:** Facundo Saiegh  
 **Desarrollador:** Braian Zapater
@@ -9,6 +9,13 @@
 ---
 
 ## 📜 Registro de Commits por Versión
+
+### v1.5.0
+> **Sistema de mejoras expandido, tutorial mejorado, tiempo fuera aumentado**
+
+| Commit | Descripción |
+|--------|-------------|
+| [latest] | v1.5.0: 5 secciones de mejoras (25 mejoras), tutorial paso a paso, tiempo fuera 25s, debug de mejoras |
 
 ### v1.4.6
 > **Sistema de Mejoras y mejoras varias**

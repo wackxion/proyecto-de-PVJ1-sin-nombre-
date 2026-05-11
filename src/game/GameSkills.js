@@ -476,8 +476,10 @@ export function actualizarTiempoFuera(game, delta) {
         game.timerTiempoFuera += delta;
         
         if (game.timerTiempoFuera >= game.duracionTiempoFuera) {
-            // Al terminar: regenerar 10 escudos
-            game.jugador.agregarEscudos(10);
+            // Al terminar: regenerar 10 escudos + bonus de mejoras (indices 20-24)
+            const regeneracionBase = 10;
+            const regeneracionBonus = game.regeneracionTiempoFueraBonus || 0;
+            game.jugador.agregarEscudos(regeneracionBase + regeneracionBonus);
             
             // Desactivar habilidad
             game.tiempoFueroActivo = false;

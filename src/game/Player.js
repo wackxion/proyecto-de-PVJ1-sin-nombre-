@@ -51,7 +51,9 @@ this.rotacion = 0;
         this.cargaUlti = 0;
         // cargaMaxUlti: carga necesaria para poder usar el ataque especial
         // 500 = más difícil de cargar (antes era 300)
+        // Se reduce según las mejoras compradas (indices 10-14 en Game.js)
         this.cargaMaxUlti = 500;
+        this.cargaMaxUltiBase = 500;
         // ultiListo: flag que indica si el ataque está listo
         this.ultiListo = false;
         

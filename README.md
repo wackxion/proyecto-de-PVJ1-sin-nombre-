@@ -1,7 +1,7 @@
 ﻿# 🎮 Jugando en el Espacio
 
 [![GitHub Pages](https://img.shields.io/badge/Jugar-Aquí-0044CC?style=for-the-badge)](https://wackxion.github.io/proyecto-de-PVJ1-Jugando-en-el-Espacio-/)
-[![Versión](https://img.shields.io/badge/Versión-v1.4.6-FFA500?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-Jugando-en-el-Espacio-//releases/tag/v1.4.6)
+[![Versión](https://img.shields.io/badge/Versión-v1.5.0-FFA500?style=for-the-badge)](https://github.com/wackxion/proyecto-de-PVJ1-Jugando-en-el-Espacio-//releases/tag/v1.5.0)
 
 ---
 
@@ -20,7 +20,7 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 
 **Jugando en el Espacio** es un juego de nave espacial en vista superior (top-down) donde el jugador controla una nave que debe destruir asteroides y naves enemigas.
 
-### Mecánicas del Juego (v1.4.6)
+### Mecánicas del Juego (v1.5.0)
 - **Movimiento tipo tanque** - La nave rota (A/D) y avanza (W) con inercia
 - **Sistema de aceleración** - Mantén W para acelerar (1s), luego sobrecalentamiento (3s)
 - **Disparar** proyectiles (Espacio) hacia la dirección que apunta la nave
@@ -29,13 +29,23 @@ Este proyecto forma parte de la cursada de **Programación de Videojuegos 1** en
 - Los asteroides grandes **orbitan** alrededor de la nave
 - Al destruir asteroides grandes/medianos, se rompen en fragmentos más pequeños
 - Sistema de **escudos** (porcentaje 0-100%)
-- Al recibir daño aparece una **esfera azul** temporal
+- **Sistema de Sobrecalentamiento** - 25 segundos de vulnerabilidad (no puedes usar propulsor)
+- **Sistema de Tiempo Fuera** - Al sobrecalentarse, regeneras escudos después de 25s
 - **Sistema de oleadas** - Cada 10 asteroides destruidos avanza la oleada
 - **Naves enemigas** - Aparecen desde el inicio (intervalo 8s), cada 5 oleadas aparece un grupo extra
 - **Asteroides especiales** - Aparece 2%, tiene comportamiento propio, 100 HP
 - **Sistema Top 5** - Guarda puntuaciones en la nube (Firebase)
-- **Partículas Boid** - Partículas que aparecen durante el juego, se capturan tocando la nave
-- **Sistema de Mejoras** - Pausa con P, usa partículas boids para comprar mejoras (+1, +3, +5, +5, +10)
+- **Partículas Boid** - Partículas que aparecen al destruir asteroides especiales, se capturan con E o tocando la nave
+
+### Sistema de Mejoras (v1.5.0)
+Presiona **P** para acceder al menú de mejoras. Usa partículas recolectadas para comprar:
+| Mejora | Efecto |
+|--------|--------|
+| AUMENTO DE DAÑO | +2, +3, +5, +5, +10 daño por proyectil |
+| AUMENTO DE VELOCIDAD | +5%, +5%, +10%, +10%, +20% velocidad de proyectil |
+| COSTE DE ULTI | -50,-50,-50,-50,-50 (reduce de 500 a 250) |
+| AUMENTO DE ESCUDO | +50,+50,+50,+50,+50 HP (aumenta vida máxima) |
+| AUMENTO DE REGENERACIÓN | +5,+10,+15,+20,+30 escudos tras Tiempo Fuera |
 
 ### Habilidades
 | Tecla | Habilidad | Cooldown |

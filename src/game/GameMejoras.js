@@ -22,8 +22,16 @@
  */
 export function inicializarMejoras(game) {
     game.mostrandoVentanaMejoras = false;
-    game.mejoras = [0, 0, 0, 0, 0]; // Niveles de cada mejora (+1, +3, +5, +5, +10)
-    game.costosMejoras = [5, 15, 25, 25, 50]; // Costo en partículas boids
+    // 5 secciones con 5 mejoras cada una = 25 mejoras totales
+    // 0-4: Proyectil, 5-9: Escudo, 10-14: ULTi, 15-19: Proyectil2, 20-24: Tiempo fuera
+    game.mejoras = Array(25).fill(0);
+    // Costos temporales - luego se especificarán
+    const costosProyectil = [5, 15, 25, 25, 50];
+    const costosEscudo = [50, 50, 50, 50, 50];
+    const costosUlti = [50, 50, 50, 50, 50];
+    const costosProyectil2 = [10, 20, 30, 30, 60];
+    const costosTiempoFuera = [30, 35, 40, 45, 100];
+    game.costosMejoras = [...costosProyectil, ...costosEscudo, ...costosUlti, ...costosProyectil2, ...costosTiempoFuera];
 }
 
 /**
@@ -78,131 +86,175 @@ export async function crearVentanaMejoras(game) {
     game.aplicacion.stage.addChild(container);
     game.elementosFinJuego.push(container);
     
-    // Imagen de proyectil con cuadrado azul y fondo blanco
-    const cuadradoAzul = new PIXI.Graphics();
-    // Borde azul y fondo blanco en un solo rectángulo
-    cuadradoAzul.lineStyle(4, 0x0044CC);
-    cuadradoAzul.beginFill(0xFFFFFF);
-    cuadradoAzul.drawRect(-40, -30, 80, 60);
-    cuadradoAzul.endFill();
+    // ==================== CREAR LAS 5 SECCIONES DE MEJORAS ====================
+    // Configuración de las secciones: [nombre, indiceInicio, textura]
+    // Los iconos deben estar alineados con sus barras
+    const secciones = [
+        { nombre: 'proyectil', indice: 0, textura: game.texturaProyectil, escala: 0.45, yBase: -120 },
+        { nombre: 'proyectil2', indice: 15, textura: game.texturaProyectil, escala: 0.45, yBase: -60 },
+        { nombre: 'ulti', indice: 10, textura: await PIXI.Assets.load('assets/ultiicon1.png'), escala: 0.5, yBase: 0 },
+        { nombre: 'escudo', indice: 5, textura: await PIXI.Assets.load('assets/escudo1.png'), escala: 0.45, yBase: 60 },
+        { nombre: 'tiempofuera', indice: 20, textura: await PIXI.Assets.load('assets/tiempo fuera.png'), escala: 0.25, yBase: 120 }
+    ];
     
-    const proyectilImg = new PIXI.Sprite(game.texturaProyectil);
-    proyectilImg.anchor.set(0.5);
-    proyectilImg.scale.set(0.5);
-    
-    // Agrupar cuadrado y proyectil (ahora más a la izquierda)
-    const proyectilContainer = new PIXI.Container();
-    proyectilContainer.addChild(cuadradoAzul);
-    proyectilContainer.addChild(proyectilImg);
-    proyectilContainer.x = -280; // Movido más a la izquierda
-    proyectilContainer.y = 0;
-    container.addChild(proyectilContainer);
-    
-    // Precio de la primera mejora disponible (la primera con nivel 0)
-    const primeraDisponible = game.mejoras.findIndex(nivel => nivel === 0);
-    const costoPrimera = primeraDisponible >= 0 ? game.costosMejoras[primeraDisponible] : 0;
-    game.primeraMejoraIndice = primeraDisponible;
-    
-    // Crear contenedor para precio con imagen de partícula boid (al lado derecho del proyectil)
-    const costoContainer = new PIXI.Container();
-    costoContainer.x = -230; // Más cerca del proyectil
-    costoContainer.y = 30; // Un poco más abajo
-    container.addChild(costoContainer);
-    
-    // Imagen de partícula boid (más pequeña)
-    const boidImg = new PIXI.Sprite(game.texturaParticulaBoid);
-    boidImg.anchor.set(0.5);
-    boidImg.scale.set(0.25);
-    boidImg.x = -8;
-    boidImg.y = 0;
-    costoContainer.addChild(boidImg);
-    
-    // Número del costo (primera mejora disponible)
-    const costoNumero = new PIXI.Text(`${costoPrimera}`, {
-        fontFamily: 'Arial',
-        fontSize: 16,
-        fill: 0x0044CC,
-        fontWeight: 'bold'
-    });
-    costoNumero.anchor.set(0, 0.5);
-    costoNumero.x = 5;
-    costoNumero.y = 0;
-    costoContainer.addChild(costoNumero);
-    
-    game.textoCostoTotal = { numero: costoNumero, boid: boidImg };
-    
-    // Guardar referencias a los elementos de las barras para actualizar después
+    // Guardar referencias de costos para actualizar después
+    game.textoCostoTotal = {};
     game.barsMejoras = [];
     
-    // Crear las 5 barras de mejoras (ahora cuadradas y en fila)
-    const barraSize = 60;
-    const gap = 15;
-    const startX = -((barraSize * 5 + gap * 4) / 2);
-    const labels = ['+1', '+3', '+5', '+5', '+10'];
+    // Labels para las mejoras
+    const labelsBase = ['+2', '+3', '+5', '+5', '+10'];
+    const labelsProyectil2 = ['+5%', '+5%', '+10%', '+10%', '+20%'];
+    const labelsEscudo = ['+50', '+50', '+50', '+50', '+50'];
+    const labelsUlti = ['-50', '-50', '-50', '-50', '-50'];
+    const labelsTiempoFuera = ['+5', '+10', '+15', '+20', '+30'];
     
-    for (let i = 0; i < 5; i++) {
-        const x = startX + i * (barraSize + gap);
-        const y = -30;
-        const costo = game.costosMejoras[i];
+    // Nombres de las secciones (a la izquierda del icono)
+    const nombresSecciones = {
+        proyectil: 'AUMENTO DE DAÑO',
+        proyectil2: 'AUMENTO DE VELOCIDAD',
+        ulti: 'COSTE DE OBTENCIÓN DE ULTI',
+        escudo: 'AUMENTO DE ESCUDO',
+        tiempofuera: 'AUMENTO DE REGENERACIÓN'
+    };
+    
+    // Crear cada sección
+    for (const seccion of secciones) {
+        // Determinar labels según el tipo
+        let labels;
+        if (seccion.nombre === 'proyectil2') {
+            labels = labelsProyectil2;
+        } else if (seccion.nombre === 'escudo') {
+            labels = labelsEscudo;
+        } else if (seccion.nombre === 'ulti') {
+            labels = labelsUlti;
+        } else if (seccion.nombre === 'tiempofuera') {
+            labels = labelsTiempoFuera;
+        } else {
+            labels = labelsBase;
+        }
         
-        // Crear contenedor para cada barra
-        const barraContainer = new PIXI.Container();
-        barraContainer.x = x;
-        barraContainer.y = y;
-        barraContainer.eventMode = 'static';
-        barraContainer.cursor = 'pointer';
-        barraContainer.interactive = true;
-        barraContainer.hitArea = new PIXI.Rectangle(0, 0, barraSize, barraSize);
-        barraContainer.name = `mejora_${i}`;
-        container.addChild(barraContainer);
-        
-        // Fondo cuadrado (ahora blanco)
-        const barraBg = new PIXI.Graphics();
-        barraBg.eventMode = 'none'; // No bloquear eventos
-        barraBg.lineStyle(3, 0x0044CC, 1);
-        barraBg.beginFill(0xFFFFFF);
-        barraBg.drawRect(0, 0, barraSize, barraSize);
-        barraBg.endFill();
-        barraContainer.addChild(barraBg);
-        
-        // Barra llena - nivel 1 = barra completa, nivel 0 = vacía
-        const nivel = game.mejoras[i] || 0;
-        const porcentaje = nivel >= 1 ? 1 : 0; // 100% si está comprada, 0% si no
-        const barraLlena = new PIXI.Graphics();
-        barraLlena.eventMode = 'none'; // No bloquear eventos
-        barraLlena.beginFill(0x0044CC);
-        barraLlena.drawRect(0, barraSize * (1 - porcentaje), barraSize, barraSize * porcentaje);
-        barraLlena.endFill();
-        barraContainer.addChild(barraLlena);
-        
-        // Guardar referencia para actualizar después
-        game.barsMejoras[i] = { barraLlena, barraSize, container: barraContainer };
-        
-        // Texto de la mejora (ahora azul)
-        const labelText = new PIXI.Text(labels[i], {
+        // Nombre de la sección (a la izquierda del icono)
+        const nombreSeccion = new PIXI.Text(nombresSecciones[seccion.nombre] || '', {
             fontFamily: 'Arial',
-            fontSize: 20,
+            fontSize: 12,
             fill: 0x0044CC,
             fontWeight: 'bold'
         });
-        labelText.anchor.set(0.5);
-        labelText.x = barraSize / 2;
-        labelText.y = barraSize / 2;
-        barraContainer.addChild(labelText);
+        nombreSeccion.anchor.set(1, 0.5); // A la derecha del texto
+        nombreSeccion.x = -200; // Alineado con el borde izquierdo del fondo
+        nombreSeccion.y = seccion.yBase; // Alineado con las barras
+        container.addChild(nombreSeccion);
         
-        // Click para comprar
-        barraContainer.on('pointertap', () => {
-            comprarMejora(game, i);
-        });
+        // Icono
+        const icono = new PIXI.Sprite(seccion.textura);
+        icono.anchor.set(0.5);
+        icono.scale.set(seccion.escala);
         
-        // Hover solo cambia color de fondo (sin mostrar precio)
-        barraContainer.on('pointerover', () => {
-            barraBg.tint = 0xCCCCCC;
+        // Costo de la primera mejora de esta sección
+        const costo = game.costosMejoras[seccion.indice];
+        
+        // Imagen de partícula boid para el costo
+        const boidImg = new PIXI.Sprite(game.texturaParticulaBoid);
+        boidImg.anchor.set(0.5);
+        boidImg.scale.set(0.25);
+        boidImg.x = 35;
+        boidImg.y = 20;
+        
+        // Número del costo
+        const costoNumero = new PIXI.Text(`${costo}`, {
+            fontFamily: 'Arial',
+            fontSize: 16,
+            fill: 0x0044CC,
+            fontWeight: 'bold'
         });
-        barraContainer.on('pointerout', () => {
-            barraBg.tint = 0xFFFFFF;
-        });
+        costoNumero.anchor.set(0, 0.5);
+        costoNumero.x = 50;
+        costoNumero.y = 20;
+        
+        // Contenedor del icono (a la derecha del nombre)
+        const iconoContainer = new PIXI.Container();
+        iconoContainer.addChild(icono);
+        iconoContainer.addChild(boidImg);
+        iconoContainer.addChild(costoNumero);
+        iconoContainer.x = -140; // A la derecha del nombre
+        iconoContainer.y = seccion.yBase;
+        container.addChild(iconoContainer);
+        
+        // Guardar referencia para actualizar costos
+        game.textoCostoTotal[seccion.nombre] = { boid: boidImg, numero: costoNumero };
+        
+        // Crear las 5 barras de esta sección
+        const barraSize = 45;
+        const gap = 5;
+        const startX = -10; // A la derecha del icono
+        
+        for (let j = 0; j < 5; j++) {
+            const indice = seccion.indice + j;
+            const x = startX + j * (barraSize + gap);
+            const y = seccion.yBase; // Las barras en el mismo Y que el icono
+            
+            const barraContainer = new PIXI.Container();
+            barraContainer.x = x;
+            barraContainer.y = y;
+            barraContainer.eventMode = 'static';
+            barraContainer.cursor = 'pointer';
+            barraContainer.interactive = true;
+            barraContainer.hitArea = new PIXI.Rectangle(0, 0, barraSize, barraSize);
+            barraContainer.name = `mejora_${indice}`;
+            container.addChild(barraContainer);
+            
+            // Fondo cuadrado
+            const barraBg = new PIXI.Graphics();
+            barraBg.eventMode = 'none';
+            barraBg.lineStyle(2, 0x0044CC, 1);
+            barraBg.beginFill(0xFFFFFF);
+            barraBg.drawRect(0, 0, barraSize, barraSize);
+            barraBg.endFill();
+            barraContainer.addChild(barraBg);
+            
+            // Barra llena
+            const nivel = game.mejoras[indice] || 0;
+            const porcentaje = nivel >= 1 ? 1 : 0;
+            const barraLlena = new PIXI.Graphics();
+            barraLlena.eventMode = 'none';
+            barraLlena.beginFill(0x0044CC);
+            barraLlena.drawRect(0, barraSize * (1 - porcentaje), barraSize, barraSize * porcentaje);
+            barraLlena.endFill();
+            barraContainer.addChild(barraLlena);
+            
+            // Guardar referencia
+            game.barsMejoras[indice] = { barraLlena, barraSize, container: barraContainer };
+            
+            // Texto de la mejora
+            const labelText = new PIXI.Text(labels[j], {
+                fontFamily: 'Arial',
+                fontSize: 16,
+                fill: 0x0044CC,
+                fontWeight: 'bold'
+            });
+            labelText.anchor.set(0.5);
+            labelText.x = barraSize / 2;
+            labelText.y = barraSize / 2;
+            barraContainer.addChild(labelText);
+            
+            // Click para comprar
+            barraContainer.on('pointertap', () => {
+                comprarMejora(game, indice);
+            });
+            
+            // Hover
+            barraContainer.on('pointerover', () => {
+                barraBg.tint = 0xCCCCCC;
+            });
+            barraContainer.on('pointerout', () => {
+                barraBg.tint = 0xFFFFFF;
+            });
+        }
     }
+    
+    // Guardar también la referencia a la primera mejora disponible
+    const primeraDisponible = game.mejoras.findIndex(nivel => nivel === 0);
+    game.primeraMejoraIndice = primeraDisponible;
     
     // Mostrar partículas actuales (imagen Pboids2 + número en azul)
     const particulasContainer = new PIXI.Container();
@@ -270,25 +322,36 @@ export function comprarMejora(game, indice) {
         return;
     }
     
-    // Consumir partículas
-    const eliminar = Math.min(costo, game.particulasBoid.length);
-    for (let j = 0; j < eliminar; j++) {
-        const idx = Math.floor(Math.random() * game.particulasBoid.length);
-        const p = game.particulasBoid[idx];
-        if (p && p.imagen && p.imagen.parent) {
-            p.imagen.parent.removeChild(p.imagen);
-        }
-        game.particulasBoid.splice(idx, 1);
-    }
+    // Consumir partículas (recolectadas, no las existentes)
+    game.particulasCapturadas -= costo;
     
     // Aumentar nivel
     game.mejoras[indice]++;
     
-    // Actualizar precio: mostrar la siguiente mejora disponible
-    const nuevaPrimera = game.mejoras.findIndex(nivel => nivel === 0);
-    const nuevoCosto = nuevaPrimera >= 0 ? game.costosMejoras[nuevaPrimera] : 0;
-    if (game.textoCostoTotal) {
-        game.textoCostoTotal.numero.text = `${nuevoCosto}`;
+    // Aplicar efecto según el tipo de mejora
+    // 0-4: Proyectil, 5-9: Escudo, 10-14: ULTi, 15-19: Proyectil2, 20-24: Tiempo fuera
+    if (indice >= 5 && indice <= 9 && game.jugador) {
+        // Restaurar escudos (+50%) al comprar mejora de escudos
+        game.jugador.escudos = Math.min(100, game.jugador.escudos + 50);
+    }
+    
+    // Actualizar costos en los iconos según la sección
+    // Determinar qué sección se actualizó
+    const seccionNombre = _getSeccionNombre(indice);
+    if (seccionNombre && game.textoCostoTotal && game.textoCostoTotal[seccionNombre]) {
+        const inicioSeccion = _getInicioSeccion(seccionNombre);
+        let siguiente = -1;
+        for (let i = inicioSeccion; i < inicioSeccion + 5; i++) {
+            if (game.mejoras[i] === 0) {
+                siguiente = i;
+                break;
+            }
+        }
+        const nuevoCosto = siguiente >= 0 ? game.costosMejoras[siguiente] : 0;
+        game.textoCostoTotal[seccionNombre].numero.text = `${nuevoCosto}`;
+        // Ocultar si no hay más mejoras en esta sección
+        game.textoCostoTotal[seccionNombre].boid.visible = siguiente >= 0;
+        game.textoCostoTotal[seccionNombre].numero.visible = siguiente >= 0;
     }
     
     // Actualizar contador de partículas en la ventana (recolectadas)
@@ -297,8 +360,67 @@ export function comprarMejora(game, indice) {
         game.textoNumeroParticulas.text = `${cantidad}`;
     }
     
+    // Actualizar contador del Devorador en la UI
+    if (game.contadorDevoradorUX) {
+        game.contadorDevoradorUX.textContent = game.particulasCapturadas.toString();
+    }
+    
     // Actualizar UI con animación
     actualizarUIMejoras(game, indice);
+    
+    // Aplicar las mejoras compradas al juego
+    if (game.aplicarMejoras) {
+        game.aplicarMejoras();
+    }
+    
+    // DEBUG: Mostrar estado de mejoras
+    _mostrarDebugMejoras(game);
+}
+
+/**
+ * Muestra debug de las mejoras compradas
+ */
+function _mostrarDebugMejoras(game) {
+    console.log('=== DEBUG MEJORAS ===');
+    console.log('Proyectil (daño):', game.mejoras.slice(0, 5));
+    console.log('Proyectil2 (velocidad):', game.mejoras.slice(15, 20));
+    console.log('ULTi (coste):', game.mejoras.slice(10, 15));
+    console.log('Escudo:', game.mejoras.slice(5, 10));
+    console.log('Tiempo fuera:', game.mejoras.slice(20, 25));
+    
+    // Calcular bonus de daño
+    let bonusDano = 0;
+    if (game.mejoras[0] >= 1) bonusDano += 2;
+    if (game.mejoras[1] >= 1) bonusDano += 3;
+    if (game.mejoras[2] >= 1) bonusDano += 5;
+    if (game.mejoras[3] >= 1) bonusDano += 5;
+    if (game.mejoras[4] >= 1) bonusDano += 10;
+    console.log('Bonus daño proyectil:', bonusDano);
+    
+    // Calcular bonus de velocidad
+    let multiplicadorVelocidad = 1.0;
+    if (game.mejoras[15] >= 1) multiplicadorVelocidad += 0.05;
+    if (game.mejoras[16] >= 1) multiplicadorVelocidad += 0.05;
+    if (game.mejoras[17] >= 1) multiplicadorVelocidad += 0.10;
+    if (game.mejoras[18] >= 1) multiplicadorVelocidad += 0.10;
+    if (game.mejoras[19] >= 1) multiplicadorVelocidad += 0.20;
+    console.log('Multiplicador velocidad:', multiplicadorVelocidad);
+    
+    // Coste ULTi
+    let reduccionUlti = 0;
+    for (let i = 10; i <= 14; i++) {
+        if (game.mejoras[i] >= 1) reduccionUlti += 50;
+    }
+    console.log('Reducción coste ULTi:', reduccionUlti);
+    console.log('Nuevo coste ULTi:', game.jugador ? game.jugador.cargaMaxUlti : 'N/A');
+    
+    // Regeneración tiempo fuera
+    let regeneracionBonus = 0;
+    for (let i = 20; i <= 24; i++) {
+        if (game.mejoras[i] >= 1) regeneracionBonus += [5, 10, 15, 20, 30][i - 20];
+    }
+    console.log('Bonus regeneración tiempo fuera:', regeneracionBonus);
+    console.log('===================');
 }
 
 /**
@@ -309,8 +431,8 @@ export function comprarMejora(game, indice) {
 export function actualizarUIMejoras(game, indiceCompra) {
     if (!game.barsMejoras) return;
     
-    // Actualizar cada barra según su nivel
-    for (let i = 0; i < 5; i++) {
+    // Actualizar las 25 barras (5 secciones x 5 mejoras)
+    for (let i = 0; i < 25; i++) {
         const barData = game.barsMejoras[i];
         if (!barData) continue;
         
@@ -355,9 +477,9 @@ export function actualizarUIMejoras(game, indiceCompra) {
             
             animateBar();
         } else {
-            // Solo actualizar sin animación
+            // Solo actualizar sin animación - si está comprada (nivel >= 1) mostrar completa
             barData.barraLlena.clear();
-            const porcentaje = Math.min(nivel * 0.2, 1);
+            const porcentaje = nivel >= 1 ? 1 : 0; // 100% si está comprada, 0% si no
             barData.barraLlena.beginFill(0x0044CC);
             barData.barraLlena.drawRect(0, barData.barraSize * (1 - porcentaje), barData.barraSize, barData.barraSize * porcentaje);
             barData.barraLlena.endFill();
@@ -395,18 +517,16 @@ export function limpiarVentanaMejoras(game) {
  * @param {string} mensaje - Mensaje a mostrar
  */
 function _mostrarMensajeError(game, mensaje) {
-    // Crear texto de error
+    // Crear texto de error (misma fuente que el título "MEJORAS", debajo del título)
     const textoError = new PIXI.Text(mensaje, {
-        fontFamily: 'Arial',
-        fontSize: 18,
+        fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
+        fontSize: 24,
         fill: 0xFF0000,
-        fontWeight: 'bold',
-        stroke: 0x000000,
-        strokeThickness: 2
+        fontWeight: 'bold'
     });
     textoError.anchor.set(0.5);
     textoError.x = game.anchoJuego / 2;
-    textoError.y = game.altoJuego / 2 + 60;
+    textoError.y = 280; // Debajo del título "MEJORAS" que está en y=220
     game.aplicacion.stage.addChild(textoError);
     game.elementosFinJuego.push(textoError);
     
@@ -421,4 +541,34 @@ function _mostrarMensajeError(game, mensaje) {
             textoError.destroy();
         }
     }, 2000);
+}
+
+/**
+ * Obtiene el nombre de la sección según el índice de mejora
+ * @param {number} indice - Índice de la mejora
+ * @returns {string} Nombre de la sección
+ */
+function _getSeccionNombre(indice) {
+    if (indice >= 0 && indice <= 4) return 'proyectil';
+    if (indice >= 5 && indice <= 9) return 'escudo';
+    if (indice >= 10 && indice <= 14) return 'ulti';
+    if (indice >= 15 && indice <= 19) return 'proyectil2';
+    if (indice >= 20 && indice <= 24) return 'tiempofuera';
+    return '';
+}
+
+/**
+ * Obtiene el índice de inicio de una sección
+ * @param {string} nombre - Nombre de la sección
+ * @returns {number} Índice de inicio
+ */
+function _getInicioSeccion(nombre) {
+    switch (nombre) {
+        case 'proyectil': return 0;
+        case 'escudo': return 5;
+        case 'ulti': return 10;
+        case 'proyectil2': return 15;
+        case 'tiempofuera': return 20;
+        default: return 0;
+    }
 }

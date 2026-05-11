@@ -488,7 +488,7 @@ export class UIManager {
     }
     
     /**
-     * Muestra modal de Tutorial
+     * Muestra modal de Tutorial con navegación paso a paso
      */
     mostrarTutorial() {
         const modal = document.createElement('div');
@@ -505,6 +505,194 @@ export class UIManager {
             z-index: 600;
         `;
         
+        // Contenido de cada paso del tutorial
+        const pasos = [
+            // Paso 1: Objetivo
+            {
+                titulo: 'TUTORIAL - OBJETIVO',
+                contenido: `
+                    <div style="color: #0044CC; font-family: 'Segoe Script', cursive; font-size: 32px; font-weight: bold; margin-bottom: 20px; text-align: center;">OBJETIVO DEL JUEGO</div>
+                    <div style="color: #0044CC; font-family: 'Arial', sans-serif; font-size: 20px; text-align: center; line-height: 1.5;">
+                        Tu misión es <strong>destruir asteroides</strong> para obtener partículas BOIDS.<br><br>
+                        Usa esas partículas para <strong>mejorar tu nave</strong> y sobrevivir<br>
+                        tantas oleadas como puedas.<br><br>
+                        Cada vez que tu puntuación sube, aparecen más asteroides.<br>
+                        ¡Sobrevive el mayor tiempo posible!
+                    </div>
+                `
+            },
+            // Paso 2: Controles
+            {
+                titulo: 'TUTORIAL - CONTROLES',
+                contenido: `
+                    <div style="color: #0044CC; font-family: 'Segoe Script', cursive; font-size: 32px; font-weight: bold; margin-bottom: 20px; text-align: center;">CONTROLES</div>
+                    <div style="color: #0044CC; font-family: 'Arial', sans-serif; font-size: 18px; text-align: left; line-height: 1.6; max-width: 500px; margin: 0 auto;">
+                        <strong>W</strong> - Avanzar<br>
+                        <strong>A / D</strong> - Rotar izquierda/derecha<br>
+                        <strong>ESPACIO</strong> - Disparar<br>
+                        <strong>Q</strong> - Cohetes (aceleración)<br>
+                        <strong>E</strong> - Devorador (atrae partículas)<br>
+                        <strong>R</strong> - Propulsor (dash)<br>
+                        <strong>P</strong> - Pausar / Abrir MEJORAS<br>
+                        <strong>T</strong> - Ver Top 5 (en pausa)
+                    </div>
+                `
+            },
+            // Paso 3: Sistema de Mejoras
+            {
+                titulo: 'TUTORIAL - MEJORAS',
+                contenido: `
+                    <div style="color: #0044CC; font-family: 'Segoe Script', cursive; font-size: 32px; font-weight: bold; margin-bottom: 20px; text-align: center;">SISTEMA DE MEJORAS</div>
+                    <div style="color: #0044CC; font-family: 'Arial', sans-serif; font-size: 16px; text-align: left; line-height: 1.5;">
+                        Presiona <strong>P</strong> para abrir el menú de mejoras.<br><br>
+                        <strong>AUMENTO DE DAÑO</strong>: +2, +3, +5, +5, +10<br>
+                        <strong>AUMENTO DE VELOCIDAD</strong>: +5%, +5%, +10%, +10%, +20%<br>
+                        <strong>COSTE DE ULTI</strong>: -50,-50,-50,-50,-50 (de 500 a 250)<br>
+                        <strong>AUMENTO DE ESCUDO</strong>: +50,+50,+50,+50,+50 HP<br>
+                        <strong>REGENERACIÓN</strong>: +5,+10,+15,+20,+30 tras Tiempo Fuera<br><br>
+                        <em style="color: #6688AA;">Paga con partículas del Devorador.</em>
+                    </div>
+                `
+            },
+            // Paso 4: Partículas
+            {
+                titulo: 'TUTORIAL - PARTÍCULAS',
+                contenido: `
+                    <div style="color: #0044CC; font-family: 'Segoe Script', cursive; font-size: 32px; font-weight: bold; margin-bottom: 15px; text-align: center;">PARTÍCULAS BOIDS</div>
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <img src="assets/Pboids2.png" style="width: 80px; height: 80px; border: 2px solid #0044CC; border-radius: 10px;">
+                    </div>
+                    <div style="color: #0044CC; font-family: 'Arial', sans-serif; font-size: 16px; text-align: left; line-height: 1.5;">
+                        Los <strong>asteroides especiales</strong> sueltan partículas BOIDS al destruirse.<br><br>
+                        <strong>¿Cómo recolectarlas?</strong><br>
+                        - Presiona <strong>E</strong> para activar el Devorador<br>
+                        - Las partículas serán atraídas hacia ti<br>
+                        - También puedes tocarlas con tu nave<br><br>
+                        Las partículas se usan en el menú de mejoras (tecla P).<br><br>
+                        <em style="color: #6688AA;">¡Recolecta sabiamente!</em>
+                    </div>
+                `
+            },
+            // Paso 5: Sobrecalentamiento
+            {
+                titulo: 'TUTORIAL - SOBRECALENTAMIENTO',
+                contenido: `
+                    <div style="color: #FF0000; font-family: 'Segoe Script', cursive; font-size: 32px; font-weight: bold; margin-bottom: 20px; text-align: center;">SOBRECALENTAMIENTO</div>
+                    <div style="color: #0044CC; font-family: 'Arial', sans-serif; font-size: 16px; text-align: left; line-height: 1.5;">
+                        Si tus escudos llegan a <strong>0</strong>, entras en modo<br>
+                        <strong>SOBRECALENTAMIENTO</strong>.<br><br>
+                        Durante <strong>25 segundos</strong>:<br>
+                        - Eres vulnerable<br>
+                        - No puedes usar el propulsor (R)<br>
+                        - Solo puedes moverte y disparar<br><br>
+                        Al terminar, regeneras <strong>10 escudos</strong>.<br>
+                        Las mejoras de ESCUDO (+50 HP cada una) aumentan<br>
+                        tu vida máxima para que puedas resistir más.<br><br>
+                        <em style="color: #6688AA;">¡Mantén tus escudos altos!</em>
+                    </div>
+                `
+            }
+        ];
+        
+        let pasoActual = 0;
+        
+        // Crear función para mostrar el paso actual
+        const mostrarPaso = (indice) => {
+            // Limpiar contenido anterior
+            container.innerHTML = '';
+            
+            const paso = pasos[indice];
+            
+            // Título del paso
+            const titulo = document.createElement('div');
+            titulo.innerHTML = paso.titulo;
+            titulo.style.cssText = `
+                color: #0044CC;
+                font-family: 'Segoe Script', cursive;
+                font-size: 26px;
+                font-weight: bold;
+                margin-bottom: 15px;
+            `;
+            container.appendChild(titulo);
+            
+            // Contenido
+            const contenido = document.createElement('div');
+            contenido.innerHTML = paso.contenido;
+            container.appendChild(contenido);
+            
+            // Indicador de progreso
+            const progreso = document.createElement('div');
+            progreso.textContent = `${indice + 1} / ${pasos.length}`;
+            progreso.style.cssText = `
+                color: #0044CC;
+                font-family: 'Arial', sans-serif;
+                font-size: 16px;
+                margin-top: 15px;
+                font-weight: bold;
+            `;
+            container.appendChild(progreso);
+            
+            // Contenedor de botones
+            const botones = document.createElement('div');
+            botones.style.cssText = `
+                display: flex;
+                justify-content: center;
+                gap: 15px;
+                margin-top: 20px;
+                width: 100%;
+            `;
+            
+            // Botón Anterior (siempre presente pero invisible si es el primer paso)
+            const btnAnterior = document.createElement('button');
+            btnAnterior.textContent = 'ANTERIOR';
+            btnAnterior.style.cssText = `
+                padding: 15px 30px;
+                font-size: 18px;
+                font-family: 'Segoe Script', cursive;
+                font-weight: bold;
+                color: white;
+                background: #0044CC;
+                border: 2px solid white;
+                border-radius: 10px;
+                cursor: pointer;
+                visibility: ${indice > 0 ? 'visible' : 'hidden'};
+            `;
+            if (indice > 0) {
+                btnAnterior.addEventListener('click', () => mostrarPaso(indice - 1));
+            }
+            botones.appendChild(btnAnterior);
+            
+            // Botón Siguiente / Finalizar
+            const btnSiguiente = document.createElement('button');
+            if (indice < pasos.length - 1) {
+                btnSiguiente.textContent = 'SIGUIENTE';
+            } else {
+                btnSiguiente.textContent = 'FINALIZAR';
+            }
+            btnSiguiente.style.cssText = `
+                padding: 15px 30px;
+                font-size: 18px;
+                font-family: 'Segoe Script', cursive;
+                font-weight: bold;
+                color: white;
+                background: #003366;
+                border: 2px solid white;
+                border-radius: 10px;
+                cursor: pointer;
+            `;
+            btnSiguiente.addEventListener('click', () => {
+                if (indice < pasos.length - 1) {
+                    mostrarPaso(indice + 1);
+                } else {
+                    modal.remove();
+                }
+            });
+            botones.appendChild(btnSiguiente);
+            
+            container.appendChild(botones);
+        };
+        
+        // Crear contenedor
         const container = document.createElement('div');
         container.style.cssText = `
             display: flex;
@@ -512,27 +700,17 @@ export class UIManager {
             align-items: center;
             justify-content: center;
             background: url('assets/gameOver.jpg') no-repeat center center;
-            background-size: contain;
-            width: ${Math.min(850, this.width * 0.95)}px;
-            height: 1100px;
-            padding: 60px 40px;
+            background-size: cover;
+            width: ${Math.min(750, this.width * 0.9)}px;
+            height: ${Math.min(700, this.height * 0.9)}px;
+            padding: 30px;
+            border-radius: 20px;
+            border: 4px solid #0044CC;
         `;
         
-        const texto = document.createElement('div');
-        texto.innerHTML = 'W: Avanzar | ESPACIO: Disparar | A/D: Rotar | S: ULTi | Q: Cohetes | E: Devorador | R: Propulsor';
-        texto.style.cssText = `
-            color: #0044CC;
-            font-family: 'Segoe Script', cursive;
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 0 0 10px #0044CC;
-            text-align: center;
-            margin-bottom: 20px;
-            max-width: 600px;
-        `;
+        // Mostrar primer paso
+        mostrarPaso(0);
         
-        container.appendChild(texto);
-        container.appendChild(this.crearBotonVolver(() => modal.remove()));
         modal.appendChild(container);
         this.mainMenu.appendChild(modal);
     }

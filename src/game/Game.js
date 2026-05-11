@@ -174,9 +174,6 @@ export class Game {
         this.pausado = false;
         this.mostrandoTop5EnPausa = false;
         
-        // Inicializar sistema de mejoras
-        inicializarMejoras(this);
-        
         // === ESTILOS PREDEFINIDOS PARA PIXI.TEXT ===
         // Para reutilizar y evitar repetir código
         this.estilos = {
@@ -504,6 +501,72 @@ const [naveTexture, asteroideTexture, fondoTexture, proyectilTexture, explocion1
         this.jugador.render(this.aplicacion.stage);
         
         // console.log('Jugador renderizado, parent:', this.jugador.imagen?.parent);
+        
+        // Inicializar sistema de mejoras después de crear el jugador
+        inicializarMejoras(this);
+        this.aplicarMejoras();
+    }
+    
+    /**
+     * Aplica las mejoras compradas al juego
+     * Se llama al inicializar y al comprar mejoras
+     */
+    aplicarMejoras() {
+        // DEBUG: Estado actual de mejoras
+        console.log('=== APLICAR MEJORAS ===');
+        
+        // Aplicar reducción de coste ULTi (indices 10-14)
+        // Cada compra reduce 50, máximo 250 de reducción (500 - 250 = 250 mínimo)
+        if (this.jugador && this.mejoras) {
+            let reduccionUlti = 0;
+            for (let i = 10; i <= 14; i++) {
+                if (this.mejoras[i] >= 1) {
+                    reduccionUlti += 50;
+                }
+            }
+            console.log('ULTi - Reducción:', reduccionUlti, 'Nuevo coste:', Math.max(250, this.jugador.cargaMaxUltiBase - reduccionUlti));
+            this.jugador.cargaMaxUlti = Math.max(250, this.jugador.cargaMaxUltiBase - reduccionUlti);
+        }
+        
+        // Guardar bonificación de regeneración para tiempo fuera (indices 20-24)
+        // +5, +10, +15, +20, +30 = máximo +80
+        if (this.mejoras) {
+            let regeneracionBonus = 0;
+            for (let i = 20; i <= 24; i++) {
+                if (this.mejoras[i] >= 1) {
+                    regeneracionBonus += [5, 10, 15, 20, 30][i - 20];
+                }
+            }
+            console.log('Tiempo fuera - Bonus regeneración:', regeneracionBonus);
+            this.regeneracionTiempoFueraBonus = regeneracionBonus;
+        }
+        
+        // Debug damage bonus
+        let bonusDano = 0;
+        for (let i = 0; i <= 4; i++) {
+            if (this.mejoras[i] >= 1) bonusDano += [2, 3, 5, 5, 10][i];
+        }
+        console.log('Proyectil - Bonus daño:', bonusDano);
+        
+        // Debug velocidad
+        let multVel = 1.0;
+        for (let i = 15; i <= 19; i++) {
+            if (this.mejoras[i] >= 1) multVel += [0.05, 0.05, 0.10, 0.10, 0.20][i - 15];
+        }
+        console.log('Proyectil2 - Multiplicador velocidad:', multVel);
+        
+        // Debug escudos
+        let escudosBonus = 0;
+        for (let i = 5; i <= 9; i++) {
+            if (this.mejoras[i] >= 1) escudosBonus += 50;
+        }
+        console.log('Escudo - BonusHP:', escudosBonus);
+        if (this.jugador) {
+            console.log('Escudo - HP actual:', this.jugador.escudos, '/ 100');
+            console.log('Escudo - Estado sobrecalentado:', this.jugador.sobrecalentado);
+        }
+        
+        console.log('======================');
     }
     
 /**
@@ -732,7 +795,7 @@ _crearParticulaBoidFuera() {
             // Habilidad Tiempo Fuera (pasiva)
             this.tiempoFueroActivo = false;
             this.timerTiempoFuera = 0;
-            this.duracionTiempoFuera = 10;
+            this.duracionTiempoFuera = 25;
             
             // Animación del reloj (Tiempo Fuero activo)
             this.relojFrameActual = 1;
@@ -877,6 +940,28 @@ _actualizarUI(delta = 0) {
     crearProyectil(x, y, direction) {
         // Crear proyectil SIN usar pool (forma original)
         const projectile = new Proyectil(x, y, direction, this.anchoJuego, this.altoJuego, this.texturaProyectil);
+        
+        // Calcular bonus de daño basado en mejoras compradas (indices 0-4)
+        // +2, +3, +5, +5, +10 (se acumulan si compras varias)
+        let bonusDano = 0;
+        if (this.mejoras && this.mejoras[0] >= 1) bonusDano += 2;  // +2 si compraste la primera
+        if (this.mejoras && this.mejoras[1] >= 1) bonusDano += 3;  // +3 si compraste la segunda
+        if (this.mejoras && this.mejoras[2] >= 1) bonusDano += 5;  // +5 si compraste la tercera
+        if (this.mejoras && this.mejoras[3] >= 1) bonusDano += 5;  // +5 si compraste la cuarta
+        if (this.mejoras && this.mejoras[4] >= 1) bonusDano += 10; // +10 si compraste la quinta
+        
+        projectile.dano += bonusDano;
+        
+        // Calcular bonus de velocidad basado en mejoras de proyectil2 (indices 15-19)
+        // +5%, +5%, +10%, +10%, +20% = total máximo 50%
+        let multiplicadorVelocidad = 1.0;
+        if (this.mejoras && this.mejoras[15] >= 1) multiplicadorVelocidad += 0.05;
+        if (this.mejoras && this.mejoras[16] >= 1) multiplicadorVelocidad += 0.05;
+        if (this.mejoras && this.mejoras[17] >= 1) multiplicadorVelocidad += 0.10;
+        if (this.mejoras && this.mejoras[18] >= 1) multiplicadorVelocidad += 0.10;
+        if (this.mejoras && this.mejoras[19] >= 1) multiplicadorVelocidad += 0.20;
+        
+        projectile.velocidad *= multiplicadorVelocidad;
         
         // Renderizar
         projectile.render(this.aplicacion.stage);
@@ -2459,6 +2544,7 @@ _crearBotonesGameOverHTML(xCentro, yCentro, ancho) {
         this.timerParticulasBoid = 0;
         this.particulasCapturadas = 0;
         inicializarMejoras(this);
+        this.aplicarMejoras();
         
         // Resetear habilidad Tiempo Fuera
         this.tiempoFueroActivo = false;
