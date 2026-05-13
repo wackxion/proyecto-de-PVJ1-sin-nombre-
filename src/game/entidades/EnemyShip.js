@@ -171,7 +171,7 @@ export class EnemyShip extends GameObject {
         
         for (const ast of this.enemigosAsteroides) {
             if (!ast.active) continue;
-            const distAst = Math.sqrt((ast.x - this.x) ** 2 + (ast.y - ast.y) ** 2);
+            const distAst = Math.sqrt((ast.x - this.x) ** 2 + (ast.y - this.y) ** 2);
             // Solo esquivar si está muy cerca (radio de esquiva = 60px)
             if (distAst < 60) {
                 const fuerza = (60 - distAst) / 60;

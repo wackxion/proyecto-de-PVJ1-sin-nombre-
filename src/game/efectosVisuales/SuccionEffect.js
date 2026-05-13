@@ -4,7 +4,7 @@
  * Crea un efecto visual de contracción que succiona las partículas Boid
  * hacia el centro (la nave del jugador)
  */
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../entidades/GameObject.js';
 
 export class SuccionEffect extends GameObject {
     /**

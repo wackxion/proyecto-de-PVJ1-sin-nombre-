@@ -12,13 +12,13 @@
  * - actualizarNavesEnemigas: Actualiza las naves enemigas
  */
 
-import { Enemigo } from './Enemy.js';
-import { EnemyShip } from './EnemyShip.js';
-import { SpecialEnemy } from './SpecialEnemy.js';
-import { BoidParticle } from './BoidParticle.js';
-import { EnemyProjectile } from './EnemyProjectile.js';
-import { AsteroidExplosion } from './AsteroidExplosion.js';
-import { HitEffect } from './HitEffect.js';
+import { Enemigo } from '../entidades/Enemy.js';
+import { EnemyShip } from '../entidades/EnemyShip.js';
+import { SpecialEnemy } from '../entidades/SpecialEnemy.js';
+import { BoidParticle } from '../efectosVisuales/BoidParticle.js';
+import { EnemyProjectile } from '../entidades/EnemyProjectile.js';
+import { AsteroidExplosion } from '../efectosVisuales/AsteroidExplosion.js';
+import { HitEffect } from '../efectosVisuales/HitEffect.js';
 
 /**
  * Genera un nuevo enemigo (asteroide)
@@ -322,6 +322,10 @@ export function verificarPosicionLibre(game, x, y, radio) {
  * @param {number} delta - Tiempo transcurrido desde el último frame
  */
 export function actualizarEnemigos(game, delta) {
+    if (!game.enemigos || !Array.isArray(game.enemigos)) {
+        return;
+    }
+    
     // Actualizar enemigos normales
     for (let i = game.enemigos.length - 1; i >= 0; i--) {
         const enemy = game.enemigos[i];
@@ -452,6 +456,10 @@ export function actualizarNavesEnemigas(game, delta) {
  * @param {number} delta - Tiempo transcurrido
  */
 export function actualizarNavesEnemigasCompleto(game, delta) {
+    if (!game.enemigosNaves || !Array.isArray(game.enemigosNaves)) {
+        return;
+    }
+    
     for (let i = game.enemigosNaves.length - 1; i >= 0; i--) {
         const naveEnemiga = game.enemigosNaves[i];
         
@@ -677,6 +685,10 @@ export function procesarColisionesEnemigos(game) {
  * @param {Game} game - Referencia al objeto Game principal
  */
 export function limpiarEnemigosLejanos(game) {
+    if (!game.enemigos || !Array.isArray(game.enemigos)) {
+        return;
+    }
+    
     const margin = 200;
     
     for (let i = game.enemigos.length - 1; i >= 0; i--) {
@@ -849,6 +861,77 @@ export function procesarColisionesJugador(game) {
                 const astroExplosion = new AsteroidExplosion(especial.x, especial.y, game.texturaAsteroidExplosion, 0.5, 0x0000FF);
                 astroExplosion.render(game.aplicacion.stage);
                 game.efectosExplosion.push(astroExplosion);
+            }
+        }
+    }
+    
+    // Colisión de mini especiales en órbita con naves enemigas
+    if (game.enemigosSpeciales && game.enemigosNaves) {
+        for (let i = game.enemigosSpeciales.length - 1; i >= 0; i--) {
+            const especial = game.enemigosSpeciales[i];
+            if (!especial || !especial.active || !especial.enOrbita) continue;
+            
+            for (let j = game.enemigosNaves.length - 1; j >= 0; j--) {
+                const naveEnemiga = game.enemigosNaves[j];
+                if (!naveEnemiga || !naveEnemiga.active) continue;
+                
+                if (game._verificarColision(especial, naveEnemiga)) {
+                    // El mini asteroide hace 25 de daño a la nave enemiga
+                    naveEnemiga.salud -= 25;
+                    
+                    // Animación de impacto
+                    const hit = new HitEffect(naveEnemiga.x, naveEnemiga.y, 'hit', 1.5);
+                    hit.render(game.aplicacion.stage);
+                    game.efectosImpacto.push(hit);
+                    
+                    // Si la nave enemiga se destruyó
+                    if (naveEnemiga.salud <= 0) {
+                        // Animación de destrucción (verde)
+                        const explosion = new AsteroidExplosion(
+                            naveEnemiga.x, naveEnemiga.y,
+                            game.texturaAsteroidExplosion,
+                            0.5,
+                            0x00FF00
+                        );
+                        explosion.render(game.aplicacion.stage);
+                        game.efectosExplosion.push(explosion);
+                        
+                        // Puntos por destruir nave
+                        game.puntuacion += 500;
+                        
+                        // Agregar carga de ULTi
+                        if (game.jugador) {
+                            game.jugador.agregarCargaUlti(naveEnemiga.cargaUlti);
+                        }
+                        
+                        naveEnemiga.destroy();
+                        game.enemigosNaves.splice(j, 1);
+                    }
+                    
+                    // El mini asteroide también recibe daño (-10)
+                    especial.salud -= 10;
+                    
+                    // Animación de impacto en el especial
+                    const hitEsp = new HitEffect(especial.x, especial.y, 'hit', 1.5);
+                    hitEsp.render(game.aplicacion.stage);
+                    game.efectosImpacto.push(hitEsp);
+                    
+                    // Si el especial se destruyó
+                    if (especial.salud <= 0) {
+                        const astroExplosion = new AsteroidExplosion(
+                            especial.x, especial.y,
+                            game.texturaAsteroidExplosion,
+                            0.42,
+                            0x0000FF
+                        );
+                        astroExplosion.render(game.aplicacion.stage);
+                        game.efectosExplosion.push(astroExplosion);
+                        
+                        especial.destroy();
+                        game.enemigosSpeciales.splice(i, 1);
+                        break;
+                    }
+                }
             }
         }
     }

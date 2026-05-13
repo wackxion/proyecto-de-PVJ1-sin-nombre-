@@ -11,7 +11,7 @@
  * 4. Se desvanece a medida que crece
  * 5. Desaparece cuando llega a los bordes de la pantalla
  */
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../entidades/GameObject.js';
 import { AsteroidExplosion } from './AsteroidExplosion.js';
 import { ProyectilExplosion } from './ProyectilExplosion.js';
 

@@ -6,9 +6,9 @@
  * 
  * v1.4.5
  */
-import { Game } from './game/Game.js';
+import { Game } from './game/sistemas/Game.js';
 import { UIManager } from './ui/UIManager.js';
-import { Top5 } from './game/Top5.js';
+import { Top5 } from './game/mecanicas/Top5.js';
 
 // Variables globales
 let game = null;
@@ -100,7 +100,8 @@ async function inicializarJuego(onProgress) {
     
     const container = document.getElementById('game-container');
     game = new Game();
-    await game.init(container, onProgress);
+    // Pasar uiManager existente para evitar duplicación
+    await game.init(container, onProgress, uiManager);
     
     juegoInicializado = true;
     window.game = game;

@@ -874,7 +874,7 @@ export class UIManager {
             
             try {
                 // Importar Top5 y obtener datos frescos
-                const { Top5 } = await import('../game/Top5.js');
+                const { Top5 } = await import('../game/mecanicas/Top5.js');
                 const top5Instance = new Top5();
                 const nuevosDatos = await top5Instance.obtenerLista();
                 

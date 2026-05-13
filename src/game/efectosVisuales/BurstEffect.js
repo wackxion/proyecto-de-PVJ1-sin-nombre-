@@ -10,7 +10,7 @@
  * - Dura 0.5 segundos
  * - Las partículas se expanden y se desvanecen
  */
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../entidades/GameObject.js';
 
 export class BurstEffect extends GameObject {
     /**

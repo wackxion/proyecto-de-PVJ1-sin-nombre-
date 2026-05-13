@@ -10,7 +10,7 @@
  * - Dura 0.3 segundos
  * - Tipos disponibles: 'hit', 'spark', 'explosion'
  */
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../entidades/GameObject.js';
 
 export class HitEffect extends GameObject {
     /**

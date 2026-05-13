@@ -23,12 +23,13 @@ export class Proyectil extends GameObject {
      * @param {number} altoJuego - Alto del área de juego
      * @param {object} textura - Textura del proyectil (proyectil1.png)
      */
-    constructor(x, y, direccion, anchoJuego = 800, altoJuego = 600, textura = null) {
+    constructor(x, y, direccion, anchoJuego = 800, altoJuego = 600, textura = null, multiplicadorVelocidad = 1.0) {
         // Llamar al constructor de GameObject
         super(x, y);
         
         // Velocidad: Qué tan rápido se mueve el proyectil (píxeles por segundo)
-        this.velocidad = 600;
+        // Se aplica el multiplicador de las mejoras Proyectil2
+        this.velocidad = 600 * multiplicadorVelocidad;
         
         // Direccion: Ángulo hacia donde se mueve el proyectil
         // Se mide en radianes (0 = derecha, π/2 = abajo, π = izquierda, etc.)

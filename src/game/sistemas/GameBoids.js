@@ -13,7 +13,7 @@
  * - capturarParticula: Elimina una partícula capturada
  */
 
-import { BoidParticle } from './BoidParticle.js';
+import { BoidParticle } from '../efectosVisuales/BoidParticle.js';
 
 /**
  * Crea las partículas Boid iniciales
@@ -121,6 +121,11 @@ switch (borde) {
  * @param {number} delta - Tiempo transcurrido desde el último frame
  */
 export function actualizarParticulasBoid(game, delta) {
+    // Verificar que el array existe
+    if (!game.particulasBoid || !Array.isArray(game.particulasBoid)) {
+        return;
+    }
+    
     const maxParticulas = 100;
     
     for (let i = game.particulasBoid.length - 1; i >= 0; i--) {
@@ -234,7 +239,7 @@ function _capturarParticulaBoid(game, indice) {
     
     // Actualizar UI del devorador
     if (game.contadorDevoradorUX) {
-        game.contadorDevoradorUX.textContent = game.particulasCapturadas.toString();
+        if (game.contadorDevoradorUX) game.contadorDevoradorUX.textContent = String(game.particulasCapturadas || 0);
     }
 }
 
@@ -259,6 +264,11 @@ export function resetearContadorCapturadas(game) {
  * @param {number} delta - Tiempo transcurrido
  */
 export function actualizarSistemaBoid(game, delta) {
+    // Verificar que el array existe
+    if (!game.particulasBoid || !Array.isArray(game.particulasBoid)) {
+        return;
+    }
+    
     // Timer para crear partículas en grupos de 10 (cada 7 segundos)
     game.timerParticulasBoid = (game.timerParticulasBoid || 0) + delta;
     if (game.timerParticulasBoid >= 7 && game.particulasBoid.length < 100) {

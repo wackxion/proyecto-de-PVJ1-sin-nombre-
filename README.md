@@ -217,6 +217,138 @@ serve .
 
 ---
 
+## 🏗️ Estructura de Clases y Herencia
+
+### Jerarquía de Clases
+
+```
+GameObject (CLASE BASE - entidades/GameObject.js)
+│
+├── entidades/ (Clases del juego)
+│   │
+│   ├── Jugador (Player.js) - extends GameObject
+│   │   │
+│   │   ├── _crearEfectoDano() → HitEffect
+│   │   ├── _crearEfectoRotacion() → HitEffect
+│   │   ├── _crearEfectoPerdidaEnfriamiento()
+│   │   └── Sub-clases internas:
+│   │       └── HitEffect (efecto visual)
+│   │
+│   ├── Proyectil (Projectile.js) - extends GameObject
+│   │   └── Propiedades:
+│   │       ├── velocidad: 600 px/s (modificable)
+│   │       ├── dano: 25 (aumentable)
+│   │       └── tiempoDeVida: 2s
+│   │
+│   ├── Enemigo (Enemy.js) - extends GameObject
+│   │   │
+│   │   ├── Tipos (constantes TamanioAsteroide):
+│   │   │   ├── PEQUENO: 'small'
+│   │   │   ├── MEDIANO: 'medium'
+│   │   │   ├── GRANDE: 'large'
+│   │   │   ├── ESPECIAL: 'special'
+│   │   │   ├── GRANDE_REZAGADO: 'large_rezagado'
+│   │   │   ├── MEDIANO_REZAGADO: 'medium_rezagado'
+│   │   │   └── PEQUENO_REZAGADO: 'small_rezagado'
+│   │   │
+│   │   ├── Métodos de movimiento:
+│   │   │   ├── _moverConcéntrico() → Va directo a la nave
+│   │   │   ├── _orbitarAlrededor() → Orbita alrededor del jugador
+│   │   │   └── _moverRezagado() → Pasa de largo
+│   │   │
+│   │   └── Sub-clases internas:
+│   │       └── _romper() → Devuelve fragmentos (nuevos Enemigo)
+│   │
+│   ├── EnemyShip (EnemyShip.js) - extends GameObject
+│   │   └── Propiedades:
+│   │       ├── velocidad: 225 px/s
+│   │       ├── salud: 100
+│   │       └── dano: 20
+│   │
+│   ├── EnemyProjectile (EnemyProjectile.js) - extends GameObject
+│   │   └── Propiedades:
+│   │       ├── velocidad: 400 px/s
+│   │       └── dano: 10
+│   │
+│   ├── SpecialEnemy (SpecialEnemy.js) - extends GameObject
+│   │   └── Propiedades:
+│   │       ├── velocidad: 80 px/s
+│   │       ├── salud: 300
+│   │       ├── cargaUlti: 20
+│   │       └── tiene mini-naves orbitando
+│   │
+│   └── GameObject (clase base)
+│
+├── efectosVisuales/ (Efectos y partículas)
+│   │
+│   ├── BoidParticle.js - extends GameObject
+│   │   └── Algoritmo Boids (cohesión, alineación, separación, fuga)
+│   │
+│   ├── HitEffect.js - extends GameObject
+│   │   └── Efecto de impacto (5 partículas, 0.3s)
+│   │
+│   ├── BurstEffect.js - extends GameObject
+│   │   └── Explosión de power-up (20 partículas, 0.5s)
+│   │
+│   ├── UltiEffect.js - extends GameObject
+│   │   └── Aro expansivo (800 px/s, destruye todo)
+│   │
+│   ├── ProyectilExplosion.js - extends GameObject
+│   │   └── Explosión al destruir proyectil enemigo
+│   │
+│   ├── AsteroidExplosion.js - extends GameObject
+│   │   └── Explosión al destruir asteroide
+│   │
+│   └── SuccionEffect.js - extends GameObject
+│       └── Efecto del Devorador (aro rojo, 300px radio)
+│
+└── mecanicas/
+    │
+    ├── Cohete.js - extends GameObject
+    │   └── Proyectil teledirigido (busca objetivo, velocidad 400, dano 999)
+    │
+    └── Top5.js (SIN HERENCIA - clase independiente)
+        └── Sistema de puntuación (Firebase Firestore)
+```
+---
+
+### Resumen: Qué llama a qué
+
+```
+main.js
+    │
+    └──► Game.init()
+          │
+          ├──► Game._crearJugador() → new Jugador()
+          │
+          └──► GAME LOOP (60 FPS)
+               │
+               ├──► Jugador.update() → Player.js
+               │     ├── _disparar() → Game.crearProyectil() → new Proyectil()
+               │     └── _usarUlti() → Game.activarUlti() → new UltiEffect()
+               │
+               ├──► GameSkills.js
+               │     ├── crearCohetes() → new Cohete()
+               │     ├── activarDevorador() → new SuccionEffect()
+               │     └── actualizarTiempoFuera() → Jugador.agregarEscudos()
+               │
+               ├──► GameBoids.js
+               │     └── crearParticulasIniciales() → new BoidParticle()
+               │
+               ├──► GameProjectiles.js
+               │     └── procesarColisiones() → Enemigo.recibirDano() → _romper()
+               │
+               ├──► GameEnemies.js
+               │     ├── generarEnemigo() → new Enemigo()
+               │     ├── generarNaveEnemiga() → new EnemyShip()
+               │     └── procesarColisionesJugador() → Jugador.recibirDano()
+               │
+               └──► GameEffects.js
+                    └── activarUlti() → new UltiEffect()
+```
+
+---
+
 ## 🔗 Recursos Útiles
 
 - [PixiJS Documentación](https://pixijs.com/8.x/guides/components)

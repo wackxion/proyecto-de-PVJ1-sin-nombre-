@@ -14,10 +14,10 @@
  * - verificarColisionesEnemigos: Verifica colisiones con enemigos
  */
 
-import { ProyectilExplosion } from './ProyectilExplosion.js';
-import { HitEffect } from './HitEffect.js';
-import { UltiEffect } from './UltiEffect.js';
-import { AsteroidExplosion } from './AsteroidExplosion.js';
+import { ProyectilExplosion } from '../efectosVisuales/ProyectilExplosion.js';
+import { HitEffect } from '../efectosVisuales/HitEffect.js';
+import { UltiEffect } from '../efectosVisuales/UltiEffect.js';
+import { AsteroidExplosion } from '../efectosVisuales/AsteroidExplosion.js';
 
 /**
  * Activa el ataque especial (Ulti)
@@ -194,6 +194,10 @@ export function crearExplosionAsteroide(game, enemy) {
  * @param {number} delta - Tiempo transcurrido desde el último frame
  */
 export function actualizarEfectosImpacto(game, delta) {
+    if (!game.efectosImpacto || !Array.isArray(game.efectosImpacto)) {
+        return;
+    }
+    
     for (let i = game.efectosImpacto.length - 1; i >= 0; i--) {
         const efecto = game.efectosImpacto[i];
         
@@ -211,6 +215,10 @@ export function actualizarEfectosImpacto(game, delta) {
     }
     
     // Actualizar efectos de explosión
+    if (!game.efectosExplosion || !Array.isArray(game.efectosExplosion)) {
+        return;
+    }
+    
     for (let i = game.efectosExplosion.length - 1; i >= 0; i--) {
         const explosion = game.efectosExplosion[i];
         

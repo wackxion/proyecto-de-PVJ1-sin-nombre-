@@ -1,25 +1,27 @@
 /**
- * ProyectilExplosion - Efecto de explosión animado del proyectil
+ * AsteroidExplosion - Efecto de destrucción animado del asteroide
  * 
- * Esta clase muestra una animación de explosión cuando un proyectil golpea un asteroide.
- * Usa 5 frames para la animación (proyectil2-6Explocion.png).
+ * Esta clase muestra una animación cuando un asteroide se destruye.
+ * Usa 5 frames para la animación (explocionAsteroides1-5.png).
  * 
  * Características:
  * - Animación de 5 frames
  * - Duración: 0.5 segundos (0.1s por frame)
  * - Se destruye después de reproducir la animación
  */
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../entidades/GameObject.js';
 
-export class ProyectilExplosion extends GameObject {
+export class AsteroidExplosion extends GameObject {
     /**
-     * Constructor del efecto de explosón del proyectil
+     * Constructor del efecto de destrucción del asteroide
      * 
-     * @param {number} x - Posición X donde ocurre el impacto
-     * @param {number} y - Posición Y donde ocurre el impacto
+     * @param {number} x - Posición X donde ocurre la destrucción
+     * @param {number} y - Posición Y donde ocurre la destrucción
      * @param {Array} texturas - Array de 5 texturas para la animación
+     * @param {number} escala - Escala del efecto (1 = normal)
+     * @param {number} color - Color del tinte (opcional, ej: 0x00FF00 para verde)
      */
-    constructor(x, y, texturas) {
+    constructor(x, y, texturas, escala = 1, color = null) {
         super(x, y);
         
         this.active = true;
@@ -34,8 +36,11 @@ export class ProyectilExplosion extends GameObject {
         // Duración de cada frame
         this.duracionFrame = 0.1; // 0.1 segundos por frame
         
-        // Escala de la explosión
-        this.escala = 0.35;
+        // Escala personalizada
+        this.escala = escala;
+        
+        // Color del tinte
+        this.color = color;
         
         // Crear el sprite con el primer frame
         this.imagen = new PIXI.Sprite(texturas[0]);
@@ -43,6 +48,11 @@ export class ProyectilExplosion extends GameObject {
         this.imagen.scale.set(this.escala);
         this.imagen.x = x;
         this.imagen.y = y;
+        
+        // Aplicar color si se especificó
+        if (this.color !== null && this.color !== undefined) {
+            this.imagen.tint = this.color;
+        }
         
         // Frame actual (0-4 para los 5 frames)
         this.frameActual = 0;

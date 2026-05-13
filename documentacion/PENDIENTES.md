@@ -1,7 +1,39 @@
 # Pendientes - Jugando en el Espacio
 
-**Última actualización:** 04/05/2026  
-**Versión:** v1.3.7 (COMPLETADO)
+**Última actualización:** 12/05/2026  
+**Versión:** v1.5.0 (COMPLETADO)
+
+---
+
+## ✅ Completado v1.5.0
+
+### Corrección de Errores Críticos
+
+| Problema | Solución |
+|----------|----------|
+| Game.js corrupto con BOM | Restaurado desde git, eliminados caracteres BOM |
+| Errores "Cannot read properties of undefined" | Agregados checks defensivos en arrays vacíos en GameBoids.js, GameProjectiles.js, GameEnemies.js, GameEffects.js, GameSkills.js |
+
+### Cambios de Gameplay
+
+| Cambio | Descripción |
+|--------|-------------|
+| **Nave puede rotar acelerando** | Removido bloqueo de dirección al presionar W |
+| **Fricción reducida** | Cambiada de 0.85 a 0.95 para mayor sensación inercial |
+| **Mini especiales pasan proyectiles** | Los mini especiales en órbita no son golpeados por disparos del jugador |
+| **Mini especiales colisionan con enemigos** | Los mini especiales en órbita dañan a las naves enemigas |
+| **Reinicio completo del juego** | Al perder todas las vidas: resetea cohetes[], bonificaciones, estados de pausa y UI |
+
+### Limpieza de Código
+
+- Eliminados todos los console.log comentados de Game.js y Top5.js
+- Eliminada función debug `_mostrarDebugMejoras` de GameMejoras.js
+- Mantenido solo console.error legítimo para manejo de errores en runtime
+
+### Estructura de Archivos
+
+- Creada carpeta `documentacion/` con todos los archivos .md excepto README.md
+- README.md permanece en raíz del proyecto
 
 ---
 
@@ -96,6 +128,20 @@
 - La animación del reloj muestra el estado de Tiempo Fuera
 - Los especiales ya no dan bonus al destroyar
 - Los especiales se convierten en mini al recibir el daño justo
+
+---
+
+## 📋 Pendientes (Por Hacer)
+
+| Tarea | Estado | Prioridad |
+|-------|--------|-----------|
+| Análisis manual del flujo del código | ⏸️ Pendiente | Media |
+
+### Notas de Análisis Pendiente
+
+- Revisar flujo de ejecución completo del game loop
+- Verificar integración entre sistemas (Boids, Enemigos, Proyectos, Habilidades)
+- Validar rendimiento con 50 NPCs activos
 
 ---
 

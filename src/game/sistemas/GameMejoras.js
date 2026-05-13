@@ -29,7 +29,7 @@ export function inicializarMejoras(game) {
     const costosProyectil = [5, 15, 25, 25, 50];
     const costosEscudo = [50, 50, 50, 50, 50];
     const costosUlti = [50, 50, 50, 50, 50];
-    const costosProyectil2 = [10, 20, 30, 30, 60];
+    const costosProyectil2 = [10, 15, 25, 30, 60];
     const costosTiempoFuera = [30, 35, 40, 45, 100];
     game.costosMejoras = [...costosProyectil, ...costosEscudo, ...costosUlti, ...costosProyectil2, ...costosTiempoFuera];
 }
@@ -103,7 +103,7 @@ export async function crearVentanaMejoras(game) {
     
     // Labels para las mejoras
     const labelsBase = ['+2', '+3', '+5', '+5', '+10'];
-    const labelsProyectil2 = ['+5%', '+5%', '+10%', '+10%', '+20%'];
+    const labelsProyectil2 = ['+10%', '+10%', '+15%', '+15%', '+30%'];
     const labelsEscudo = ['+50', '+50', '+50', '+50', '+50'];
     const labelsUlti = ['-50', '-50', '-50', '-50', '-50'];
     const labelsTiempoFuera = ['+5', '+10', '+15', '+20', '+30'];
@@ -362,7 +362,7 @@ export function comprarMejora(game, indice) {
     
     // Actualizar contador del Devorador en la UI
     if (game.contadorDevoradorUX) {
-        game.contadorDevoradorUX.textContent = game.particulasCapturadas.toString();
+        if (game.contadorDevoradorUX) game.contadorDevoradorUX.textContent = String(game.particulasCapturadas || 0);
     }
     
     // Actualizar UI con animación
@@ -372,55 +372,6 @@ export function comprarMejora(game, indice) {
     if (game.aplicarMejoras) {
         game.aplicarMejoras();
     }
-    
-    // DEBUG: Mostrar estado de mejoras
-    _mostrarDebugMejoras(game);
-}
-
-/**
- * Muestra debug de las mejoras compradas
- */
-function _mostrarDebugMejoras(game) {
-    console.log('=== DEBUG MEJORAS ===');
-    console.log('Proyectil (daño):', game.mejoras.slice(0, 5));
-    console.log('Proyectil2 (velocidad):', game.mejoras.slice(15, 20));
-    console.log('ULTi (coste):', game.mejoras.slice(10, 15));
-    console.log('Escudo:', game.mejoras.slice(5, 10));
-    console.log('Tiempo fuera:', game.mejoras.slice(20, 25));
-    
-    // Calcular bonus de daño
-    let bonusDano = 0;
-    if (game.mejoras[0] >= 1) bonusDano += 2;
-    if (game.mejoras[1] >= 1) bonusDano += 3;
-    if (game.mejoras[2] >= 1) bonusDano += 5;
-    if (game.mejoras[3] >= 1) bonusDano += 5;
-    if (game.mejoras[4] >= 1) bonusDano += 10;
-    console.log('Bonus daño proyectil:', bonusDano);
-    
-    // Calcular bonus de velocidad
-    let multiplicadorVelocidad = 1.0;
-    if (game.mejoras[15] >= 1) multiplicadorVelocidad += 0.05;
-    if (game.mejoras[16] >= 1) multiplicadorVelocidad += 0.05;
-    if (game.mejoras[17] >= 1) multiplicadorVelocidad += 0.10;
-    if (game.mejoras[18] >= 1) multiplicadorVelocidad += 0.10;
-    if (game.mejoras[19] >= 1) multiplicadorVelocidad += 0.20;
-    console.log('Multiplicador velocidad:', multiplicadorVelocidad);
-    
-    // Coste ULTi
-    let reduccionUlti = 0;
-    for (let i = 10; i <= 14; i++) {
-        if (game.mejoras[i] >= 1) reduccionUlti += 50;
-    }
-    console.log('Reducción coste ULTi:', reduccionUlti);
-    console.log('Nuevo coste ULTi:', game.jugador ? game.jugador.cargaMaxUlti : 'N/A');
-    
-    // Regeneración tiempo fuera
-    let regeneracionBonus = 0;
-    for (let i = 20; i <= 24; i++) {
-        if (game.mejoras[i] >= 1) regeneracionBonus += [5, 10, 15, 20, 30][i - 20];
-    }
-    console.log('Bonus regeneración tiempo fuera:', regeneracionBonus);
-    console.log('===================');
 }
 
 /**

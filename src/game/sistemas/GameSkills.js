@@ -14,9 +14,9 @@
  * - activarPropulsor: Activa el dash del jugador
  */
 
-import { Cohete } from './Cohete.js';
-import { SuccionEffect } from './SuccionEffect.js';
-import { AsteroidExplosion } from './AsteroidExplosion.js';
+import { Cohete } from '../mecanicas/Cohete.js';
+import { SuccionEffect } from '../efectosVisuales/SuccionEffect.js';
+import { AsteroidExplosion } from '../efectosVisuales/AsteroidExplosion.js';
 
 /**
  * Encuentra los N enemigos más cercanos al jugador
@@ -139,6 +139,10 @@ export function actualizarUIMarcoCohetes(game) {
  * @param {number} delta - Tiempo transcurrido desde el último frame
  */
 export function actualizarCohetes(game, delta) {
+    if (!game.cohetes || !Array.isArray(game.cohetes)) {
+        return;
+    }
+    
     for (let i = game.cohetes.length - 1; i >= 0; i--) {
         const cohete = game.cohetes[i];
         
@@ -229,10 +233,21 @@ export function actualizarCohetes(game, delta) {
             explosion.render(game.aplicacion.stage);
             game.efectosImpacto.push(explosion);
             
-            // Agregar puntos y carga Ulti
+            // Agregar puntos, carga Ulti y actualizar contador de oleada
             game.puntuacion += objetivo.puntos || 10;
             game.jugador.agregarCargaUlti(objetivo.cargaUlti || 10);
-            
+            game.asteroidesDestruidos++;
+
+            // Actualizar oleada
+            if (game.asteroidesDestruidos >= game.objetivoOleada) {
+                game.contadorOleadas++;
+                game.asteroidesDestruidos = 0;
+                game.objetivoOleada = 10 + (game.contadorOleadas * 10);
+                if (game.intervaloSpawn > game.intervaloMinimoSpawn) {
+                    game.intervaloSpawn = Math.max(game.intervaloMinimoSpawn, game.intervaloSpawn - game.tasaDisminucionSpawn);
+                }
+            }
+
             // Destruir objetivo
             if (objetivo.destroy) {
                 objetivo.destroy();

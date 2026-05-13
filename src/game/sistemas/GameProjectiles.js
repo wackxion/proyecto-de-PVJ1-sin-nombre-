@@ -9,13 +9,13 @@
  * - actualizarProyectiles: Actualiza todos los proyectiles en pantalla
  */
 
-import { Proyectil } from './Projectile.js';
-import { Enemigo } from './Enemy.js';
-import { SpecialEnemy } from './SpecialEnemy.js';
-import { AsteroidExplosion } from './AsteroidExplosion.js';
-import { ProyectilExplosion } from './ProyectilExplosion.js';
-import { HitEffect } from './HitEffect.js';
-import { BoidParticle } from './BoidParticle.js';
+import { Proyectil } from '../entidades/Projectile.js';
+import { Enemigo } from '../entidades/Enemy.js';
+import { SpecialEnemy } from '../entidades/SpecialEnemy.js';
+import { AsteroidExplosion } from '../efectosVisuales/AsteroidExplosion.js';
+import { ProyectilExplosion } from '../efectosVisuales/ProyectilExplosion.js';
+import { HitEffect } from '../efectosVisuales/HitEffect.js';
+import { BoidParticle } from '../efectosVisuales/BoidParticle.js';
 
 /**
  * Crea un nuevo proyectil desde la posición del jugador
@@ -26,9 +26,9 @@ import { BoidParticle } from './BoidParticle.js';
  * @param {number} y - Posición Y donde nace el proyectil
  * @param {number} direction - Dirección del proyectil en radianes (ángulo)
  */
-export function crearProyectil(game, x, y, direction) {
+export function crearProyectil(game, x, y, direction, multiplicadorVelocidad = 1.0) {
     // Crear proyectil SIN usar pool (forma original)
-    const projectile = new Proyectil(x, y, direction, game.anchoJuego, game.altoJuego, game.texturaProyectil);
+    const projectile = new Proyectil(x, y, direction, game.anchoJuego, game.altoJuego, game.texturaProyectil, multiplicadorVelocidad);
 
     // Renderizar
     projectile.render(game.aplicacion.stage);
@@ -93,6 +93,10 @@ export function actualizarProyectiles(game, delta) {
  * @param {number} delta - Tiempo transcurrido
  */
 export function actualizarProyectilesJugador(game, delta) {
+    if (!game.proyectiles || !Array.isArray(game.proyectiles)) {
+        return;
+    }
+    
     for (let i = game.proyectiles.length - 1; i >= 0; i--) {
         const projectile = game.proyectiles[i];
         projectile.update(delta);
@@ -258,37 +262,6 @@ export function procesarColisionesProyectiles(game) {
                 const hit = new HitEffect(enemy.x, enemy.y, 'hit', 2);
                 hit.render(game.aplicacion.stage);
                 game.efectosImpacto.push(hit);
-
-                // Verificar colisión con Mini SpecialEnemy (en órbita)
-                let miniEspecialGolpeado = false;
-                for (let m = game.enemigosSpeciales.length - 1; m >= 0; m--) {
-                    const miniEspecial = game.enemigosSpeciales[m];
-                    if (!miniEspecial || !miniEspecial.active) continue;
-                    if (!miniEspecial.enOrbita) continue;
-
-                    if (game._verificarColision(projectile, miniEspecial)) {
-                        miniEspecial.salud -= 10;
-
-                        if (miniEspecial.salud <= 0) {
-                            const explosion = new AsteroidExplosion(miniEspecial.x, miniEspecial.y, game.texturaAsteroidExplosion, 0.25, 0x0000FF);
-                            explosion.render(game.aplicacion.stage);
-                            game.efectosExplosion.push(explosion);
-
-                            miniEspecial.destroy();
-                            game.enemigosSpeciales.splice(m, 1);
-                            game.puntuacion += 50;
-                        }
-
-                        miniEspecialGolpeado = true;
-                        break;
-                    }
-                }
-
-                if (miniEspecialGolpeado) {
-                    projectile.destroy();
-                    game.proyectiles.splice(i, 1);
-                    continue;
-                }
 
                 // Daño normal a enemigos
                 const newAsteroids = enemy.recibirDano(projectile.dano);

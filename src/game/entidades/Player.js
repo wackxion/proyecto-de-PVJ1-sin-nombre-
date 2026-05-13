@@ -10,7 +10,7 @@
  * - Efectos visuales
  */
 import { GameObject } from './GameObject.js';
-import { HitEffect } from './HitEffect.js';
+import { HitEffect } from '../efectosVisuales/HitEffect.js';
 
 export class Jugador extends GameObject {
     /**
@@ -58,9 +58,11 @@ this.rotacion = 0;
         this.ultiListo = false;
         
         // SISTEMA DE ESCUDOS
-        // escudos: Escudos actuales del jugador (porcentaje 0-100)
+        // escudos: Escudos actuales del jugador
+        // escudosMax: Máximo de escudos (aumenta con mejoras)
         // Cuando llega a 0, es game over
         this.escudos = 100;
+        this.escudosMax = 100;
         
         // SISTEMA DE DISPARO
         // enfriamientoDisparoMax: Tiempo mínimo entre cada disparo (en segundos)
@@ -250,9 +252,8 @@ this.rotacion = 0;
         } 
         // Si presiona W y no está sobrecalentado
         else if (estaPresionandoW) {
-            if (!estabaAvanzando) {
-                this.direccionMovimiento = this.rotacion;
-            }
+            // Actualizar dirección de movimiento continuamente para permitir giro mientras acelera
+            this.direccionMovimiento = this.rotacion;
             
             // Llenar barra
             this.cargaAceleracion = Math.min(this.cargaAceleracion + this.velocidadCarga * delta, this.cargaMax);
@@ -461,7 +462,7 @@ this.rotacion = 0;
      */
     agregarEscudos(cantidad) {
         // Agregar escudos (máximo 100%)
-        this.escudos = Math.min(100, this.escudos + cantidad);
+        this.escudos = Math.min(this.escudosMax, this.escudos + cantidad);
         
         // Si estaba en sobrecalentamiento y ahora tiene escudos, salir del sobrecalentamiento
         if (this.sobrecalentado && this.escudos > 0) {

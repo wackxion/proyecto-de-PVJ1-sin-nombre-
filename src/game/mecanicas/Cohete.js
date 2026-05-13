@@ -1,7 +1,7 @@
 /**
  * Cohete - Proyectil teledirigido que va hacia el enemigo más cercano
  */
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../entidades/GameObject.js';
 
 export class Cohete extends GameObject {
     /**

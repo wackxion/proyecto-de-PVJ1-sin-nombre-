@@ -8,7 +8,7 @@
  * - Fuga: huir de la nave del jugador y las verdes enemigas
  * - Rebote: rebotar al colisionar con asteroides
  */
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../entidades/GameObject.js';
 
 export class BoidParticle extends GameObject {
     /**

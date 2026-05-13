@@ -79,20 +79,20 @@ export class Top5 {
      */
     async _cargarDesdeFirebase() {
         if (!this.top5Ref) {
-            // console.log('Top5: top5Ref es null');
+            //('Top5: top5Ref es null');
             return;
         }
 
         try {
-            // console.log('Top5: Intentando cargar desde Firebase...');
+            //('Top5: Intentando cargar desde Firebase...');
             const doc = await this.top5Ref.get();
-            // console.log('Top5: Doc gotten:', doc.exists, doc.data());
+            //('Top5: Doc gotten:', doc.exists, doc.data());
             if (doc.exists) {
                 this.listaMemoria = doc.data().lista || [];
-                // console.log('Top5: Datos cargados:', this.listaMemoria);
+                //('Top5: Datos cargados:', this.listaMemoria);
             }
         } catch (e) {
-            // console.log('Top5: Error al cargar desde Firebase:', e.message);
+            //('Top5: Error al cargar desde Firebase:', e.message);
             this.firebaseListo = false;
         }
     }
@@ -108,9 +108,9 @@ export class Top5 {
         } catch (e) {
             // Silenciar errores de permisos
             if (e.code === 'permission-denied' || e.message?.includes('permission')) {
-                // console.log('Top5 - Firebase sin permisos para guardar');
+                //('Top5 - Firebase sin permisos para guardar');
             } else {
-                // console.error('Top5 - Error al guardar en Firebase:', e);
+                //('Top5 - Error al guardar en Firebase:', e);
             }
         }
     }
@@ -139,11 +139,11 @@ export class Top5 {
                 const data = localStorage.getItem(this.storageKey);
                 if (data) {
                     this.listaMemoria = JSON.parse(data);
-                    // console.log('Top5: cargado desde localStorage');
+                    //('Top5: cargado desde localStorage');
                     return this.listaMemoria;
                 }
             } catch (e) { 
-                // console.log('Top5: error localStorage', e.message);
+                //('Top5: error localStorage', e.message);
             }
         }
 
@@ -270,7 +270,7 @@ export class Top5 {
         );
         
         if (yaExiste) {
-            // console.log('Top5 - Entrada duplicada, no se guarda');
+            //('Top5 - Entrada duplicada, no se guarda');
             return false;
         }
         
