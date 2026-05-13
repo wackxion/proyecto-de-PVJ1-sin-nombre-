@@ -22,6 +22,7 @@
  */
 export function inicializarMejoras(game) {
     game.mostrandoVentanaMejoras = false;
+    game.mensajeErrorMostrando = false;
     // 5 secciones con 5 mejoras cada una = 25 mejoras totales
     // 0-4: Proyectil, 5-9: Escudo, 10-14: ULTi, 15-19: Proyectil2, 20-24: Tiempo fuera
     game.mejoras = Array(25).fill(0);
@@ -119,6 +120,15 @@ export async function crearVentanaMejoras(game) {
     
     // Crear cada sección
     for (const seccion of secciones) {
+        // Encontrar la primera mejora disponible en esta sección
+        let primeraDisponibleEnSeccion = -1;
+        for (let i = seccion.indice; i < seccion.indice + 5; i++) {
+            if (game.mejoras[i] === 0) {
+                primeraDisponibleEnSeccion = i;
+                break;
+            }
+        }
+        
         // Determinar labels según el tipo
         let labels;
         if (seccion.nombre === 'proyectil2') {
@@ -150,8 +160,8 @@ export async function crearVentanaMejoras(game) {
         icono.anchor.set(0.5);
         icono.scale.set(seccion.escala);
         
-        // Costo de la primera mejora de esta sección
-        const costo = game.costosMejoras[seccion.indice];
+        // Costo de la primera mejora disponible en esta sección
+        const costo = primeraDisponibleEnSeccion >= 0 ? game.costosMejoras[primeraDisponibleEnSeccion] : 0;
         
         // Imagen de partícula boid para el costo
         const boidImg = new PIXI.Sprite(game.texturaParticulaBoid);
@@ -182,6 +192,12 @@ export async function crearVentanaMejoras(game) {
         
         // Guardar referencia para actualizar costos
         game.textoCostoTotal[seccion.nombre] = { boid: boidImg, numero: costoNumero };
+        
+        // Ocultar el costo si no hay más mejoras disponibles en esta sección
+        if (primeraDisponibleEnSeccion < 0) {
+            boidImg.visible = false;
+            costoNumero.visible = false;
+        }
         
         // Crear las 5 barras de esta sección
         const barraSize = 45;
@@ -444,6 +460,7 @@ export function actualizarUIMejoras(game, indiceCompra) {
  */
 export function limpiarVentanaMejoras(game) {
     game.mostrandoVentanaMejoras = false;
+    game.mensajeErrorMostrando = false;
     
     if (game.elementosFinJuego) {
         for (const el of game.elementosFinJuego) {
@@ -468,6 +485,14 @@ export function limpiarVentanaMejoras(game) {
  * @param {string} mensaje - Mensaje a mostrar
  */
 function _mostrarMensajeError(game, mensaje) {
+    // Si ya hay un mensaje de error mostrando, no mostrar otro
+    if (game.mensajeErrorMostrando) {
+        return;
+    }
+    
+    // Marcar que hay un mensaje mostrando
+    game.mensajeErrorMostrando = true;
+    
     // Crear texto de error (misma fuente que el título "MEJORAS", debajo del título)
     const textoError = new PIXI.Text(mensaje, {
         fontFamily: 'Segoe Script, Lucida Handwriting, Bradley Hand, cursive',
@@ -491,6 +516,8 @@ function _mostrarMensajeError(game, mensaje) {
             }
             textoError.destroy();
         }
+        // Limpiar la bandera cuando el mensaje desaparece
+        game.mensajeErrorMostrando = false;
     }, 2000);
 }
 
