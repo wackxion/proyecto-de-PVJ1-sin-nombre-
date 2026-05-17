@@ -78,8 +78,13 @@ this.rotacion = 0;
         // Se usa para crear proyectiles y acceder a otras funciones del juego
         this.juego = null;
         
-        // SISTEMA DE ESCUDOS Y SOBRECALENTAMIENTO
-        // sobrecalentado: Flag que indica si está en modo enfriamiento
+        // =========================================
+        // SOBRECALENTAMIENTO DE ESCUDOS (VIDA)
+        // =========================================
+        // Este sobrecalentamiento se activa cuando los escudos llegan a 0
+        // Es una "segunda oportunidad" - seguís jugando sin escudos pero vulnerable
+        // Salís de este estado solo cuando recibís escudos (via Tiempo Fuera o mejoras)
+        // sobrecalentado: Flag que indica si está en modo sobrecalentamiento (sin escudos)
         this.sobrecalentado = false;
         
         // temporizadorEnfriamiento: Temporizador de enfriamiento (cuenta regresiva)
@@ -147,16 +152,20 @@ this.rotacion = 0;
         // direccionMovimiento: Dirección en la que se mueve
         this.direccionMovimiento = this.rotacion;
         
-        // SISTEMA DE ACELERACIÓN (W)
+        // =========================================
+        // SOBRECALENTAMIENTO DE ACELERACIÓN (W)
+        // =========================================
+        // Este sobrecalentamiento se activa cuando acelerás con W por 2 segundos seguidos
+        // Te impide acelerar por 2.5 segundos, pero seguís jugando normalmente
         // cargaAceleracion: Carga que se llena mientras presionas W (0-100)
         this.cargaAceleracion = 0;
         this.cargaMax = 100;
-        this.velocidadCarga = 100; // 100% por segundo (llena en 1 segundo)
-        // estaSobrecalentado: Flag que indica si está sobrecalentado
+        this.velocidadCarga = 50; // 50% por segundo (llena en 2 segundos)
+        // sobrecalentadoAceleracion: Flag que indica si está sobrecalentado por usar W demasiado
         this.sobrecalentadoAceleracion = false;
-        // temporizadorEnfriamientoAcel: Temporizador de enfriamiento (3 segundos)
+        // temporizadorEnfriamientoAcel: Temporizador de enfriamiento (2.5 segundos)
         this.temporizadorEnfriamientoAcel = 0;
-        this.duracionEnfriamientoAcel = 3;
+        this.duracionEnfriamientoAcel = 2.5;
     }
     
     /**

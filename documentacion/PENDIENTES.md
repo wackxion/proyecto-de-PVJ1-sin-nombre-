@@ -1,7 +1,32 @@
 # Pendientes - Jugando en el Espacio
 
-**Última actualización:** 12/05/2026  
-**Versión:** v1.5.0 (COMPLETADO)
+**Última actualización:** 16/05/2026  
+**Versión:** v1.5.2 (COMPLETADO)
+
+---
+
+## ✅ Completado v1.5.2
+
+### Sistema de Sobrecargado (Aceleración W)
+
+| Parámetro | Valor Anterior | Valor Nuevo |
+|-----------|----------------|--------------|
+| Tiempo de aceleración continua | 1 segundo | 2 segundos |
+| Enfriamiento después de sobrecarga | 3 segundos | 2.5 segundos |
+
+### IA de Naves Enemigas
+
+- Radio de detección de asteroides aumentado de 60px a 100px
+
+### Mejoras
+
+- Corregido precio de mejoras: ahora muestra el siguiente disponible, no siempre el primero
+- Agregado control para evitar mensajes duplicados al intentar comprar sin saldo
+
+### Documentación
+
+- Creada carpeta `documentacion/` con todos los archivos .md (excepto README)
+- Agregada explicación de los dos sistemas de sobrecalentamiento en Player.js
 
 ---
 
